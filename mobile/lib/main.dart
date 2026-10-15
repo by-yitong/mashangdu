@@ -29,7 +29,7 @@ Future<void> main() async {
       brightnessResolver: Theme.maybeBrightnessOf,
       child: MultiProvider(
         providers: [
-          Provider<SettingsStore>.value(value: settings),
+          ChangeNotifierProvider<SettingsStore>.value(value: settings),
           Provider<ApiClient>.value(value: apiClient),
           Provider<ContentCache>(create: (_) => ContentCache(prefs)),
           ChangeNotifierProvider<ProgressStore>(
