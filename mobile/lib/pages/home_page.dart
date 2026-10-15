@@ -59,73 +59,77 @@ class _HomePageState extends State<HomePage> {
     final topPadding = MediaQuery.paddingOf(context).top + 12;
     const bottomPadding = 120.0;
 
-    return ListView(
-      padding: EdgeInsets.fromLTRB(16, topPadding, 16, bottomPadding),
-      children: [
-        Text(
-          '码上读',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w700,
-            height: 1.2,
-            color: colors.ink,
-          ),
-        ),
-        const SizedBox(height: 4),
-        _SyncLine(library: library),
-        const SizedBox(height: 16),
-        _FilterPills(
-          selected: _filter,
-          onSelected: (value) => setState(() => _filter = value),
-        ),
-        const SizedBox(height: 16),
-        if (library.status == SyncStatus.offline && courses.isEmpty)
-          _EmptyState(onGoSettings: widget.onGoSettings)
-        else if (courses.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 48),
-            child: Center(child: CircularProgressIndicator()),
-          )
-        else ...[
-          if (continueCourse != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: _ContinueCardTarget(
-                course: continueCourse,
-                progress: progress,
-              ),
-            ),
-          for (final course in visibleCourses)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: CourseCard(
-                course: course,
-                readCount: progress.readCount(course.slug),
-                progress:
-                    progress.progress(course.slug, course.chapterCount),
-                onTap: () => _openCourse(course),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Center(
-              child: Text(
-                '没有更多了',
-                style: TextStyle(fontSize: 13, color: colors.inkMuted),
-              ),
+    // 下拉刷新替代同步按钮。
+    return RefreshIndicator(
+      color: colors.accent,
+      backgroundColor: colors.card,
+      onRefresh: () => library.refresh(),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(16, topPadding, 16, bottomPadding),
+        children: [
+          Text(
+            '码上读',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              color: colors.ink,
             ),
           ),
+          const SizedBox(height: 4),
+          _SyncLine(library: library),
+          const SizedBox(height: 16),
+          _FilterPills(
+            selected: _filter,
+            onSelected: (value) => setState(() => _filter = value),
+          ),
+          const SizedBox(height: 16),
+          if (library.status == SyncStatus.offline && courses.isEmpty)
+            _EmptyState(onGoSettings: widget.onGoSettings)
+          else if (courses.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 48),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            if (continueCourse != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _ContinueCardTarget(
+                  course: continueCourse,
+                  progress: progress,
+                ),
+              ),
+            for (final course in visibleCourses)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: CourseCard(
+                  course: course,
+                  readCount: progress.readCount(course.slug),
+                  progress: progress.progress(course.slug, course.chapterCount),
+                  onTap: () => _openCourse(course),
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: Text(
+                  '没有更多了',
+                  style: TextStyle(fontSize: 13, color: colors.inkMuted),
+                ),
+              ),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 
   void _openCourse(CourseSummary course) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => CoursePage(course: course),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => CoursePage(course: course)));
   }
 }
 
@@ -194,10 +198,12 @@ class _FilterPills extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   height: 1.2,
-                  fontWeight:
-                      selected == entry.key ? FontWeight.w600 : FontWeight.w400,
-                  color:
-                      selected == entry.key ? colors.accent : colors.inkMuted,
+                  fontWeight: selected == entry.key
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                  color: selected == entry.key
+                      ? colors.accent
+                      : colors.inkMuted,
                 ),
               ),
             ),
@@ -216,10 +222,9 @@ class _ContinueCardTarget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final chapterTitle =
-        progress.lastChapterTitle(course.slug) ?? course.title;
-    final percent =
-        (progress.progress(course.slug, course.chapterCount) * 100).round();
+    final chapterTitle = progress.lastChapterTitle(course.slug) ?? course.title;
+    final percent = (progress.progress(course.slug, course.chapterCount) * 100)
+        .round();
     return ContinueCard(
       courseTitle: course.title,
       chapterTitle: chapterTitle,
@@ -229,10 +234,8 @@ class _ContinueCardTarget extends StatelessWidget {
         final lastSlug = progress.lastChapter(course.slug);
         Navigator.of(context).push(
           MaterialPageRoute<void>(
-            builder: (_) => CoursePage(
-              course: course,
-              openChapterSlug: lastSlug,
-            ),
+            builder: (_) =>
+                CoursePage(course: course, openChapterSlug: lastSlug),
           ),
         );
       },

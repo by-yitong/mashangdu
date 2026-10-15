@@ -23,25 +23,27 @@ class CodeTutorialsApp extends StatelessWidget {
 
   /// Material 3 + design.md token 覆盖（深色下 surface/container 用卡片/背景 token）。
   static ThemeData buildTheme(Brightness brightness) {
-    final colors =
-        brightness == Brightness.dark ? AppColors.dark : AppColors.light;
-    final scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.seedColor,
-      brightness: brightness,
-    ).copyWith(
-      primary: colors.accent,
-      onPrimary: colors.onAccent,
-      primaryContainer: colors.accentDim,
-      onPrimaryContainer: colors.accent,
-      surface: colors.paper,
-      surfaceContainerLowest: colors.card,
-      surfaceContainerLow: colors.card,
-      surfaceContainer: colors.card,
-      surfaceContainerHigh: colors.card,
-      surfaceContainerHighest: colors.card,
-      onSurface: colors.ink,
-      onSurfaceVariant: colors.inkMuted,
-    );
+    final colors = brightness == Brightness.dark
+        ? AppColors.dark
+        : AppColors.light;
+    final scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.seedColor,
+          brightness: brightness,
+        ).copyWith(
+          primary: colors.accent,
+          onPrimary: colors.onAccent,
+          primaryContainer: colors.accentDim,
+          onPrimaryContainer: colors.accent,
+          surface: colors.paper,
+          surfaceContainerLowest: colors.card,
+          surfaceContainerLow: colors.card,
+          surfaceContainer: colors.card,
+          surfaceContainerHigh: colors.card,
+          surfaceContainerHighest: colors.card,
+          onSurface: colors.ink,
+          onSurfaceVariant: colors.inkMuted,
+        );
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
@@ -88,21 +90,22 @@ class _HomeShellState extends State<HomeShell> {
     });
   }
 
-  Future<void> _sync() async {
-    await context.read<LibraryStore>().refresh();
-  }
-
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     return GlassScaffold(
       backgroundColor: colors.paper,
-      body: IndexedStack(
-        index: _tabIndex,
-        children: [
-          HomePage(onGoSettings: () => setState(() => _tabIndex = 1)),
-          const SettingsPage(),
-        ],
+      // GlassScaffold 不是 Material Scaffold，不提供 Material 祖先；
+      // 页面里的 InkWell/TextButton 需要它才能渲染。
+      body: Material(
+        type: MaterialType.transparency,
+        child: IndexedStack(
+          index: _tabIndex,
+          children: [
+            HomePage(onGoSettings: () => setState(() => _tabIndex = 1)),
+            const SettingsPage(),
+          ],
+        ),
       ),
       bottomBar: GlassTabBar.bottom(
         selectedIndex: _tabIndex,
@@ -128,12 +131,6 @@ class _HomeShellState extends State<HomeShell> {
             label: '设置',
           ),
         ],
-        extraButton: GlassTabBarExtraButton(
-          icon: Icon(Icons.sync_rounded, color: colors.accent),
-          onTap: _sync,
-          label: '同步',
-          size: 52,
-        ),
       ),
     );
   }
