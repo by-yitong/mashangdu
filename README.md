@@ -9,7 +9,8 @@ backend/   Go + Gin + GORM + SQLite 内容 API 与管理 API（接口文档见 b
 backend/admin/dist/   React 管理后台构建产物（后端托管在 /admin）
 admin/     React 管理后台源码（Vite + React + TS + Tailwind，Markdown 编辑器）
 mobile/    Flutter Android 客户端
-content:   教程内容在 backend/internal/store/seeddata/（courses.json + 31 章 Markdown）
+content:   教程内容在 backend/internal/store/seeddata/（courses.json + 148 章 Markdown）
+tools/     教程爬取入库脚本（mkdocs 文档站 → seed 格式，详见 skills/crawl-tutorials）
 design.md  冻结的 UI 设计系统（颜色/字体/组件规范）
 ```
 
@@ -22,7 +23,7 @@ cd backend
 ADMIN_TOKEN=your-token go run .   # 设置管理令牌，后台写接口需要
 ```
 
-首次启动自动建库并按 `seeddata/courses.json` 写入 4 门课程（Go 10 章、Python 10 章、JavaScript 6 章、SQL 5 章）。内容文件改动后重启即 upsert（按 slug 更新，永不删除）。数据库文件在 `backend/data/tutorials.db`。
+首次启动自动建库并按 `seeddata/courses.json` 写入 5 门课程（Go 10 章、Python 10 章、JavaScript 6 章、SQL 5 章、Hello 算法 117 章）。其中《Hello 算法》来自开源书 [hello-algo.com](https://www.hello-algo.com/)（krahets 著），按 CC BY-NC-SA 4.0 授权转载，仅限非商业用途。内容文件改动后重启即 upsert（按 slug 更新，永不删除）。数据库文件在 `backend/data/tutorials.db`。
 
 环境变量：`PORT`（端口）、`TUTORIALS_DB`（SQLite 路径）、`ADMIN_TOKEN`（管理令牌，不设则管理 API 全部 403）。
 

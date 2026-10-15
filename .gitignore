@@ -1,8 +1,14 @@
 # backend
 backend/backend.exe
 backend/backend
+backend/backend.exe~
 backend/data/
+backend/server.log
 *.db
+
+# python
+__pycache__/
+*.pyc
 
 # mobile (Flutter 自身 .gitignore 之外补充)
 mobile/.dart_tool/
