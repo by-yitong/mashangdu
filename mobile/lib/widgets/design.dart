@@ -48,9 +48,9 @@ class AppColors {
 
   /// accent 14%（深色）/ 12%（浅色）混入 card，用于选中胶囊/状态底色。
   Color get accentDim => Color.alphaBlend(
-        accent.withValues(alpha: brightness == Brightness.dark ? 0.14 : 0.12),
-        card,
-      );
+    accent.withValues(alpha: brightness == Brightness.dark ? 0.14 : 0.12),
+    card,
+  );
 
   static AppColors of(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark ? dark : light;
@@ -72,26 +72,33 @@ class LanguageTagStyle {
       case 'Go':
         return isDark
             ? const LanguageTagStyle(
-                background: Color(0xFF1D2B2E), foreground: Color(0xFF7DD3C8))
+                background: Color(0xFF1D2B2E),
+                foreground: Color(0xFF7DD3C8),
+              )
             : const LanguageTagStyle(
-                background: Color(0xFFE6F5F3), foreground: Color(0xFF0F766E));
+                background: Color(0xFFE6F5F3),
+                foreground: Color(0xFF0F766E),
+              );
       case 'Python':
         return isDark
             ? const LanguageTagStyle(
-                background: Color(0xFF232936), foreground: Color(0xFF9DB4E8))
+                background: Color(0xFF232936),
+                foreground: Color(0xFF9DB4E8),
+              )
             : const LanguageTagStyle(
-                background: Color(0xFFEDF1FA), foreground: Color(0xFF4C6BB0));
+                background: Color(0xFFEDF1FA),
+                foreground: Color(0xFF4C6BB0),
+              );
       default:
-      // 其他语言：语言主色低饱和深底 + 亮字（深色）/ 浅底 + 深字（浅色），
-      // 无既有主色时以主题 accent 同思路兜底。
-      {
-        final colors =
-            isDark ? AppColors.dark : AppColors.light;
-        return LanguageTagStyle(
-          background: colors.accentDim,
-          foreground: colors.accent,
-        );
-      }
+        // 其他语言：语言主色低饱和深底 + 亮字（深色）/ 浅底 + 深字（浅色），
+        // 无既有主色时以主题 accent 同思路兜底。
+        {
+          final colors = isDark ? AppColors.dark : AppColors.light;
+          return LanguageTagStyle(
+            background: colors.accentDim,
+            foreground: colors.accent,
+          );
+        }
     }
   }
 }
@@ -224,7 +231,7 @@ CourseStatus courseStatusFor(int readCount, int totalChapters) {
 }
 
 String courseStatusLabel(CourseStatus status) => switch (status) {
-      CourseStatus.notStarted => '未开始',
-      CourseStatus.learning => '学习中',
-      CourseStatus.finished => '已读完',
-    };
+  CourseStatus.notStarted => '未开始',
+  CourseStatus.learning => '学习中',
+  CourseStatus.finished => '已读完',
+};

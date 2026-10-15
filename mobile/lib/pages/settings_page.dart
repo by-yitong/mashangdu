@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../state/api_client.dart';
 import '../state/settings_store.dart';
+import '../state/theme_store.dart';
 import '../widgets/design.dart';
 
 /// 设置页：服务器地址（http/https 校验）+ 保存 + 测试连接。
@@ -25,8 +26,9 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _urlController =
-        TextEditingController(text: context.read<SettingsStore>().serverUrl);
+    _urlController = TextEditingController(
+      text: context.read<SettingsStore>().serverUrl,
+    );
   }
 
   @override
@@ -135,8 +137,11 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 4),
               Text(
                 'Golang 后端 API 地址，默认 ${SettingsStore.defaultServerUrl}',
-                style:
-                    TextStyle(fontSize: 12, height: 1.4, color: colors.inkMuted),
+                style: TextStyle(
+                  fontSize: 12,
+                  height: 1.4,
+                  color: colors.inkMuted,
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -147,14 +152,18 @@ class _SettingsPageState extends State<SettingsPage> {
                   color: colors.ink,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'http://10.0.2.2:8080',
-                  hintStyle: MonoText.monoBase
-                      .copyWith(fontSize: 14, color: colors.inkMuted),
+                  hintText: SettingsStore.defaultServerUrl,
+                  hintStyle: MonoText.monoBase.copyWith(
+                    fontSize: 14,
+                    color: colors.inkMuted,
+                  ),
                   errorText: _inputError,
                   filled: true,
                   fillColor: colors.paper,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: colors.track),
@@ -218,8 +227,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           ? Icons.check_circle_rounded
                           : Icons.error_rounded,
                       size: 16,
-                      color:
-                          _testSuccess == true ? colors.accent : colors.inkMuted,
+                      color: _testSuccess == true
+                          ? colors.accent
+                          : colors.inkMuted,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
@@ -241,6 +251,8 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
         const SizedBox(height: 14),
+        const _AppearanceCard(),
+        const SizedBox(height: 14),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
           child: Center(
@@ -251,6 +263,60 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 外观卡片:跟随系统 / 浅色 / 深色。
+class _AppearanceCard extends StatelessWidget {
+  const _AppearanceCard();
+
+  static const Map<ThemeMode, String> _labels = {
+    ThemeMode.system: '跟随系统',
+    ThemeMode.light: '浅色',
+    ThemeMode.dark: '深色',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final theme = context.watch<ThemeStore>();
+    return DesignCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '外观',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: colors.ink,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '深浅色跟随此处设置，默认跟随系统',
+            style: TextStyle(fontSize: 12, height: 1.4, color: colors.inkMuted),
+          ),
+          const SizedBox(height: 12),
+          SegmentedButton<ThemeMode>(
+            segments: [
+              for (final entry in _labels.entries)
+                ButtonSegment(value: entry.key, label: Text(entry.value)),
+            ],
+            selected: {theme.mode},
+            onSelectionChanged: (selection) =>
+                context.read<ThemeStore>().setMode(selection.first),
+            style: SegmentedButton.styleFrom(
+              foregroundColor: colors.inkMuted,
+              selectedForegroundColor: colors.onAccent,
+              selectedBackgroundColor: colors.accent,
+              side: BorderSide(color: colors.track),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

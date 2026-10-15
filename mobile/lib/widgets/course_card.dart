@@ -29,11 +29,7 @@ class StatusRow extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            height: 1.2,
-            color: colors.inkMuted,
-          ),
+          style: TextStyle(fontSize: 14, height: 1.2, color: colors.inkMuted),
         ),
         const Spacer(),
         Text(
@@ -171,17 +167,17 @@ class ContinueCard extends StatelessWidget {
                   color: colors.accentDim,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.play_arrow_rounded,
-                    size: 18, color: colors.accent),
+                child: Icon(
+                  Icons.play_arrow_rounded,
+                  size: 18,
+                  color: colors.accent,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '上次读到',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colors.inkMuted,
-                  ),
+                  style: TextStyle(fontSize: 12, color: colors.inkMuted),
                 ),
               ),
               MonoText('$percent%', color: colors.accent),

@@ -1,0 +1,75 @@
+{
+  "courses": [
+    {
+      "slug": "go-basics",
+      "title": "Go 语言入门",
+      "summary": "从零掌握 Go 基础语法与并发，最终写出命令行待办工具。",
+      "language": "Go",
+      "color": "#14B8A6",
+      "sort_order": 1,
+      "chapters": [
+        {"slug": "hello-world", "title": "Hello World", "sort_order": 1, "file": "go-hello-world.md"},
+        {"slug": "go-variables", "title": "变量与基本类型", "sort_order": 2, "file": "go-variables.md"},
+        {"slug": "go-goroutine", "title": "goroutine 并发入门", "sort_order": 3, "file": "go-goroutine.md"},
+        {"slug": "go-control-flow", "title": "流程控制 if-for-switch", "sort_order": 4, "file": "go-control-flow.md"},
+        {"slug": "go-functions", "title": "函数与多返回值", "sort_order": 5, "file": "go-functions.md"},
+        {"slug": "go-slice-map", "title": "切片与映射", "sort_order": 6, "file": "go-slice-map.md"},
+        {"slug": "go-struct", "title": "结构体与方法", "sort_order": 7, "file": "go-struct.md"},
+        {"slug": "go-interface", "title": "接口", "sort_order": 8, "file": "go-interface.md"},
+        {"slug": "go-error", "title": "错误处理", "sort_order": 9, "file": "go-error.md"},
+        {"slug": "go-cli-todo", "title": "写一个命令行待办工具", "sort_order": 10, "file": "go-cli-todo.md"}
+      ]
+    },
+    {
+      "slug": "python-basics",
+      "title": "Python 基础",
+      "summary": "零基础学 Python，从语法到实战，学会批量重命名文件。",
+      "language": "Python",
+      "color": "#4C6BB0",
+      "sort_order": 2,
+      "chapters": [
+        {"slug": "python-install-repl", "title": "安装与 REPL", "sort_order": 1, "file": "python-install-repl.md"},
+        {"slug": "python-variables-controlflow", "title": "变量与控制流", "sort_order": 2, "file": "python-variables-controlflow.md"},
+        {"slug": "py-strings", "title": "字符串与格式化", "sort_order": 3, "file": "py-strings.md"},
+        {"slug": "py-list-dict", "title": "列表与字典", "sort_order": 4, "file": "py-list-dict.md"},
+        {"slug": "py-functions", "title": "函数与模块", "sort_order": 5, "file": "py-functions.md"},
+        {"slug": "py-oop", "title": "面向对象入门", "sort_order": 6, "file": "py-oop.md"},
+        {"slug": "py-file-io", "title": "文件读写", "sort_order": 7, "file": "py-file-io.md"},
+        {"slug": "py-exceptions", "title": "异常处理", "sort_order": 8, "file": "py-exceptions.md"},
+        {"slug": "py-stdlib", "title": "标准库常用模块", "sort_order": 9, "file": "py-stdlib.md"},
+        {"slug": "py-rename-project", "title": "实战:批量重命名文件", "sort_order": 10, "file": "py-rename-project.md"}
+      ]
+    },
+    {
+      "slug": "javascript-basics",
+      "title": "JavaScript 入门",
+      "summary": "在浏览器里学会 JavaScript 基础，理解函数、DOM 与异步。",
+      "language": "JavaScript",
+      "color": "#2F6FEB",
+      "sort_order": 3,
+      "chapters": [
+        {"slug": "js-hello", "title": "在浏览器里运行第一行 JS", "sort_order": 1, "file": "js-hello.md"},
+        {"slug": "js-variables", "title": "变量与类型", "sort_order": 2, "file": "js-variables.md"},
+        {"slug": "js-functions", "title": "函数与箭头函数", "sort_order": 3, "file": "js-functions.md"},
+        {"slug": "js-array-object", "title": "数组与对象", "sort_order": 4, "file": "js-array-object.md"},
+        {"slug": "js-dom", "title": "DOM 操作入门", "sort_order": 5, "file": "js-dom.md"},
+        {"slug": "js-async", "title": "异步:Promise 与 async/await", "sort_order": 6, "file": "js-async.md"}
+      ]
+    },
+    {
+      "slug": "sql-basics",
+      "title": "SQL 入门",
+      "summary": "从表的概念到多表连接，循序渐进掌握 SQL 查询核心。",
+      "language": "SQL",
+      "color": "#0E7490",
+      "sort_order": 4,
+      "chapters": [
+        {"slug": "sql-concepts", "title": "数据库与表的概念", "sort_order": 1, "file": "sql-concepts.md"},
+        {"slug": "sql-select", "title": "SELECT 基础查询", "sort_order": 2, "file": "sql-select.md"},
+        {"slug": "sql-where", "title": "WHERE 排序与限制", "sort_order": 3, "file": "sql-where.md"},
+        {"slug": "sql-aggregate", "title": "聚合与分组", "sort_order": 4, "file": "sql-aggregate.md"},
+        {"slug": "sql-join", "title": "多表连接 JOIN", "sort_order": 5, "file": "sql-join.md"}
+      ]
+    }
+  ]
+}

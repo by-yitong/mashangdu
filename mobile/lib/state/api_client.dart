@@ -32,8 +32,8 @@ class ApiException implements Exception {
 /// 网络层失败抛 SocketException/TimeoutException 等原始异常，由调用方兜底。
 class ApiClient {
   ApiClient(String serverUrl, {http.Client? client})
-      : _serverUrl = serverUrl,
-        _client = client ?? http.Client();
+    : _serverUrl = serverUrl,
+      _client = client ?? http.Client();
 
   String _serverUrl;
   final http.Client _client;
@@ -55,8 +55,8 @@ class ApiClient {
     }
     final Map<String, dynamic> envelope;
     try {
-      envelope = jsonDecode(utf8.decode(response.bodyBytes))
-          as Map<String, dynamic>;
+      envelope =
+          jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     } on FormatException {
       throw ApiException('BAD_JSON', '响应不是合法 JSON');
     }

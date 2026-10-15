@@ -24,6 +24,8 @@ class _CoursePageState extends State<CoursePage> {
   CourseDetail? _detail;
   bool _loading = true;
   bool _openedLastChapter = false;
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
 
   @override
   void initState() {
@@ -31,9 +33,16 @@ class _CoursePageState extends State<CoursePage> {
     _load();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
-    final detail =
-        await context.read<LibraryStore>().loadCourseDetail(widget.course.slug);
+    final detail = await context.read<LibraryStore>().loadCourseDetail(
+      widget.course.slug,
+    );
     if (!mounted) return;
     setState(() {
       _detail = detail;
@@ -52,12 +61,19 @@ class _CoursePageState extends State<CoursePage> {
   void _openChapter(String chapterSlug) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => ReaderPage(
-          course: widget.course,
-          chapterSlug: chapterSlug,
-        ),
+        builder: (_) =>
+            ReaderPage(course: widget.course, chapterSlug: chapterSlug),
       ),
     );
+  }
+
+  /// 下拉刷新：重新拉取课程详情 + 未缓存章节。
+  Future<void> _refresh() async {
+    final detail = await context
+        .read<LibraryStore>()
+        .refreshCourse(widget.course.slug);
+    if (!mounted || detail == null) return;
+    setState(() => _detail = detail);
   }
 
   @override
@@ -65,67 +81,113 @@ class _CoursePageState extends State<CoursePage> {
     final colors = AppColors.of(context);
     final progress = context.watch<ProgressStore>();
     final chapters = _detail?.chapters ?? const <ChapterRef>[];
-    final total = chapters.isNotEmpty ? chapters.length : widget.course.chapterCount;
+    final total = chapters.isNotEmpty
+        ? chapters.length
+        : widget.course.chapterCount;
     final readCount = progress.readCount(widget.course.slug);
     final ratio = progress.progress(widget.course.slug, total);
+
+    // 章节标题过滤（大小写不敏感）；搜索为空时显示全部。
+    final keyword = _query.trim().toLowerCase();
+    final visibleChapters = keyword.isEmpty
+        ? chapters
+        : chapters
+              .where((c) => c.title.toLowerCase().contains(keyword))
+              .toList();
 
     return Scaffold(
       backgroundColor: colors.paper,
       appBar: AppBar(title: Text(widget.course.title)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
-              children: [
-                _ProgressHeader(
-                  summary: widget.course,
-                  readCount: readCount,
-                  total: total,
-                  ratio: ratio,
-                ),
-                const SizedBox(height: 16),
-                if (chapters.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 48),
-                    child: Column(
-                      children: [
-                        Icon(Icons.cloud_off_rounded,
-                            size: 40, color: colors.inkMuted),
-                        const SizedBox(height: 12),
-                        Text(
-                          '章节内容加载失败',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: colors.ink,
+          : RefreshIndicator(
+              color: colors.accent,
+              backgroundColor: colors.card,
+              onRefresh: _refresh,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
+                children: [
+                  _ProgressHeader(
+                    summary: widget.course,
+                    readCount: readCount,
+                    total: total,
+                    ratio: ratio,
+                  ),
+                  const SizedBox(height: 16),
+                  _SearchField(
+                    controller: _searchController,
+                    onChanged: (value) => setState(() => _query = value),
+                    onClear: () => setState(() {
+                      _searchController.clear();
+                      _query = '';
+                    }),
+                  ),
+                  const SizedBox(height: 16),
+                  if (chapters.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.cloud_off_rounded,
+                            size: 40,
+                            color: colors.inkMuted,
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '网络不可用且没有缓存，请稍后重试，或到设置页检查服务器地址。',
-                          textAlign: TextAlign.center,
+                          const SizedBox(height: 12),
+                          Text(
+                            '章节内容加载失败',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: colors.ink,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '网络不可用且没有缓存，请稍后重试，或到设置页检查服务器地址。',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.5,
+                              color: colors.inkMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else if (visibleChapters.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: Center(
+                        child: Text(
+                          '没有匹配的章节',
                           style: TextStyle(
                             fontSize: 13,
-                            height: 1.5,
                             color: colors.inkMuted,
                           ),
                         ),
-                      ],
-                    ),
-                  )
-                else
-                  for (var i = 0; i < chapters.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _ChapterTile(
-                        index: i + 1,
-                        chapter: chapters[i],
-                        isRead:
-                            progress.isRead(widget.course.slug, chapters[i].slug),
-                        onTap: () => _openChapter(chapters[i].slug),
                       ),
-                    ),
-              ],
+                    )
+                  else
+                    for (var i = 0; i < visibleChapters.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _ChapterTile(
+                          // 无搜索词时序号 = 列表位置；过滤时用真实章节 order。
+                          index: keyword.isEmpty
+                              ? i + 1
+                              : visibleChapters[i].order,
+                          chapter: visibleChapters[i],
+                          isRead: progress.isRead(
+                            widget.course.slug,
+                            visibleChapters[i].slug,
+                          ),
+                          onTap: () => _openChapter(visibleChapters[i].slug),
+                        ),
+                      ),
+                ],
+              ),
             ),
     );
   }
@@ -157,11 +219,7 @@ class _ProgressHeader extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              MonoText(
-                '$readCount/$total',
-                color: colors.ink,
-                fontSize: 20,
-              ),
+              MonoText('$readCount/$total', color: colors.ink, fontSize: 20),
               const Spacer(),
               MonoText('$percent%', color: colors.accent, fontSize: 20),
             ],
@@ -175,6 +233,64 @@ class _ProgressHeader extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ProgressBar(value: ratio),
+        ],
+      ),
+    );
+  }
+}
+
+/// 章节搜索框：card 底圆角容器 + 搜索图标 + 清除按钮。
+class _SearchField extends StatelessWidget {
+  const _SearchField({
+    required this.controller,
+    required this.onChanged,
+    required this.onClear,
+  });
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      decoration: BoxDecoration(
+        color: colors.card,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search_rounded, size: 20, color: colors.inkMuted),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              cursorColor: colors.accent,
+              style: TextStyle(fontSize: 15, color: colors.ink),
+              decoration: InputDecoration(
+                hintText: '搜索章节',
+                hintStyle: TextStyle(fontSize: 15, color: colors.inkMuted),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: controller,
+            builder: (context, value, _) {
+              if (value.text.isEmpty) return const SizedBox.shrink();
+              return IconButton(
+                tooltip: '清除',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.cancel_rounded, size: 18, color: colors.inkMuted),
+                onPressed: onClear,
+              );
+            },
+          ),
         ],
       ),
     );

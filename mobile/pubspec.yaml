@@ -37,6 +37,7 @@ dependencies:
   flutter_markdown: ^0.7.7
   shared_preferences: ^2.5.5
   liquid_glass_widgets: ^1.13.0
+  highlight: ^0.7.0
 
 dev_dependencies:
   flutter_test:

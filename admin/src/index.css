@@ -1,0 +1,65 @@
+/* 码上读后台 · Hallmark 仪表盘卡片风 · 主题 teal #0D9488（禁紫/琥珀）
+ * 设计 token 与 design.md 浅色版同构 */
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-paper: #f4f6f5;
+  --color-card: #ffffff;
+  --color-ink: #1a1f1d;
+  --color-inkmuted: #6d7773;
+  --color-accent: #0d9488;
+  --color-accentdim: #e2f2f0;
+  --color-track: #e3e8e6;
+  --radius-card: 22px;
+}
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    "PingFang SC",
+    "Microsoft YaHei",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Markdown 预览：正文排版走 typography 插件，代码块按 design.md 用深底圆角等宽 */
+.preview pre {
+  background-color: #1d211f;
+  color: #e8ecea;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.preview pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: inherit;
+}
+.preview :not(pre) > code {
+  background-color: var(--color-accentdim);
+  color: #0f766e;
+  border-radius: 6px;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+.preview a {
+  color: var(--color-accent);
+}
+.preview blockquote {
+  border-left: 3px solid var(--color-accent);
+  color: var(--color-inkmuted);
+  font-style: normal;
+}
+.preview h1,
+.preview h2,
+.preview h3,
+.preview h4 {
+  font-style: normal;
+  font-weight: 700;
+}

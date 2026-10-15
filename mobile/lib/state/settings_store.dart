@@ -7,7 +7,9 @@ class SettingsStore extends ChangeNotifier {
 
   final SharedPreferences _prefs;
 
-  static const String defaultServerUrl = 'http://10.0.2.2:8080';
+  /// 默认服务器地址：debug 构建直连开发机局域网；release 指向线上域名。
+  static String get defaultServerUrl =>
+      kReleaseMode ? 'https://study.phpcurl.cn' : 'http://192.168.31.15:8080';
   static const String _serverUrlKey = 'settings.server_url';
 
   String _serverUrl = defaultServerUrl;

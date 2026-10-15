@@ -9,14 +9,14 @@ class MetaInfo {
   final int courseCount;
 
   factory MetaInfo.fromJson(Map<String, dynamic> json) => MetaInfo(
-        contentVersion: json['content_version'] as String? ?? '',
-        courseCount: (json['course_count'] as num?)?.toInt() ?? 0,
-      );
+    contentVersion: json['content_version'] as String? ?? '',
+    courseCount: (json['course_count'] as num?)?.toInt() ?? 0,
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'content_version': contentVersion,
-        'course_count': courseCount,
-      };
+    'content_version': contentVersion,
+    'course_count': courseCount,
+  };
 
   /// content_version(RFC3339) 的日期部分，如 2026-10-15。
   String get versionDate {
@@ -51,24 +51,24 @@ class CourseSummary {
   final DateTime? updatedAt;
 
   factory CourseSummary.fromJson(Map<String, dynamic> json) => CourseSummary(
-        slug: json['slug'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-        summary: json['summary'] as String? ?? '',
-        language: json['language'] as String? ?? '',
-        color: json['color'] as String? ?? '',
-        chapterCount: (json['chapter_count'] as num?)?.toInt() ?? 0,
-        updatedAt: _parseDate(json['updated_at']),
-      );
+    slug: json['slug'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    summary: json['summary'] as String? ?? '',
+    language: json['language'] as String? ?? '',
+    color: json['color'] as String? ?? '',
+    chapterCount: (json['chapter_count'] as num?)?.toInt() ?? 0,
+    updatedAt: _parseDate(json['updated_at']),
+  );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'slug': slug,
-        'title': title,
-        'summary': summary,
-        'language': language,
-        'color': color,
-        'chapter_count': chapterCount,
-        'updated_at': updatedAt?.toIso8601String(),
-      };
+    'slug': slug,
+    'title': title,
+    'summary': summary,
+    'language': language,
+    'color': color,
+    'chapter_count': chapterCount,
+    'updated_at': updatedAt?.toIso8601String(),
+  };
 
   static List<CourseSummary> listFromJson(Object? data) =>
       (data as List<Object?>? ?? const [])
@@ -90,10 +90,10 @@ class ChapterRef {
   final int order;
 
   factory ChapterRef.fromJson(Map<String, dynamic> json) => ChapterRef(
-        slug: json['slug'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-        order: (json['order'] as num?)?.toInt() ?? 0,
-      );
+    slug: json['slug'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    order: (json['order'] as num?)?.toInt() ?? 0,
+  );
 }
 
 /// GET /api/v1/courses/{slug} 的 data。
@@ -117,17 +117,17 @@ class CourseDetail {
   final List<ChapterRef> chapters;
 
   factory CourseDetail.fromJson(Map<String, dynamic> json) => CourseDetail(
-        slug: json['slug'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-        summary: json['summary'] as String? ?? '',
-        language: json['language'] as String? ?? '',
-        color: json['color'] as String? ?? '',
-        updatedAt: _parseDate(json['updated_at']),
-        chapters: (json['chapters'] as List<Object?>? ?? const [])
-            .whereType<Map<String, dynamic>>()
-            .map(ChapterRef.fromJson)
-            .toList(),
-      );
+    slug: json['slug'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    summary: json['summary'] as String? ?? '',
+    language: json['language'] as String? ?? '',
+    color: json['color'] as String? ?? '',
+    updatedAt: _parseDate(json['updated_at']),
+    chapters: (json['chapters'] as List<Object?>? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(ChapterRef.fromJson)
+        .toList(),
+  );
 }
 
 /// GET /api/v1/courses/{slug}/chapters/{chapterSlug} 的 data。
@@ -147,12 +147,12 @@ class ChapterContent {
   final DateTime? updatedAt;
 
   factory ChapterContent.fromJson(Map<String, dynamic> json) => ChapterContent(
-        slug: json['slug'] as String? ?? '',
-        courseSlug: json['course_slug'] as String? ?? '',
-        title: json['title'] as String? ?? '',
-        contentMd: json['content_md'] as String? ?? '',
-        updatedAt: _parseDate(json['updated_at']),
-      );
+    slug: json['slug'] as String? ?? '',
+    courseSlug: json['course_slug'] as String? ?? '',
+    title: json['title'] as String? ?? '',
+    contentMd: json['content_md'] as String? ?? '',
+    updatedAt: _parseDate(json['updated_at']),
+  );
 }
 
 DateTime? _parseDate(Object? value) {

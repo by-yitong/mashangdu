@@ -4,6 +4,9 @@ package api
 import (
 	"errors"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,27 +35,85 @@ type Server struct {
 	db *gorm.DB
 }
 
+// adminDistCandidates 未显式指定托管目录时，自动探测后台静态目录的候选路径
+// （相对进程工作目录，目录需已构建完成，含 index.html）。
+var adminDistCandidates = []string{
+	"admin/dist",         // 在 backend/ 目录启动（go run .）
+	"backend/admin/dist", // 在仓库根目录启动
+}
+
 // NewRouter 构建 Gin 引擎：CORS、统一错误信封与全部 /api/v1 路由。
-func NewRouter(db *gorm.DB) *gin.Engine {
+// 可选参数 adminDist 指定后台 SPA 静态目录（挂载到 /admin，未知路径回退
+// index.html）；不传时按候选路径自动探测，目录不存在则不挂载、行为不变。
+func NewRouter(db *gorm.DB, adminDist ...string) *gin.Engine {
 	s := &Server{db: db}
 	r := gin.New()
 	r.Use(gin.Logger(), cors(), recovery())
-	r.NoRoute(func(c *gin.Context) { fail(c, http.StatusNotFound, "NOT_FOUND", "not found") })
+
+	adminIndex := mountAdmin(r, adminDist)
+	r.NoRoute(func(c *gin.Context) {
+		if adminIndex != "" && isAdminPageRequest(c) {
+			c.File(adminIndex)
+			return
+		}
+		fail(c, http.StatusNotFound, "NOT_FOUND", "not found")
+	})
 
 	v1 := r.Group("/api/v1")
 	v1.GET("/meta", s.meta)
 	v1.GET("/courses", s.listCourses)
 	v1.GET("/courses/:slug", s.getCourse)
 	v1.GET("/courses/:slug/chapters/:chapterSlug", s.getChapter)
+
+	admin := v1.Group("/admin", adminAuth())
+	admin.POST("/courses", s.createCourse)
+	admin.PUT("/courses/:slug", s.updateCourse)
+	admin.DELETE("/courses/:slug", s.deleteCourse)
+	admin.POST("/courses/:slug/chapters", s.createChapter)
+	admin.PUT("/courses/:slug/chapters/:chapterSlug", s.updateChapter)
+	admin.DELETE("/courses/:slug/chapters/:chapterSlug", s.deleteChapter)
 	return r
 }
 
-// cors 开发期放开所有来源。
+// mountAdmin 若目录存在则挂载 /admin 静态目录，返回 index.html 路径（用作 SPA
+// 回退）；目录不存在或未指定时返回空串、不挂载。candidates 为空时按默认候选探测。
+func mountAdmin(r *gin.Engine, candidates []string) string {
+	if len(candidates) == 0 {
+		candidates = adminDistCandidates
+	}
+	dir := ""
+	for _, cand := range candidates {
+		if cand == "" {
+			continue
+		}
+		if st, err := os.Stat(cand); err == nil && st.IsDir() {
+			dir = cand
+			break
+		}
+	}
+	if dir == "" {
+		return ""
+	}
+	r.Static("/admin", dir)
+	return filepath.Join(dir, "index.html")
+}
+
+// isAdminPageRequest 判断是否为需要回退到后台 SPA index.html 的请求：
+// /admin 前缀的 GET/HEAD（静态文件已由 r.Static 处理，此处只接未知路径）。
+func isAdminPageRequest(c *gin.Context) bool {
+	if c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead {
+		return false
+	}
+	p := c.Request.URL.Path
+	return p == "/admin" || strings.HasPrefix(p, "/admin/")
+}
+
+// cors 开发期放开所有来源；允许管理端需要的写方法与 X-Admin-Token 头。
 func cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, X-Admin-Token")
 		if c.Request.Method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
@@ -169,6 +230,19 @@ type chapterBrief struct {
 	Order int    `json:"order"`
 }
 
+// coursePayload 组装课程对象（GET /courses/:slug 与管理端共用结构）。
+func coursePayload(course model.Course, chapters []chapterBrief) gin.H {
+	return gin.H{
+		"slug":       course.Slug,
+		"title":      course.Title,
+		"summary":    course.Summary,
+		"language":   course.Language,
+		"color":      course.Color,
+		"updated_at": course.UpdatedAt.UTC().Format(time.RFC3339),
+		"chapters":   chapters,
+	}
+}
+
 // GET /api/v1/courses/:slug
 func (s *Server) getCourse(c *gin.Context) {
 	var course model.Course
@@ -176,12 +250,21 @@ func (s *Server) getCourse(c *gin.Context) {
 		s.notFoundOrInternal(c, err, "course not found")
 		return
 	}
-	var chapters []model.Chapter
-	if err := s.db.Where("course_id = ?", course.ID).
-		Order("sort_order ASC, id ASC").
-		Find(&chapters).Error; err != nil {
+	briefs, err := s.chapterBriefs(course.ID)
+	if err != nil {
 		s.internalError(c, err)
 		return
+	}
+	ok(c, coursePayload(course, briefs))
+}
+
+// chapterBriefs 查询某课程下的章节目录（按 sort_order 升序，不含正文）。
+func (s *Server) chapterBriefs(courseID uint) ([]chapterBrief, error) {
+	var chapters []model.Chapter
+	if err := s.db.Where("course_id = ?", courseID).
+		Order("sort_order ASC, id ASC").
+		Find(&chapters).Error; err != nil {
+		return nil, err
 	}
 	briefs := make([]chapterBrief, 0, len(chapters))
 	for _, chapter := range chapters {
@@ -191,21 +274,14 @@ func (s *Server) getCourse(c *gin.Context) {
 			Order: chapter.SortOrder,
 		})
 	}
-	ok(c, gin.H{
-		"slug":       course.Slug,
-		"title":      course.Title,
-		"summary":    course.Summary,
-		"language":   course.Language,
-		"color":      course.Color,
-		"updated_at": course.UpdatedAt.UTC().Format(time.RFC3339),
-		"chapters":   briefs,
-	})
+	return briefs, nil
 }
 
 type chapterDetail struct {
 	Slug       string `json:"slug"`
 	CourseSlug string `json:"course_slug"`
 	Title      string `json:"title"`
+	Order      int    `json:"order"`
 	ContentMD  string `json:"content_md"`
 	UpdatedAt  string `json:"updated_at"`
 }
@@ -227,6 +303,7 @@ func (s *Server) getChapter(c *gin.Context) {
 		Slug:       chapter.Slug,
 		CourseSlug: course.Slug,
 		Title:      chapter.Title,
+		Order:      chapter.SortOrder,
 		ContentMD:  chapter.ContentMD,
 		UpdatedAt:  chapter.UpdatedAt.UTC().Format(time.RFC3339),
 	})

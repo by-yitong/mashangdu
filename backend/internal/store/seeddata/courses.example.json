@@ -1,0 +1,29 @@
+{
+  "courses": [
+    {
+      "slug": "go-basics",
+      "title": "Go 语言入门",
+      "summary": "从零开始学 Go：写出第一个程序、认识变量与类型，再到 goroutine 并发入门，跑通 Go 学习的第一段路。",
+      "language": "Go",
+      "color": "#14B8A6",
+      "sort_order": 1,
+      "chapters": [
+        { "slug": "hello-world", "title": "Hello World", "sort_order": 1, "file": "go-hello-world.md" },
+        { "slug": "variables", "title": "变量与基本类型", "sort_order": 2, "file": "go-variables.md" },
+        { "slug": "goroutine", "title": "goroutine 并发入门", "sort_order": 3, "file": "go-goroutine.md" }
+      ]
+    },
+    {
+      "slug": "python-basics",
+      "title": "Python 基础",
+      "summary": "面向零基础读者的 Python 入门：装好环境、玩转 REPL，掌握变量与控制流，迈出编程第一步。",
+      "language": "Python",
+      "color": "#4C6BB0",
+      "sort_order": 2,
+      "chapters": [
+        { "slug": "install-repl", "title": "安装与 REPL", "sort_order": 1, "file": "python-install-repl.md" },
+        { "slug": "variables-controlflow", "title": "变量与控制流", "sort_order": 2, "file": "python-variables-controlflow.md" }
+      ]
+    }
+  ]
+}

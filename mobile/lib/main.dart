@@ -8,7 +8,9 @@ import 'state/api_client.dart';
 import 'state/content_cache.dart';
 import 'state/library_store.dart';
 import 'state/progress_store.dart';
+import 'state/reader_prefs.dart';
 import 'state/settings_store.dart';
+import 'state/theme_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,6 +20,8 @@ Future<void> main() async {
 
   final prefs = await SharedPreferences.getInstance();
   final settings = SettingsStore(prefs)..load();
+  final theme = ThemeStore(prefs)..load();
+  final readerPrefs = ReaderPrefs(prefs)..load();
   final apiClient = ApiClient(settings.serverUrl);
   // 服务器地址变更时同步生效到 API 客户端。
   settings.addListener(() => apiClient.updateServerUrl(settings.serverUrl));
@@ -30,6 +34,8 @@ Future<void> main() async {
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider<SettingsStore>.value(value: settings),
+          ChangeNotifierProvider<ThemeStore>.value(value: theme),
+          ChangeNotifierProvider<ReaderPrefs>.value(value: readerPrefs),
           Provider<ApiClient>.value(value: apiClient),
           Provider<ContentCache>(create: (_) => ContentCache(prefs)),
           ChangeNotifierProvider<ProgressStore>(

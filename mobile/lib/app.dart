@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'pages/home_page.dart';
 import 'pages/settings_page.dart';
 import 'state/library_store.dart';
+import 'state/theme_store.dart';
 import 'widgets/design.dart';
 
 class CodeTutorialsApp extends StatelessWidget {
@@ -14,9 +15,10 @@ class CodeTutorialsApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: '码上读',
+      debugShowCheckedModeBanner: false,
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
-      themeMode: ThemeMode.system,
+      themeMode: context.watch<ThemeStore>().mode,
       home: const HomeShell(),
     );
   }

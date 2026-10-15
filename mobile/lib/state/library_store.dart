@@ -90,11 +90,40 @@ class LibraryStore extends ChangeNotifier {
     } catch (_) {
       final cached = _cache.get(path);
       if (cached == null) return null;
-      final detail =
-          CourseDetail.fromJson((cached as Map).cast<String, dynamic>());
+      final detail = CourseDetail.fromJson(
+        (cached as Map).cast<String, dynamic>(),
+      );
       _details[slug] = detail;
       return detail;
     }
+  }
+
+  /// 课程页下拉刷新：强制重新拉取课程详情（不走内存缓存，网络失败保留旧值），
+  /// 并补拉尚未缓存的章节正文（单章失败不阻塞其余）。
+  Future<CourseDetail?> refreshCourse(String slug) async {
+    CourseDetail? detail;
+    try {
+      detail = await _api.fetchCourseDetail(slug);
+      _details[slug] = detail;
+      await _cache.put(ApiPaths.courseDetail(slug), detailToJson(detail));
+    } catch (_) {
+      detail = _details[slug];
+    }
+    if (detail == null) return null;
+
+    for (final chapter in detail.chapters) {
+      final key = '$slug/${chapter.slug}';
+      final path = ApiPaths.chapter(slug, chapter.slug);
+      if (_chapters.containsKey(key) || _cache.has(path)) continue;
+      try {
+        final content = await _api.fetchChapter(slug, chapter.slug);
+        _chapters[key] = content;
+        await _cache.put(path, chapterToJson(content));
+      } catch (_) {
+        // 单章拉取失败不阻塞刷新，需要时阅读页会再走 网络 → 缓存 链路。
+      }
+    }
+    return detail;
   }
 
   /// 章节正文：内存 → 网络 → 缓存。全部未命中返回 null（页面显示空态）。
@@ -115,29 +144,31 @@ class LibraryStore extends ChangeNotifier {
     } catch (_) {
       final cached = _cache.get(path);
       if (cached == null) return null;
-      final chapter =
-          ChapterContent.fromJson((cached as Map).cast<String, dynamic>());
+      final chapter = ChapterContent.fromJson(
+        (cached as Map).cast<String, dynamic>(),
+      );
       _chapters[key] = chapter;
       return chapter;
     }
   }
 
-  static Map<String, dynamic> detailToJson(CourseDetail d) =>
-      <String, dynamic>{
-        'slug': d.slug,
-        'title': d.title,
-        'summary': d.summary,
-        'language': d.language,
-        'color': d.color,
-        'updated_at': d.updatedAt?.toIso8601String(),
-        'chapters': d.chapters
-            .map((c) => <String, dynamic>{
-                  'slug': c.slug,
-                  'title': c.title,
-                  'order': c.order,
-                })
-            .toList(),
-      };
+  static Map<String, dynamic> detailToJson(CourseDetail d) => <String, dynamic>{
+    'slug': d.slug,
+    'title': d.title,
+    'summary': d.summary,
+    'language': d.language,
+    'color': d.color,
+    'updated_at': d.updatedAt?.toIso8601String(),
+    'chapters': d.chapters
+        .map(
+          (c) => <String, dynamic>{
+            'slug': c.slug,
+            'title': c.title,
+            'order': c.order,
+          },
+        )
+        .toList(),
+  };
 
   static Map<String, dynamic> chapterToJson(ChapterContent c) =>
       <String, dynamic>{

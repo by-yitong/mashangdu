@@ -22,9 +22,11 @@ func TestMain(m *testing.M) {
 }
 
 // newRouter 为每个用例打开独立的临时数据库，不污染 backend/data。
+// seedDir 指向不含 courses.json 的空目录，固定走内置硬编码种子（2 门课程 5 章），
+// 使断言不依赖真实 seeddata/courses.json 的内容。
 func newRouter(t *testing.T) *gin.Engine {
 	t.Helper()
-	db, err := store.Open(filepath.Join(t.TempDir(), "test.db"))
+	db, err := store.OpenSeed(filepath.Join(t.TempDir(), "test.db"), t.TempDir())
 	if err != nil {
 		t.Fatalf("open test store: %v", err)
 	}
