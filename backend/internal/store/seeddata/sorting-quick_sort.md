@@ -7,23 +7,23 @@
 3. 循环执行步骤 `2.` ，直到 `i` 和 `j` 相遇时停止，最后将基准数交换至两个子数组的分界线。
 
 
-![哨兵划分步骤](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step1.png)
+![哨兵划分步骤](images/hello-algo/sorting/pivot_division_step1.png)
 
-![pivot_division_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step2.png)
+![pivot_division_step2](images/hello-algo/sorting/pivot_division_step2.png)
 
-![pivot_division_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step3.png)
+![pivot_division_step3](images/hello-algo/sorting/pivot_division_step3.png)
 
-![pivot_division_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step4.png)
+![pivot_division_step4](images/hello-algo/sorting/pivot_division_step4.png)
 
-![pivot_division_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step5.png)
+![pivot_division_step5](images/hello-algo/sorting/pivot_division_step5.png)
 
-![pivot_division_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step6.png)
+![pivot_division_step6](images/hello-algo/sorting/pivot_division_step6.png)
 
-![pivot_division_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step7.png)
+![pivot_division_step7](images/hello-algo/sorting/pivot_division_step7.png)
 
-![pivot_division_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step8.png)
+![pivot_division_step8](images/hello-algo/sorting/pivot_division_step8.png)
 
-![pivot_division_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/pivot_division_step9.png)
+![pivot_division_step9](images/hello-algo/sorting/pivot_division_step9.png)
 
 哨兵划分完成后，原数组被划分成三部分：左子数组、基准数、右子数组，且满足“左子数组任意元素 $\leq$ 基准数 $\leq$ 右子数组任意元素”。因此，我们接下来只需对这两个子数组进行排序。
 
@@ -84,7 +84,7 @@ func (q *quickSort) partition(nums []int, left, right int) int {
 2. 然后，对左子数组和右子数组分别递归执行“哨兵划分”。
 3. 持续递归，直至子数组长度为 1 时终止，从而完成整个数组的排序。
 
-![快速排序流程](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/quick_sort.assets/quick_sort_overview.png)
+![快速排序流程](images/hello-algo/sorting/quick_sort_overview.png)
 
 
 **Python**

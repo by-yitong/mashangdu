@@ -42,7 +42,7 @@ func preOrderI(root *TreeNode, res *[]*TreeNode) {
 ```
 
 
-![在前序遍历中搜索节点](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_nodes.png)
+![在前序遍历中搜索节点](images/hello-algo/backtracking/preorder_find_nodes.png)
 
 ## 尝试与回退
 
@@ -105,27 +105,27 @@ func preOrderII(root *TreeNode, res *[][]*TreeNode, path *[]*TreeNode) {
 观察下图所示的过程，**我们可以将尝试和回退理解为“前进”与“撤销”**，两个操作互为逆向。
 
 
-![尝试与回退](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step1.png)
+![尝试与回退](images/hello-algo/backtracking/preorder_find_paths_step1.png)
 
-![preorder_find_paths_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step2.png)
+![preorder_find_paths_step2](images/hello-algo/backtracking/preorder_find_paths_step2.png)
 
-![preorder_find_paths_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step3.png)
+![preorder_find_paths_step3](images/hello-algo/backtracking/preorder_find_paths_step3.png)
 
-![preorder_find_paths_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step4.png)
+![preorder_find_paths_step4](images/hello-algo/backtracking/preorder_find_paths_step4.png)
 
-![preorder_find_paths_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step5.png)
+![preorder_find_paths_step5](images/hello-algo/backtracking/preorder_find_paths_step5.png)
 
-![preorder_find_paths_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step6.png)
+![preorder_find_paths_step6](images/hello-algo/backtracking/preorder_find_paths_step6.png)
 
-![preorder_find_paths_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step7.png)
+![preorder_find_paths_step7](images/hello-algo/backtracking/preorder_find_paths_step7.png)
 
-![preorder_find_paths_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step8.png)
+![preorder_find_paths_step8](images/hello-algo/backtracking/preorder_find_paths_step8.png)
 
-![preorder_find_paths_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step9.png)
+![preorder_find_paths_step9](images/hello-algo/backtracking/preorder_find_paths_step9.png)
 
-![preorder_find_paths_step10](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step10.png)
+![preorder_find_paths_step10](images/hello-algo/backtracking/preorder_find_paths_step10.png)
 
-![preorder_find_paths_step11](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_paths_step11.png)
+![preorder_find_paths_step11](images/hello-algo/backtracking/preorder_find_paths_step11.png)
 
 ## 剪枝
 
@@ -183,7 +183,7 @@ func preOrderIII(root *TreeNode, res *[][]*TreeNode, path *[]*TreeNode) {
 
 “剪枝”是一个非常形象的名词。如下图所示，在搜索过程中，**我们“剪掉”了不满足约束条件的搜索分支**，避免许多无意义的尝试，从而提高了搜索效率。
 
-![根据约束条件剪枝](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/preorder_find_constrained_paths.png)
+![根据约束条件剪枝](images/hello-algo/backtracking/preorder_find_constrained_paths.png)
 
 ## 框架代码
 
@@ -281,7 +281,7 @@ func backtrackIII(state *[]*TreeNode, choices *[]*TreeNode, res *[][]*TreeNode) 
 
 根据题意，我们在找到值为 $7$ 的节点后应该继续搜索，**因此需要将记录解之后的 `return` 语句删除**。下图对比了保留或删除 `return` 语句的搜索过程。
 
-![保留与删除 return 的搜索过程对比](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_backtracking/backtracking_algorithm.assets/backtrack_remove_return_or_not.png)
+![保留与删除 return 的搜索过程对比](images/hello-algo/backtracking/backtrack_remove_return_or_not.png)
 
 相比基于前序遍历的代码实现，基于回溯算法框架的代码实现虽然显得啰唆，但通用性更好。实际上，**许多回溯问题可以在该框架下解决**。我们只需根据具体问题来定义 `state` 和 `choices` ，并实现框架中的各个方法即可。
 

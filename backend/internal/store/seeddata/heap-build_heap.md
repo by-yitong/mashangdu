@@ -62,7 +62,7 @@ func newMaxHeap(nums []any) *maxHeap {
 
 接下来我们来进行更为准确的计算。为了降低计算难度，假设给定一个节点数量为 $n$ 、高度为 $h$ 的“完美二叉树”，该假设不会影响计算结果的正确性。
 
-![完美二叉树的各层节点数量](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/build_heap.assets/heapify_operations_count.png)
+![完美二叉树的各层节点数量](images/hello-algo/heap/heapify_operations_count.png)
 
 如上图所示，节点“从顶至底堆化”的最大迭代次数等于该节点到叶节点的距离，而该距离正是“节点高度”。因此，我们可以对各层的“节点数量 $\times$ 节点高度”求和，**得到所有节点的堆化迭代次数的总和**。
 

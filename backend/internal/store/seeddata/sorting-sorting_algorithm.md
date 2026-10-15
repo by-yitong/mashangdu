@@ -2,7 +2,7 @@
 
 如下图所示，排序算法中的数据类型可以是整数、浮点数、字符或字符串等。排序的判断规则可根据需求设定，如数字大小、字符 ASCII 码顺序或自定义规则。
 
-![数据类型和判断规则示例](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/sorting_algorithm.assets/sorting_examples.png)
+![数据类型和判断规则示例](images/hello-algo/sorting/sorting_examples.png)
 
 ## 评价维度
 

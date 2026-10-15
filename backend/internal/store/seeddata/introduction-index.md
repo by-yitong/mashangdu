@@ -1,4 +1,4 @@
-![初识算法](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_introduction.jpg)
+![初识算法](images/hello-algo/assets/chapter_introduction.jpg)
 
 
 > 一位少女翩翩起舞，与数据交织在一起，裙摆上飘扬着算法的旋律。

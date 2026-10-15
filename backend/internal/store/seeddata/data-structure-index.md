@@ -1,4 +1,4 @@
-![数据结构](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_data_structure.jpg)
+![数据结构](images/hello-algo/assets/chapter_data_structure.jpg)
 
 
 > 数据结构如同一副稳固而多样的框架。

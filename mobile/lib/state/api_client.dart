@@ -40,6 +40,24 @@ class ApiClient {
 
   void updateServerUrl(String url) => _serverUrl = url;
 
+  /// 绝对 http/https URL 原样返回；否则视为相对路径（如 markdown 正文里的
+  /// `images/xx/yy.png`），拼到当前服务器地址下。
+  /// 每次按当前 [_serverUrl] 现拼、不缓存结果，用户改设置后自然跟随；
+  /// base 尾斜杠与入参前导斜杠的四种组合均归一处理。
+  String resolve(String pathOrUrl) {
+    final uri = Uri.tryParse(pathOrUrl);
+    if (uri != null &&
+        (uri.scheme == 'http' || uri.scheme == 'https') &&
+        uri.host.isNotEmpty) {
+      return pathOrUrl;
+    }
+    final base = _serverUrl.endsWith('/')
+        ? _serverUrl.substring(0, _serverUrl.length - 1)
+        : _serverUrl;
+    final path = pathOrUrl.startsWith('/') ? pathOrUrl : '/$pathOrUrl';
+    return '$base$path';
+  }
+
   static const Duration _timeout = Duration(seconds: 10);
 
   Future<Object?> get(String path) async {

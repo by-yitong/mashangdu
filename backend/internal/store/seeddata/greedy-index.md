@@ -1,4 +1,4 @@
-![贪心](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_greedy.jpg)
+![贪心](images/hello-algo/assets/chapter_greedy.jpg)
 
 
 > 向日葵朝着太阳转动，时刻追求自身成长的最大可能。

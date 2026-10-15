@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../state/download_store.dart';
 import '../state/library_store.dart';
 import '../state/progress_store.dart';
 import '../widgets/design.dart';
@@ -80,6 +81,9 @@ class _CoursePageState extends State<CoursePage> {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final progress = context.watch<ProgressStore>();
+    final downloads = context.watch<DownloadStore>();
+    final downloadState = downloads.stateOf(widget.course.slug);
+    final downloading = downloadState?.status == DownloadStatus.downloading;
     final chapters = _detail?.chapters ?? const <ChapterRef>[];
     final total = chapters.isNotEmpty
         ? chapters.length
@@ -97,7 +101,10 @@ class _CoursePageState extends State<CoursePage> {
 
     return Scaffold(
       backgroundColor: colors.paper,
-      appBar: AppBar(title: Text(widget.course.title)),
+      appBar: AppBar(
+        title: Text(widget.course.title),
+        actions: [_DownloadButton(slug: widget.course.slug)],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -108,6 +115,10 @@ class _CoursePageState extends State<CoursePage> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                 children: [
+                  if (downloading && downloadState != null) ...[
+                    _DownloadProgressCard(state: downloadState),
+                    const SizedBox(height: 16),
+                  ],
                   _ProgressHeader(
                     summary: widget.course,
                     readCount: readCount,
@@ -189,6 +200,109 @@ class _CoursePageState extends State<CoursePage> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+/// 字节数展示：< 1 KB / x KB / x.x MB。
+String _formatBytes(int bytes) {
+  if (bytes < 1024) return '< 1 KB';
+  final kb = bytes / 1024;
+  if (kb < 1024) return '${kb.round()} KB';
+  return '${(kb / 1024).toStringAsFixed(1)} MB';
+}
+
+/// 课程页 appbar 下载按钮：idle=下载图标 / downloading=小菊花 / done=对勾。
+/// done 再点 = 重新下载更新；下载中禁点。
+class _DownloadButton extends StatelessWidget {
+  const _DownloadButton({required this.slug});
+
+  final String slug;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final store = context.watch<DownloadStore>();
+    final state = store.stateOf(slug);
+    final downloading = state?.status == DownloadStatus.downloading;
+    final done = store.isDownloaded(slug);
+    return IconButton(
+      tooltip: downloading
+          ? '正在下载'
+          : done
+          ? '已离线可用'
+          : '下载离线包',
+      onPressed: downloading ? null : () => _start(context),
+      icon: downloading
+          ? SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colors.accent,
+              ),
+            )
+          : Icon(done ? Icons.check : Icons.download_outlined),
+    );
+  }
+
+  Future<void> _start(BuildContext context) async {
+    // await 前抓引用，避免异步后再碰 context。
+    final messenger = ScaffoldMessenger.of(context);
+    final store = context.read<DownloadStore>();
+    await store.downloadCourse(slug);
+    if (store.stateOf(slug)?.status != DownloadStatus.done) return;
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('已下载，无网络也能看'),
+        duration: Duration(milliseconds: 1500),
+      ),
+    );
+  }
+}
+
+/// 下载中插在列表顶部的进度卡：标题 + mono 明细 + 细进度条。
+class _DownloadProgressCard extends StatelessWidget {
+  const _DownloadProgressCard({required this.state});
+
+  final CourseDownloadState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return DesignCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '离线下载',
+            style: TextStyle(
+              fontSize: 20,
+              height: 1.2,
+              fontWeight: FontWeight.w700,
+              color: colors.ink,
+            ),
+          ),
+          const SizedBox(height: 8),
+          MonoText(
+            '章节 ${state.chaptersDone}/${state.chaptersTotal}'
+            ' · 图片 ${state.imagesDone}/${state.imagesTotal}'
+            ' · ${_formatBytes(state.bytesReceived)}',
+            color: colors.inkMuted,
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: LinearProgressIndicator(
+              value: state.progress,
+              minHeight: 4,
+              color: colors.accent,
+              backgroundColor: colors.track,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

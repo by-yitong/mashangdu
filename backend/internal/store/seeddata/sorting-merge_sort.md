@@ -3,7 +3,7 @@
 1. **划分阶段**：通过递归不断地将数组从中点处分开，将长数组的排序问题转换为短数组的排序问题。
 2. **合并阶段**：当子数组长度为 1 时终止划分，开始合并，持续地将左右两个较短的有序数组合并为一个较长的有序数组，直至结束。
 
-![归并排序的划分与合并阶段](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_overview.png)
+![归并排序的划分与合并阶段](images/hello-algo/sorting/merge_sort_overview.png)
 
 ## 算法流程
 
@@ -15,25 +15,25 @@
 “合并阶段”从底至顶地将左子数组和右子数组合并为一个有序数组。需要注意的是，从长度为 1 的子数组开始合并，合并阶段中的每个子数组都是有序的。
 
 
-![归并排序步骤](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step1.png)
+![归并排序步骤](images/hello-algo/sorting/merge_sort_step1.png)
 
-![merge_sort_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step2.png)
+![merge_sort_step2](images/hello-algo/sorting/merge_sort_step2.png)
 
-![merge_sort_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step3.png)
+![merge_sort_step3](images/hello-algo/sorting/merge_sort_step3.png)
 
-![merge_sort_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step4.png)
+![merge_sort_step4](images/hello-algo/sorting/merge_sort_step4.png)
 
-![merge_sort_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step5.png)
+![merge_sort_step5](images/hello-algo/sorting/merge_sort_step5.png)
 
-![merge_sort_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step6.png)
+![merge_sort_step6](images/hello-algo/sorting/merge_sort_step6.png)
 
-![merge_sort_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step7.png)
+![merge_sort_step7](images/hello-algo/sorting/merge_sort_step7.png)
 
-![merge_sort_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step8.png)
+![merge_sort_step8](images/hello-algo/sorting/merge_sort_step8.png)
 
-![merge_sort_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step9.png)
+![merge_sort_step9](images/hello-algo/sorting/merge_sort_step9.png)
 
-![merge_sort_step10](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/merge_sort.assets/merge_sort_step10.png)
+![merge_sort_step10](images/hello-algo/sorting/merge_sort_step10.png)
 
 观察发现，归并排序与二叉树后序遍历的递归顺序是一致的。
 

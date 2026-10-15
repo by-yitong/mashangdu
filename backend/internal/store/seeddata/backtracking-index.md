@@ -1,4 +1,4 @@
-![回溯](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_backtracking.jpg)
+![回溯](images/hello-algo/assets/chapter_backtracking.jpg)
 
 
 > 我们如同迷宫中的探索者，在前进的道路上可能会遇到困难。

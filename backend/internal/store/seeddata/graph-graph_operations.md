@@ -10,15 +10,15 @@
 - **初始化**：传入 $n$ 个顶点，初始化长度为 $n$ 的顶点列表 `vertices` ，使用 $O(n)$ 时间；初始化 $n \times n$ 大小的邻接矩阵 `adjMat` ，使用 $O(n^2)$ 时间。
 
 
-![邻接矩阵的初始化、增删边、增删顶点](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_matrix_step1_initialization.png)
+![邻接矩阵的初始化、增删边、增删顶点](images/hello-algo/graph/adjacency_matrix_step1_initialization.png)
 
-![adjacency_matrix_add_edge](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_matrix_step2_add_edge.png)
+![adjacency_matrix_add_edge](images/hello-algo/graph/adjacency_matrix_step2_add_edge.png)
 
-![adjacency_matrix_remove_edge](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_matrix_step3_remove_edge.png)
+![adjacency_matrix_remove_edge](images/hello-algo/graph/adjacency_matrix_step3_remove_edge.png)
 
-![adjacency_matrix_add_vertex](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_matrix_step4_add_vertex.png)
+![adjacency_matrix_add_vertex](images/hello-algo/graph/adjacency_matrix_step4_add_vertex.png)
 
-![adjacency_matrix_remove_vertex](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_matrix_step5_remove_vertex.png)
+![adjacency_matrix_remove_vertex](images/hello-algo/graph/adjacency_matrix_step5_remove_vertex.png)
 
 以下是基于邻接矩阵表示图的实现代码：
 
@@ -209,15 +209,15 @@ func newGraphAdjMat(vertices []int, edges [][]int) *graphAdjMat {
 - **初始化**：在邻接表中创建 $n$ 个顶点和 $2m$ 条边，使用 $O(n + m)$ 时间。
 
 
-![邻接表的初始化、增删边、增删顶点](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_list_step1_initialization.png)
+![邻接表的初始化、增删边、增删顶点](images/hello-algo/graph/adjacency_list_step1_initialization.png)
 
-![adjacency_list_add_edge](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_list_step2_add_edge.png)
+![adjacency_list_add_edge](images/hello-algo/graph/adjacency_list_step2_add_edge.png)
 
-![adjacency_list_remove_edge](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_list_step3_remove_edge.png)
+![adjacency_list_remove_edge](images/hello-algo/graph/adjacency_list_step3_remove_edge.png)
 
-![adjacency_list_add_vertex](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_list_step4_add_vertex.png)
+![adjacency_list_add_vertex](images/hello-algo/graph/adjacency_list_step4_add_vertex.png)
 
-![adjacency_list_remove_vertex](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_operations.assets/adjacency_list_step5_remove_vertex.png)
+![adjacency_list_remove_vertex](images/hello-algo/graph/adjacency_list_step5_remove_vertex.png)
 
 以下是邻接表的代码实现。对比上图，实际代码有以下不同。
 

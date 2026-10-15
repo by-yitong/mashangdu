@@ -1,4 +1,4 @@
-![动态规划](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_dynamic_programming.jpg)
+![动态规划](images/hello-algo/assets/chapter_dynamic_programming.jpg)
 
 
 > 小溪汇入河流，江河汇入大海。

@@ -1,6 +1,6 @@
 > 给定 $n$ 个物品，第 $i$ 个物品的重量为 $wgt[i-1]$、价值为 $val[i-1]$ ，和一个容量为 $cap$ 的背包。每个物品只能选择一次，**但可以选择物品的一部分，价值根据选择的重量比例计算**，问在限定背包容量下背包中物品的最大价值。示例如下图所示。
 
-![分数背包问题的示例数据](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_greedy/fractional_knapsack_problem.assets/fractional_knapsack_example.png)
+![分数背包问题的示例数据](images/hello-algo/greedy/fractional_knapsack_example.png)
 
 分数背包问题和 0-1 背包问题整体上非常相似，状态包含当前物品 $i$ 和容量 $c$ ，目标是求限定背包容量下的最大价值。
 
@@ -9,7 +9,7 @@
 1. 对于物品 $i$ ，它在单位重量下的价值为 $val[i-1] / wgt[i-1]$ ，简称单位价值。
 2. 假设放入一部分物品 $i$ ，重量为 $w$ ，则背包增加的价值为 $w \times val[i-1] / wgt[i-1]$ 。
 
-![物品在单位重量下的价值](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_greedy/fractional_knapsack_problem.assets/fractional_knapsack_unit_value.png)
+![物品在单位重量下的价值](images/hello-algo/greedy/fractional_knapsack_unit_value.png)
 
 ### 贪心策略确定
 
@@ -19,7 +19,7 @@
 2. 遍历所有物品，**每轮贪心地选择单位价值最高的物品**。
 3. 若剩余背包容量不足，则使用当前物品的一部分填满背包。
 
-![分数背包问题的贪心策略](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_greedy/fractional_knapsack_problem.assets/fractional_knapsack_greedy_strategy.png)
+![分数背包问题的贪心策略](images/hello-algo/greedy/fractional_knapsack_greedy_strategy.png)
 
 ### 代码实现
 
@@ -100,6 +100,6 @@ func fractionalKnapsack(wgt []int, val []int, cap int) float64 {
 
 如下图所示，如果将物品重量和物品单位价值分别看作一张二维图表的横轴和纵轴，则分数背包问题可转化为“求在有限横轴区间下围成的最大面积”。这个类比可以帮助我们从几何角度理解贪心策略的有效性。
 
-![分数背包问题的几何表示](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_greedy/fractional_knapsack_problem.assets/fractional_knapsack_area_chart.png)
+![分数背包问题的几何表示](images/hello-algo/greedy/fractional_knapsack_area_chart.png)
 
 > 本文来自 [Hello 算法](https://www.hello-algo.com/)，作者 krahets，采用 CC BY-NC-SA 4.0 授权转载。

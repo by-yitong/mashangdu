@@ -1,4 +1,4 @@
-![树](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_tree.jpg)
+![树](images/hello-algo/assets/chapter_tree.jpg)
 
 
 > 参天大树充满生命力，根深叶茂，分枝扶疏。

@@ -20,29 +20,29 @@
 > 实际上，元素出堆操作中也包含第 `2.` 步和第 `3.` 步，只是多了一个弹出元素的步骤。
 
 
-![堆排序步骤](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step1.png)
+![堆排序步骤](images/hello-algo/sorting/heap_sort_step1.png)
 
-![heap_sort_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step2.png)
+![heap_sort_step2](images/hello-algo/sorting/heap_sort_step2.png)
 
-![heap_sort_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step3.png)
+![heap_sort_step3](images/hello-algo/sorting/heap_sort_step3.png)
 
-![heap_sort_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step4.png)
+![heap_sort_step4](images/hello-algo/sorting/heap_sort_step4.png)
 
-![heap_sort_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step5.png)
+![heap_sort_step5](images/hello-algo/sorting/heap_sort_step5.png)
 
-![heap_sort_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step6.png)
+![heap_sort_step6](images/hello-algo/sorting/heap_sort_step6.png)
 
-![heap_sort_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step7.png)
+![heap_sort_step7](images/hello-algo/sorting/heap_sort_step7.png)
 
-![heap_sort_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step8.png)
+![heap_sort_step8](images/hello-algo/sorting/heap_sort_step8.png)
 
-![heap_sort_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step9.png)
+![heap_sort_step9](images/hello-algo/sorting/heap_sort_step9.png)
 
-![heap_sort_step10](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step10.png)
+![heap_sort_step10](images/hello-algo/sorting/heap_sort_step10.png)
 
-![heap_sort_step11](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step11.png)
+![heap_sort_step11](images/hello-algo/sorting/heap_sort_step11.png)
 
-![heap_sort_step12](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/heap_sort.assets/heap_sort_step12.png)
+![heap_sort_step12](images/hello-algo/sorting/heap_sort_step12.png)
 
 在代码实现中，我们使用了与“堆”章节相同的从顶至底堆化 `sift_down()` 函数。值得注意的是，由于堆的长度会随着提取最大元素而减小，因此我们需要给 `sift_down()` 函数添加一个长度参数 $n$ ，用于指定堆的当前有效长度。代码如下所示：
 

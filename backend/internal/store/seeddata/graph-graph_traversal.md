@@ -6,7 +6,7 @@
 
 **广度优先遍历是一种由近及远的遍历方式，从某个节点出发，始终优先访问距离最近的顶点，并一层层向外扩张**。如下图所示，从左上角顶点出发，首先遍历该顶点的所有邻接顶点，然后遍历下一个顶点的所有邻接顶点，以此类推，直至所有顶点访问完毕。
 
-![图的广度优先遍历](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs.png)
+![图的广度优先遍历](images/hello-algo/graph/graph_bfs.png)
 
 ### 算法实现
 
@@ -89,27 +89,27 @@ func graphBFS(g *graphAdjList, startVet Vertex) []Vertex {
 代码相对抽象，建议对照下图来加深理解。
 
 
-![图的广度优先遍历步骤](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step1.png)
+![图的广度优先遍历步骤](images/hello-algo/graph/graph_bfs_step1.png)
 
-![graph_bfs_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step2.png)
+![graph_bfs_step2](images/hello-algo/graph/graph_bfs_step2.png)
 
-![graph_bfs_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step3.png)
+![graph_bfs_step3](images/hello-algo/graph/graph_bfs_step3.png)
 
-![graph_bfs_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step4.png)
+![graph_bfs_step4](images/hello-algo/graph/graph_bfs_step4.png)
 
-![graph_bfs_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step5.png)
+![graph_bfs_step5](images/hello-algo/graph/graph_bfs_step5.png)
 
-![graph_bfs_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step6.png)
+![graph_bfs_step6](images/hello-algo/graph/graph_bfs_step6.png)
 
-![graph_bfs_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step7.png)
+![graph_bfs_step7](images/hello-algo/graph/graph_bfs_step7.png)
 
-![graph_bfs_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step8.png)
+![graph_bfs_step8](images/hello-algo/graph/graph_bfs_step8.png)
 
-![graph_bfs_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step9.png)
+![graph_bfs_step9](images/hello-algo/graph/graph_bfs_step9.png)
 
-![graph_bfs_step10](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step10.png)
+![graph_bfs_step10](images/hello-algo/graph/graph_bfs_step10.png)
 
-![graph_bfs_step11](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_bfs_step11.png)
+![graph_bfs_step11](images/hello-algo/graph/graph_bfs_step11.png)
 
 
 > **广度优先遍历的序列是否唯一？**
@@ -125,7 +125,7 @@ func graphBFS(g *graphAdjList, startVet Vertex) []Vertex {
 
 **深度优先遍历是一种优先走到底、无路可走再回头的遍历方式**。如下图所示，从左上角顶点出发，访问当前顶点的某个邻接顶点，直到走到尽头时返回，再继续走到尽头并返回，以此类推，直至所有顶点遍历完成。
 
-![图的深度优先遍历](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs.png)
+![图的深度优先遍历](images/hello-algo/graph/graph_dfs.png)
 
 ### 算法实现
 
@@ -172,27 +172,27 @@ func graphDFS(g *graphAdjList, startVet Vertex) []Vertex {
 为了加深理解，建议将下图与代码结合起来，在脑中模拟（或者用笔画下来）整个 DFS 过程，包括每个递归方法何时开启、何时返回。
 
 
-![图的深度优先遍历步骤](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step1.png)
+![图的深度优先遍历步骤](images/hello-algo/graph/graph_dfs_step1.png)
 
-![graph_dfs_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step2.png)
+![graph_dfs_step2](images/hello-algo/graph/graph_dfs_step2.png)
 
-![graph_dfs_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step3.png)
+![graph_dfs_step3](images/hello-algo/graph/graph_dfs_step3.png)
 
-![graph_dfs_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step4.png)
+![graph_dfs_step4](images/hello-algo/graph/graph_dfs_step4.png)
 
-![graph_dfs_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step5.png)
+![graph_dfs_step5](images/hello-algo/graph/graph_dfs_step5.png)
 
-![graph_dfs_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step6.png)
+![graph_dfs_step6](images/hello-algo/graph/graph_dfs_step6.png)
 
-![graph_dfs_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step7.png)
+![graph_dfs_step7](images/hello-algo/graph/graph_dfs_step7.png)
 
-![graph_dfs_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step8.png)
+![graph_dfs_step8](images/hello-algo/graph/graph_dfs_step8.png)
 
-![graph_dfs_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step9.png)
+![graph_dfs_step9](images/hello-algo/graph/graph_dfs_step9.png)
 
-![graph_dfs_step10](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step10.png)
+![graph_dfs_step10](images/hello-algo/graph/graph_dfs_step10.png)
 
-![graph_dfs_step11](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_graph/graph_traversal.assets/graph_dfs_step11.png)
+![graph_dfs_step11](images/hello-algo/graph/graph_dfs_step11.png)
 
 
 > **深度优先遍历的序列是否唯一？**

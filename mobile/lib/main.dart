@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app.dart';
 import 'state/api_client.dart';
 import 'state/content_cache.dart';
+import 'state/download_store.dart';
 import 'state/library_store.dart';
 import 'state/progress_store.dart';
 import 'state/reader_prefs.dart';
@@ -43,6 +44,12 @@ Future<void> main() async {
           ),
           ChangeNotifierProvider<LibraryStore>(
             create: (context) => LibraryStore(
+              context.read<ApiClient>(),
+              context.read<ContentCache>(),
+            ),
+          ),
+          ChangeNotifierProvider<DownloadStore>(
+            create: (context) => DownloadStore(
               context.read<ApiClient>(),
               context.read<ContentCache>(),
             ),

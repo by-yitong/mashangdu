@@ -33,7 +33,7 @@
 
 下图展示了在数组中二分查找元素 $6$ 的分治过程。
 
-![二分查找的分治过程](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/binary_search_recur.assets/binary_search_recur.png)
+![二分查找的分治过程](images/hello-algo/divide-conquer/binary_search_recur.png)
 
 在实现代码中，我们声明一个递归函数 `dfs()` 来求解问题 $f(i, j)$ ：
 

@@ -1,6 +1,6 @@
 数组（array）是一种线性数据结构，其将相同类型的元素存储在连续的内存空间中。我们将元素在数组中的位置称为该元素的索引（index）。下图展示了数组的主要概念和存储方式。
 
-![数组定义与存储方式](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_array_and_linkedlist/array.assets/array_definition.png)
+![数组定义与存储方式](images/hello-algo/array-linkedlist/array_definition.png)
 
 ## 数组常用操作
 
@@ -36,7 +36,7 @@ nums := []int{1, 3, 2, 5, 4}
 
 数组元素被存储在连续的内存空间中，这意味着计算数组元素的内存地址非常容易。给定数组内存地址（首元素内存地址）和某个元素的索引，我们可以使用下图所示的公式计算得到该元素的内存地址，从而直接访问该元素。
 
-![数组元素的内存地址计算](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_array_and_linkedlist/array.assets/array_memory_location_calculation.png)
+![数组元素的内存地址计算](images/hello-algo/array-linkedlist/array_memory_location_calculation.png)
 
 观察上图，我们发现数组首个元素的索引为 $0$ ，这似乎有些反直觉，因为从 $1$ 开始计数会更自然。但从地址计算公式的角度看，**索引本质上是内存地址的偏移量**。首个元素的地址偏移量是 $0$ ，因此它的索引为 $0$ 是合理的。
 
@@ -74,7 +74,7 @@ func randomAccess(nums []int) (randomNum int) {
 
 数组元素在内存中是“紧挨着的”，它们之间没有空间再存放任何数据。如下图所示，如果想在数组中间插入一个元素，则需要将该元素之后的所有元素都向后移动一位，之后再把元素赋值给该索引。
 
-![数组插入元素示例](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_array_and_linkedlist/array.assets/array_insert_element.png)
+![数组插入元素示例](images/hello-algo/array-linkedlist/array_insert_element.png)
 
 值得注意的是，由于数组的长度是固定的，因此插入一个元素必定会导致数组尾部元素“丢失”。我们将这个问题的解决方案留在“列表”章节中讨论。
 
@@ -111,7 +111,7 @@ func insert(nums []int, num int, index int) {
 
 同理，如下图所示，若想删除索引 $i$ 处的元素，则需要把索引 $i$ 之后的元素都向前移动一位。
 
-![数组删除元素示例](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_array_and_linkedlist/array.assets/array_remove_element.png)
+![数组删除元素示例](images/hello-algo/array-linkedlist/array_remove_element.png)
 
 请注意，删除元素完成后，原先末尾的元素变得“无意义”了，所以我们无须特意去修改它。
 

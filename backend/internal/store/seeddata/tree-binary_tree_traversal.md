@@ -8,7 +8,7 @@
 
 层序遍历本质上属于广度优先遍历（breadth-first traversal），也称广度优先搜索（breadth-first search, BFS），它体现了一种“一圈一圈向外扩展”的逐层遍历方式。
 
-![二叉树的层序遍历](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/binary_tree_bfs.png)
+![二叉树的层序遍历](images/hello-algo/tree/binary_tree_bfs.png)
 
 ### 代码实现
 
@@ -76,7 +76,7 @@ func levelOrder(root *TreeNode) []any {
 
 下图展示了对二叉树进行深度优先遍历的工作原理。**深度优先遍历就像是绕着整棵二叉树的外围“走”一圈**，在每个节点都会遇到三个位置，分别对应前序遍历、中序遍历和后序遍历。
 
-![二叉搜索树的前序、中序、后序遍历](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/binary_tree_dfs.png)
+![二叉搜索树的前序、中序、后序遍历](images/hello-algo/tree/binary_tree_dfs.png)
 
 ### 代码实现
 
@@ -121,27 +121,27 @@ func postOrder(node *TreeNode) {
 2. “归”表示函数返回，代表当前节点已经访问完毕。
 
 
-![前序遍历的递归过程](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step1.png)
+![前序遍历的递归过程](images/hello-algo/tree/preorder_step1.png)
 
-![preorder_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step2.png)
+![preorder_step2](images/hello-algo/tree/preorder_step2.png)
 
-![preorder_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step3.png)
+![preorder_step3](images/hello-algo/tree/preorder_step3.png)
 
-![preorder_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step4.png)
+![preorder_step4](images/hello-algo/tree/preorder_step4.png)
 
-![preorder_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step5.png)
+![preorder_step5](images/hello-algo/tree/preorder_step5.png)
 
-![preorder_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step6.png)
+![preorder_step6](images/hello-algo/tree/preorder_step6.png)
 
-![preorder_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step7.png)
+![preorder_step7](images/hello-algo/tree/preorder_step7.png)
 
-![preorder_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step8.png)
+![preorder_step8](images/hello-algo/tree/preorder_step8.png)
 
-![preorder_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step9.png)
+![preorder_step9](images/hello-algo/tree/preorder_step9.png)
 
-![preorder_step10](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step10.png)
+![preorder_step10](images/hello-algo/tree/preorder_step10.png)
 
-![preorder_step11](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_tree/binary_tree_traversal.assets/preorder_step11.png)
+![preorder_step11](images/hello-algo/tree/preorder_step11.png)
 
 ### 复杂度分析
 

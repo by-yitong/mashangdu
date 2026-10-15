@@ -1,6 +1,6 @@
 > 给定一棵二叉树的前序遍历 `preorder` 和中序遍历 `inorder` ，请从中构建二叉树，返回二叉树的根节点。假设二叉树中没有值重复的节点（如下图所示）。
 
-![构建二叉树的示例数据](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/build_tree_example.png)
+![构建二叉树的示例数据](images/hello-algo/divide-conquer/build_tree_example.png)
 
 ### 判断是否为分治问题
 
@@ -25,7 +25,7 @@
 2. 查找根节点 3 在 `inorder` 中的索引，利用该索引可将 `inorder` 划分为 `[ 9 | 3 | 1 2 7 ]` 。
 3. 根据 `inorder` 的划分结果，易得左子树和右子树的节点数量分别为 1 和 3 ，从而可将 `preorder` 划分为 `[ 3 | 9 | 2 1 7 ]` 。
 
-![在前序遍历和中序遍历中划分子树](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/build_tree_preorder_inorder_division.png)
+![在前序遍历和中序遍历中划分子树](images/hello-algo/divide-conquer/build_tree_preorder_inorder_division.png)
 
 ### 基于变量描述子树区间
 
@@ -46,7 +46,7 @@
 
 请注意，右子树根节点索引中的 $(m-l)$ 的含义是“左子树的节点数量”，建议结合下图理解。
 
-![根节点和左右子树的索引区间表示](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/build_tree_division_pointers.png)
+![根节点和左右子树的索引区间表示](images/hello-algo/divide-conquer/build_tree_division_pointers.png)
 
 ### 代码实现
 
@@ -85,27 +85,27 @@ func buildTree(preorder, inorder []int) *TreeNode {
 下图展示了构建二叉树的递归过程，各个节点是在向下“递”的过程中建立的，而各条边（引用）是在向上“归”的过程中建立的。
 
 
-![构建二叉树的递归过程](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step1.png)
+![构建二叉树的递归过程](images/hello-algo/divide-conquer/built_tree_step1.png)
 
-![built_tree_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step2.png)
+![built_tree_step2](images/hello-algo/divide-conquer/built_tree_step2.png)
 
-![built_tree_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step3.png)
+![built_tree_step3](images/hello-algo/divide-conquer/built_tree_step3.png)
 
-![built_tree_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step4.png)
+![built_tree_step4](images/hello-algo/divide-conquer/built_tree_step4.png)
 
-![built_tree_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step5.png)
+![built_tree_step5](images/hello-algo/divide-conquer/built_tree_step5.png)
 
-![built_tree_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step6.png)
+![built_tree_step6](images/hello-algo/divide-conquer/built_tree_step6.png)
 
-![built_tree_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step7.png)
+![built_tree_step7](images/hello-algo/divide-conquer/built_tree_step7.png)
 
-![built_tree_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step8.png)
+![built_tree_step8](images/hello-algo/divide-conquer/built_tree_step8.png)
 
-![built_tree_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_step9.png)
+![built_tree_step9](images/hello-algo/divide-conquer/built_tree_step9.png)
 
 每个递归函数内的前序遍历 `preorder` 和中序遍历 `inorder` 的划分结果如下图所示。
 
-![每个递归函数中的划分结果](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_divide_and_conquer/build_binary_tree_problem.assets/built_tree_overall.png)
+![每个递归函数中的划分结果](images/hello-algo/divide-conquer/built_tree_overall.png)
 
 设树的节点数量为 $n$ ，初始化每一个节点（执行一个递归函数 `dfs()` ）使用 $O(1)$ 时间。**因此总体时间复杂度为 $O(n)$** 。
 

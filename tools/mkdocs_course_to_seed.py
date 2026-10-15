@@ -8,6 +8,7 @@
         --langs Python,Go --course-slug hello-algo --course-title "Hello 算法" \
         --language "Python/Go" --color "#059669" --sort-order 5 \
         --source-url https://www.hello-algo.com \
+        --local-images backend/static/images \
         --out backend/internal/store/seeddata
 
 做什么：
@@ -23,6 +24,9 @@
      - `` ```src `` 源码引用块（`[file]{..}-[class]{..}-[func]{..}`，契约未覆盖
        语法）从仓库 codes/<lang>/<章节>/ 提取真实 Python/Go 代码，按语言输出；
      - 相对图片路径改写为 jsdelivr CDN 绝对 URL，删除行尾 {..}/{:..} 属性；
+       --local-images 时进一步把本课程 jsdelivr 图片地址改写为本地相对路径
+       images/<course-slug>/<章短名>/<文件名>，并下载到 <目录>/<course-slug>/ 下；
+       已存在的文件跳过；下载失败的告警并保留原 jsdelivr 地址（不阻塞）；
      - 末尾追加署名行（CC BY-NC-SA 4.0 要求，不可省）。
   3. slug = {章节短名}-{文件名 stem}，sort_order 全书 nav 顺序全局递增；
   4. 幂等写出：md 按 slug 覆盖；courses.json 按 slug 原位替换、无则追加到末尾，
@@ -38,6 +42,7 @@ import re
 import sys
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 try:
@@ -500,6 +505,126 @@ class SrcResolver:
 
 
 # ---------------------------------------------------------------------------
+# 图片本地化（--local-images）
+# ---------------------------------------------------------------------------
+
+
+class ImageLocalizer:
+    """把本课程 jsdelivr 图片地址改写为本地相对路径并下载（--local-images 模式）。
+
+    - 改写规则：https://cdn.jsdelivr.net/gh/<repo>@<branch>/<docs_dir>/<X>
+      -> images/<course_slug>/<章短名>/<basename(X)>；章短名取 X 首段在短名映射
+      中的值；无映射的目录（如 docs 根的 assets/ 封面）按原目录名落盘，
+      保证本课程 md 无 jsdelivr 残留。非本课程地址原样保留、不下载。
+    - 下载规则：已存在的文件直接跳过（幂等）；单张 timeout 秒超时；失败重试
+      retries 次；jsdelivr 取不到再回退 raw.githubusercontent 同路径；仍失败
+      则计入失败清单，由调用方把 md 中的地址回退为原 jsdelivr URL（不阻塞）。
+    """
+
+    def __init__(self, images_root: Path, course_slug: str, cdn_base: str,
+                 short_map: dict, raw_docs_base: str = "",
+                 retries: int = 2, timeout: int = 30, workers: int = 8):
+        self.images_root = images_root
+        self.course_slug = course_slug
+        self.prefix = cdn_base.rstrip("/") + "/"
+        self.raw_docs_base = raw_docs_base.rstrip("/") if raw_docs_base else ""
+        self.short_map = short_map
+        self.retries = retries
+        self.timeout = timeout
+        self.workers = workers
+        self.pending = {}  # rel_path -> (原 url, 本地绝对路径)，去重后的待下载集
+        self.n_success = 0
+        self.n_skipped = 0
+        self.n_failed = 0
+        self.total_bytes = 0
+        self.failures = []  # [(原 url, 错误信息)]
+        self._warned_dirs = set()
+
+    def plan(self, url: str):
+        """jsdelivr docs URL -> (rel_path, abs_path)；非本课程图片返回 None。"""
+        if not url.startswith(self.prefix):
+            return None
+        x = url[len(self.prefix):].strip()
+        segs = x.split("/")
+        if not x or ".." in segs or segs[-1] == "":
+            return None
+        chapter = segs[0]
+        short = self.short_map.get(chapter, chapter)
+        if chapter not in self.short_map and chapter not in self._warned_dirs:
+            self._warned_dirs.add(chapter)
+            print(f"    [提示] 图片目录 {chapter} 无章短名映射，按原目录名存放: {chapter}/")
+        rel = f"images/{self.course_slug}/{short}/{segs[-1]}"
+        return rel, self.images_root / self.course_slug / short / segs[-1]
+
+    def register(self, url: str, planned) -> str:
+        """登记一个已改写地址（同地址多页引用只登记一次），返回 rel_path。"""
+        rel, abs_path = planned
+        self.pending.setdefault(rel, (url, abs_path))
+        return rel
+
+    def _fetch_bytes(self, url: str) -> bytes:
+        last_err = None
+        for attempt in range(self.retries + 1):
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+                with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                    return resp.read()
+            except Exception as exc:  # noqa: BLE001 - 网络/404 等统一重试
+                last_err = exc
+                if attempt < self.retries:
+                    time.sleep(1.5 * (attempt + 1))
+        raise RuntimeError(str(last_err))
+
+    def _fallback_url(self, url: str) -> str:
+        """jsdelivr 取不到时回退 raw.githubusercontent 同路径。"""
+        if self.raw_docs_base and url.startswith(self.prefix):
+            return self.raw_docs_base + "/" + url[len(self.prefix):]
+        return url
+
+    def download_all(self) -> dict:
+        """下载全部登记图片；返回 {rel_path: 原 url} 失败映射（供 md 回退地址）。"""
+        if not self.pending:
+            return {}
+        items = sorted(self.pending.items())
+        print(f"==> 下载图片到 {self.images_root}/{self.course_slug}/："
+              f"共 {len(items)} 个（已存在的跳过，{self.workers} 并发）")
+
+        def work(entry):
+            rel, (url, path) = entry
+            if path.exists() and path.stat().st_size > 0:
+                return ("skip", rel, url, 0, None)
+            try:
+                try:
+                    data = self._fetch_bytes(url)
+                except Exception:  # noqa: BLE001
+                    data = self._fetch_bytes(self._fallback_url(url))
+            except Exception as exc:  # noqa: BLE001
+                return ("fail", rel, url, 0, str(exc))
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+            return ("ok", rel, url, len(data), None)
+
+        failed = {}
+        with ThreadPoolExecutor(max_workers=self.workers) as ex:
+            for status, rel, url, nbytes, err in ex.map(work, items):
+                if status == "ok":
+                    self.n_success += 1
+                    self.total_bytes += nbytes
+                elif status == "skip":
+                    self.n_skipped += 1
+                else:
+                    self.n_failed += 1
+                    failed[rel] = url
+                    self.failures.append((url, err))
+        return failed
+
+    def summary(self) -> str:
+        total = self.n_success + self.n_skipped + self.n_failed
+        return (f"图片本地化: 成功 {self.n_success} / 跳过(已存在) {self.n_skipped} / "
+                f"失败 {self.n_failed} / 共 {total} 个，新下载 {self.total_bytes} 字节")
+
+
+# ---------------------------------------------------------------------------
 # 页面正文转换
 # ---------------------------------------------------------------------------
 
@@ -518,10 +643,17 @@ IMG_EXT = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp")
 class Converter:
     """单页 Markdown 转换器（一次运行共用一个实例，聚合告警）。"""
 
-    def __init__(self, args, cdn_base: str, src_resolver: SrcResolver):
+    def __init__(self, args, cdn_base: str, src_resolver: SrcResolver, localizer=None):
         self.args = args
         self.cdn_base = cdn_base.rstrip("/")
         self.resolver = src_resolver
+        self.localizer = localizer
+        # 本课程 jsdelivr 图片地址（围栏外全部改写，不限于 ![]() 语法）
+        self.cdn_url_re = (
+            re.compile(re.escape(self.cdn_base) + r"/[^\s)<>\"'）」』】》。，；：！？、]+")
+            if localizer is not None
+            else None
+        )
         self.warnings = []
 
     def warn(self, page: str, msg: str):
@@ -537,6 +669,7 @@ class Converter:
         lines = self._drop_first_h1(lines)
         out = self._transform(lines, page, doc_path, depth)
         out = self._post_process(out, page, doc_path)
+        out = self._localize(out, page)
         out = self._tidy(out)
         return "\n".join(out)
 
@@ -790,6 +923,33 @@ class Converter:
             i += 1
         return out
 
+    def _localize(self, lines, page: str):
+        """--local-images 模式：围栏外所有本课程 jsdelivr 图片地址 -> 本地相对路径。"""
+        if self.localizer is None:
+            return lines
+        out = []
+        in_fence = False
+        for line in lines:
+            if FENCE_RE.match(line):
+                in_fence = not in_fence
+                out.append(line)
+                continue
+            if in_fence:
+                out.append(line)
+                continue
+            out.append(self.cdn_url_re.sub(self._localize_url, line))
+        return out
+
+    def _localize_url(self, m):
+        """单处 jsdelivr 地址改写：登记待下载并返回相对路径；改写失败原样保留。"""
+        whole = m.group(0)
+        url = whole.rstrip(".,;:!?")  # 句尾标点不是 URL 的一部分
+        planned = self.localizer.plan(url)
+        if planned is None:
+            return whole
+        rel = self.localizer.register(url, planned)
+        return rel + whole[len(url):]
+
     @staticmethod
     def _tidy(lines):
         """去首尾空行、压缩 3+ 连续空行为 2。"""
@@ -856,6 +1016,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument("--color", default="#059669", help="课程主题色")
     p.add_argument("--sort-order", type=int, default=5, help="课程 sort_order")
     p.add_argument("--source-url", default="https://www.hello-algo.com", help="来源站点（署名用）")
+    p.add_argument("--local-images", default=None,
+                   help="图片本地化根目录（传入则把本课程 jsdelivr 图片改写为本地相对路径"
+                        "并下载到 <该目录>/<course-slug>/<章短名>/，如 backend/static/images）")
     p.add_argument("--attribution", default=None, help="自定义署名行（默认 Hello 算法 CC BY-NC-SA 4.0）")
     p.add_argument("--out", default="backend/internal/store/seeddata", help="seeddata 输出目录")
     p.add_argument("--short-map-json", default=None, help="覆盖内置章目录->短名映射（JSON 文件）")
@@ -899,13 +1062,21 @@ def main(argv=None) -> int:
 
     resolver = SrcResolver(args.repo, args.branch, args.docs_dir, args.langs,
                            retries=args.retries, timeout=args.timeout)
-    conv = Converter(args, cdn_base, resolver)
+    localizer = None
+    if args.local_images:
+        localizer = ImageLocalizer(
+            Path(args.local_images), args.course_slug, cdn_base, short_map,
+            raw_docs_base=docs_base, retries=args.retries, timeout=args.timeout,
+        )
+    conv = Converter(args, cdn_base, resolver, localizer)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # 3. 逐页下载并转换
+    # 3. 逐页下载并转换（先转换进内存；--local-images 时待全部下载完再写盘，
+    #    下载失败的图片能把 md 里的地址回退为原 jsdelivr URL）
     chapters = []
+    entries = []  # (sort_order, doc_path, slug, title, content)
     slugs_seen = set()
     total_bytes = 0
     for idx, (doc_path, nav_title) in enumerate(selected, start=1):
@@ -932,11 +1103,24 @@ def main(argv=None) -> int:
 
         body = conv.convert(text, doc_path)
         content = body + "\n\n" + attribution + "\n"
+        entries.append((idx, doc_path, slug, title, content))
+        print(f"    [{idx:3d}/{len(selected)}] {slug}  <-  {doc_path}")
+
+    # 3.5 图片本地化：下载全部登记图片，失败的把 md 中地址回退为原 jsdelivr
+    if localizer is not None:
+        failed = localizer.download_all()
+        if failed:
+            for i, (_idx, _dp, _slug, _title, content) in enumerate(entries):
+                for rel, url in failed.items():
+                    content = content.replace(f"]({rel})", f"]({url})")
+                entries[i] = (_idx, _dp, _slug, _title, content)
+
+    # 3.9 幂等写出 md（按 slug 覆盖）
+    for idx, _doc_path, slug, title, content in entries:
         encoded = content.encode("utf-8")  # UTF-8 无 BOM；write_bytes 保持 LF
         (out_dir / f"{slug}.md").write_bytes(encoded)
         total_bytes += len(encoded)
         chapters.append({"slug": slug, "title": title, "sort_order": idx, "file": f"{slug}.md"})
-        print(f"    [{idx:3d}/{len(selected)}] {slug}  <-  {doc_path}  ({len(encoded)} B)")
 
     # 4. courses.json：按 slug 原位替换（幂等），无则追加到末尾；其余课程原样保留
     json_path = out_dir / "courses.json"
@@ -964,6 +1148,12 @@ def main(argv=None) -> int:
     print("\n===== 统计 =====")
     print(f"章节数: {len(chapters)}")
     print(f"输出总字节: {total_bytes}")
+    if localizer is not None:
+        print(localizer.summary())
+        if localizer.failures:
+            print(f"图片下载失败清单（{len(localizer.failures)} 个，md 中保留原 jsdelivr 地址）:")
+            for url, err in localizer.failures:
+                print(f"  - {url}  ({err})")
     if conv.warnings:
         print(f"警告 {len(conv.warnings)} 条:")
         for w in conv.warnings:

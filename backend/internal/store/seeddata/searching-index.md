@@ -1,4 +1,4 @@
-![搜索](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_searching.jpg)
+![搜索](images/hello-algo/assets/chapter_searching.jpg)
 
 
 > 搜索是一场未知的冒险，我们或许需要走遍神秘空间的每个角落，又或许可以快速锁定目标。

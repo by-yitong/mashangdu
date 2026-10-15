@@ -8,7 +8,7 @@
 
 本人自知学疏才浅，书中内容虽然已经过一段时间的打磨，但一定仍有许多错误，恳请各位老师和同学批评指正。
 
-![Hello 算法](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_hello_algo.jpg)
+![Hello 算法](images/hello-algo/assets/chapter_hello_algo.jpg)
 
 
 计算机的出现给世界带来了巨大变革，它凭借高速的计算能力和出色的可编程性，成为了执行算法与处理数据的理想媒介。无论是电子游戏的逼真画面、自动驾驶的智能决策，还是 AlphaGo 的精彩棋局、ChatGPT 的自然交互，这些应用都是算法在计算机上的精妙演绎。

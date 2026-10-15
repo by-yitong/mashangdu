@@ -1,4 +1,4 @@
-![堆](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_heap.jpg)
+![堆](images/hello-algo/assets/chapter_heap.jpg)
 
 
 > 堆就像是山岳峰峦，层叠起伏、形态各异。

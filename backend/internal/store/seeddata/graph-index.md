@@ -1,4 +1,4 @@
-![图](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_graph.jpg)
+![图](images/hello-algo/assets/chapter_graph.jpg)
 
 
 > 在生命旅途中，我们就像是一个个节点，被无数看不见的边相连。

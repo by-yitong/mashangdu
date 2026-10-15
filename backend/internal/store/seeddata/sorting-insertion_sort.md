@@ -4,7 +4,7 @@
 
 下图展示了数组插入元素的操作流程。设基准元素为 `base` ，我们需要将从目标索引到 `base` 之间的所有元素向右移动一位，然后将 `base` 赋值给目标索引。
 
-![单次插入操作](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/insertion_sort.assets/insertion_operation.png)
+![单次插入操作](images/hello-algo/sorting/insertion_operation.png)
 
 ## 算法流程
 
@@ -15,7 +15,7 @@
 3. 选取第 3 个元素作为 `base` ，将其插入到正确位置后，**数组的前 3 个元素已排序**。
 4. 以此类推，在最后一轮中，选取最后一个元素作为 `base` ，将其插入到正确位置后，**所有元素均已排序**。
 
-![插入排序流程](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/insertion_sort.assets/insertion_sort_overview.png)
+![插入排序流程](images/hello-algo/sorting/insertion_sort_overview.png)
 
 示例代码如下：
 

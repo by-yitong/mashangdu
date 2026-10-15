@@ -1,4 +1,4 @@
-![栈与队列](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_stack_and_queue.jpg)
+![栈与队列](images/hello-algo/assets/chapter_stack_and_queue.jpg)
 
 
 > 栈如同叠猫猫，而队列就像猫猫排队。

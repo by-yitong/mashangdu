@@ -4,11 +4,13 @@ import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../state/api_client.dart';
 import '../state/library_store.dart';
 import '../state/progress_store.dart';
 import '../state/reader_prefs.dart';
 import '../widgets/code_block.dart';
 import '../widgets/design.dart';
+import '../widgets/offline_image.dart';
 
 /// 阅读页：Markdown 正文 + 代码块复制 + 底部上一章/下一章；打开即记已读。
 class ReaderPage extends StatefulWidget {
@@ -288,6 +290,13 @@ class _ReaderPageState extends State<ReaderPage> {
           builders: {
             'pre': CodeBlockBuilder(fontSize: prefs.codeFontSize),
           },
+          // 图片：优先读离线缓存，缺失时按需下载（与整课下载同一落盘规则）；
+          // 相对路径经 ApiClient.resolve 拼到当前服务器地址。
+          imageBuilder: (uri, title, alt) => OfflineImage(
+            url: uri.toString(),
+            alt: alt ?? '',
+            resolver: (raw) => context.read<ApiClient>().resolve(raw),
+          ),
           softLineBreak: true,
         ),
       ),

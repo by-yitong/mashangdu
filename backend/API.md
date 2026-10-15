@@ -540,3 +540,31 @@ go run .
 - **chapters**：`ID`、`CourseID`（外键，联合唯一首列 + 可作单列索引前缀）、`Slug`（联合唯一 `idx_chapters_course_slug(CourseID, Slug)`）、`Title`、`ContentMD`（markdown 正文）、`SortOrder`、`CreatedAt`、`UpdatedAt`
 
 表结构由 GORM AutoMigrate 自动创建。
+
+---
+
+## 教程图片静态托管：GET /images/{filepath}
+
+教程图片静态文件路由（离线下载功能配套，无需认证）。教程正文中的图片以相对路径引用（如 `images/hello-algo/sorting/quick_sort.assets/pivot_division_step1.png`），客户端拼上服务器地址后经此路由获取文件。
+
+- 服务端根目录：`backend/static/images/`（相对后端进程工作目录）。目录**不存在时不预创建**，此时请求一律 404；目录后续落盘后无需重启即可生效。
+- 参数：`filepath` 为 path 通配，即图片在 `static/images/` 下的相对路径，支持多级子目录（与正文中的相对路径一一对应）。
+- 认证：无（与 /api/v1 内容读接口同级）；`Access-Control-Allow-Origin: *` 同样适用。
+
+### 成功响应 200
+
+返回文件二进制内容，`Content-Type` 按扩展名自动映射（`.png` → `image/png`、`.jpg`/`.jpeg` → `image/jpeg`、`.gif` → `image/gif`、`.svg` → `image/svg+xml`、`.webp` → `image/webp`、`.mp4` → `video/mp4` 等）。
+
+```bash
+curl -s -o pivot.png http://localhost:8080/images/hello-algo/sorting/quick_sort.assets/pivot_division_step1.png
+```
+
+### 失败响应 404
+
+文件不存在、图片目录未落盘或路径越界（含 `..` 穿越，不可越出图片根目录）时返回统一 JSON 信封：
+
+```json
+{"code": "NOT_FOUND", "message": "not found", "data": null}
+```
+
+> 目录请求（如 `GET /images/`）与目录列表均被禁用，同样返回 404，不暴露文件清单。

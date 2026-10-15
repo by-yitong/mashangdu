@@ -4,7 +4,7 @@
 
 链表的设计使得各个节点可以分散存储在内存各处，它们的内存地址无须连续。
 
-![链表定义与存储方式](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_array_and_linkedlist/linked_list.assets/linkedlist_definition.png)
+![链表定义与存储方式](images/hello-algo/array-linkedlist/linkedlist_definition.png)
 
 观察上图，链表的组成单位是节点（node）对象。每个节点都包含两项数据：节点的“值”和指向下一节点的“引用”。
 
@@ -96,7 +96,7 @@ n3.Next = n4
 
 相比之下，在数组中插入元素的时间复杂度为 $O(n)$ ，在大数据量下的效率较低。
 
-![链表插入节点示例](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_array_and_linkedlist/linked_list.assets/linkedlist_insert_node.png)
+![链表插入节点示例](images/hello-algo/array-linkedlist/linkedlist_insert_node.png)
 
 
 **Python**
@@ -128,7 +128,7 @@ func insertNode(n0 *ListNode, P *ListNode) {
 
 请注意，尽管在删除操作完成后节点 `P` 仍然指向 `n1` ，但实际上遍历此链表已经无法访问到 `P` ，这意味着 `P` 已经不再属于该链表了。
 
-![链表删除节点](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_array_and_linkedlist/linked_list.assets/linkedlist_remove_node.png)
+![链表删除节点](images/hello-algo/array-linkedlist/linkedlist_remove_node.png)
 
 
 **Python**
@@ -287,7 +287,7 @@ func NewDoublyListNode(val int) *DoublyListNode {
 }
 ```
 
-![常见链表种类](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_array_and_linkedlist/linked_list.assets/linkedlist_common_types.png)
+![常见链表种类](images/hello-algo/array-linkedlist/linkedlist_common_types.png)
 
 ## 链表典型应用
 

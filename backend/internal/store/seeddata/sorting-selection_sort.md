@@ -9,27 +9,27 @@
 5. 仅剩的一个元素必定是最大元素，无须排序，因此数组排序完成。
 
 
-![选择排序步骤](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step1.png)
+![选择排序步骤](images/hello-algo/sorting/selection_sort_step1.png)
 
-![selection_sort_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step2.png)
+![selection_sort_step2](images/hello-algo/sorting/selection_sort_step2.png)
 
-![selection_sort_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step3.png)
+![selection_sort_step3](images/hello-algo/sorting/selection_sort_step3.png)
 
-![selection_sort_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step4.png)
+![selection_sort_step4](images/hello-algo/sorting/selection_sort_step4.png)
 
-![selection_sort_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step5.png)
+![selection_sort_step5](images/hello-algo/sorting/selection_sort_step5.png)
 
-![selection_sort_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step6.png)
+![selection_sort_step6](images/hello-algo/sorting/selection_sort_step6.png)
 
-![selection_sort_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step7.png)
+![selection_sort_step7](images/hello-algo/sorting/selection_sort_step7.png)
 
-![selection_sort_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step8.png)
+![selection_sort_step8](images/hello-algo/sorting/selection_sort_step8.png)
 
-![selection_sort_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step9.png)
+![selection_sort_step9](images/hello-algo/sorting/selection_sort_step9.png)
 
-![selection_sort_step10](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step10.png)
+![selection_sort_step10](images/hello-algo/sorting/selection_sort_step10.png)
 
-![selection_sort_step11](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_step11.png)
+![selection_sort_step11](images/hello-algo/sorting/selection_sort_step11.png)
 
 在代码中，我们用 $k$ 来记录未排序区间内的最小元素：
 
@@ -82,6 +82,6 @@ func selectionSort(nums []int) {
 - **空间复杂度为 $O(1)$、原地排序**：指针 $i$ 和 $j$ 使用常数大小的额外空间。
 - **非稳定排序**：如下图所示，元素 `nums[i]` 有可能被交换至与其相等的元素的右边，导致两者的相对顺序发生改变。
 
-![选择排序非稳定示例](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/selection_sort.assets/selection_sort_instability.png)
+![选择排序非稳定示例](images/hello-algo/sorting/selection_sort_instability.png)
 
 > 本文来自 [Hello 算法](https://www.hello-algo.com/)，作者 krahets，采用 CC BY-NC-SA 4.0 授权转载。

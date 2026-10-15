@@ -1,4 +1,4 @@
-![排序](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_sorting.jpg)
+![排序](images/hello-algo/assets/chapter_sorting.jpg)
 
 
 > 排序犹如一把将混乱变为秩序的魔法钥匙，使我们能以更高效的方式理解与处理数据。

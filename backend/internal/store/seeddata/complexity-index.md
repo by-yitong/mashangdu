@@ -1,4 +1,4 @@
-![复杂度分析](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_complexity_analysis.jpg)
+![复杂度分析](images/hello-algo/assets/chapter_complexity_analysis.jpg)
 
 
 > 复杂度分析犹如浩瀚的算法宇宙中的时空向导。

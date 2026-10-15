@@ -18,7 +18,7 @@
 
 在分析一段程序的空间复杂度时，**我们通常统计暂存数据、栈帧空间和输出数据三部分**，如下图所示。
 
-![算法使用的相关空间](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_computational_complexity/space_complexity.assets/space_types.png)
+![算法使用的相关空间](images/hello-algo/complexity/space_types.png)
 
 相关代码如下：
 
@@ -172,7 +172,7 @@ $$
 \end{aligned}
 $$
 
-![常见的空间复杂度类型](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_computational_complexity/space_complexity.assets/space_complexity_common_types.png)
+![常见的空间复杂度类型](images/hello-algo/complexity/space_complexity_common_types.png)
 
 ### 常数阶 $O(1)$
 
@@ -295,7 +295,7 @@ func spaceLinearRecur(n int) {
 ```
 
 
-![递归函数产生的线性阶空间复杂度](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_computational_complexity/space_complexity.assets/space_complexity_recursive_linear.png)
+![递归函数产生的线性阶空间复杂度](images/hello-algo/complexity/space_complexity_recursive_linear.png)
 
 ### 平方阶 $O(n^2)$
 
@@ -357,7 +357,7 @@ func spaceQuadraticRecur(n int) int {
 ```
 
 
-![递归函数产生的平方阶空间复杂度](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_computational_complexity/space_complexity.assets/space_complexity_recursive_quadratic.png)
+![递归函数产生的平方阶空间复杂度](images/hello-algo/complexity/space_complexity_recursive_quadratic.png)
 
 ### 指数阶 $O(2^n)$
 
@@ -394,7 +394,7 @@ func buildTree(n int) *TreeNode {
 ```
 
 
-![满二叉树产生的指数阶空间复杂度](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_computational_complexity/space_complexity.assets/space_complexity_exponential.png)
+![满二叉树产生的指数阶空间复杂度](images/hello-algo/complexity/space_complexity_exponential.png)
 
 ### 对数阶 $O(\log n)$
 

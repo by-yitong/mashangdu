@@ -8,7 +8,7 @@
 
 此方法只适用于 $k \ll n$ 的情况，因为当 $k$ 与 $n$ 比较接近时，其时间复杂度趋向于 $O(n^2)$ ，非常耗时。
 
-![遍历寻找最大的 k 个元素](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_traversal.png)
+![遍历寻找最大的 k 个元素](images/hello-algo/heap/top_k_traversal.png)
 
 
 > 当 $k = n$ 时，我们可以得到完整的有序序列，此时等价于“选择排序”算法。
@@ -19,7 +19,7 @@
 
 显然，该方法“超额”完成任务了，因为我们只需找出最大的 $k$ 个元素即可，而不需要排序其他元素。
 
-![排序寻找最大的 k 个元素](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_sorting.png)
+![排序寻找最大的 k 个元素](images/hello-algo/heap/top_k_sorting.png)
 
 ## 方法三：堆
 
@@ -31,23 +31,23 @@
 4. 遍历完成后，堆中保存的就是最大的 $k$ 个元素。
 
 
-![基于堆寻找最大的 k 个元素](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step1.png)
+![基于堆寻找最大的 k 个元素](images/hello-algo/heap/top_k_heap_step1.png)
 
-![top_k_heap_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step2.png)
+![top_k_heap_step2](images/hello-algo/heap/top_k_heap_step2.png)
 
-![top_k_heap_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step3.png)
+![top_k_heap_step3](images/hello-algo/heap/top_k_heap_step3.png)
 
-![top_k_heap_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step4.png)
+![top_k_heap_step4](images/hello-algo/heap/top_k_heap_step4.png)
 
-![top_k_heap_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step5.png)
+![top_k_heap_step5](images/hello-algo/heap/top_k_heap_step5.png)
 
-![top_k_heap_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step6.png)
+![top_k_heap_step6](images/hello-algo/heap/top_k_heap_step6.png)
 
-![top_k_heap_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step7.png)
+![top_k_heap_step7](images/hello-algo/heap/top_k_heap_step7.png)
 
-![top_k_heap_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step8.png)
+![top_k_heap_step8](images/hello-algo/heap/top_k_heap_step8.png)
 
-![top_k_heap_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_heap/top_k.assets/top_k_heap_step9.png)
+![top_k_heap_step9](images/hello-algo/heap/top_k_heap_step9.png)
 
 示例代码如下：
 

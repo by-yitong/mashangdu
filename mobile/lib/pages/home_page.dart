@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/models.dart';
+import '../state/download_store.dart';
 import '../state/library_store.dart';
 import '../state/progress_store.dart';
 import '../widgets/course_card.dart';
@@ -28,6 +29,7 @@ class _HomePageState extends State<HomePage> {
     final colors = AppColors.of(context);
     final library = context.watch<LibraryStore>();
     final progress = context.watch<ProgressStore>();
+    final downloads = context.watch<DownloadStore>();
 
     final courses = library.courses;
     final visibleCourses = courses.where((course) {
@@ -108,6 +110,7 @@ class _HomePageState extends State<HomePage> {
                   course: course,
                   readCount: progress.readCount(course.slug),
                   progress: progress.progress(course.slug, course.chapterCount),
+                  offline: downloads.isDownloaded(course.slug),
                   onTap: () => _openCourse(course),
                 ),
               ),

@@ -8,7 +8,7 @@
 2. **借助 `counter` 统计 `nums` 中各数字的出现次数**，其中 `counter[num]` 对应数字 `num` 的出现次数。统计方法很简单，只需遍历 `nums`（设当前数字为 `num`），每轮将 `counter[num]` 增加 $1$ 即可。
 3. **由于 `counter` 的各个索引天然有序，因此相当于所有数字已经排序好了**。接下来，我们遍历 `counter` ，根据各数字出现次数从小到大的顺序填入 `nums` 即可。
 
-![计数排序流程](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_overview.png)
+![计数排序流程](images/hello-algo/sorting/counting_sort_overview.png)
 
 代码如下所示：
 
@@ -86,21 +86,21 @@ $$
 遍历完成后，数组 `res` 中就是排序好的结果，最后使用 `res` 覆盖原数组 `nums` 即可。下图展示了完整的计数排序流程。
 
 
-![计数排序步骤](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_step1.png)
+![计数排序步骤](images/hello-algo/sorting/counting_sort_step1.png)
 
-![counting_sort_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_step2.png)
+![counting_sort_step2](images/hello-algo/sorting/counting_sort_step2.png)
 
-![counting_sort_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_step3.png)
+![counting_sort_step3](images/hello-algo/sorting/counting_sort_step3.png)
 
-![counting_sort_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_step4.png)
+![counting_sort_step4](images/hello-algo/sorting/counting_sort_step4.png)
 
-![counting_sort_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_step5.png)
+![counting_sort_step5](images/hello-algo/sorting/counting_sort_step5.png)
 
-![counting_sort_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_step6.png)
+![counting_sort_step6](images/hello-algo/sorting/counting_sort_step6.png)
 
-![counting_sort_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_step7.png)
+![counting_sort_step7](images/hello-algo/sorting/counting_sort_step7.png)
 
-![counting_sort_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_sorting/counting_sort.assets/counting_sort_step8.png)
+![counting_sort_step8](images/hello-algo/sorting/counting_sort_step8.png)
 
 计数排序的实现代码如下所示：
 

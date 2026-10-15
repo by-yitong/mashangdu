@@ -1,4 +1,4 @@
-![数组与链表](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_array_and_linkedlist.jpg)
+![数组与链表](images/hello-algo/assets/chapter_array_and_linkedlist.jpg)
 
 
 > 数据结构的世界如同一堵厚实的砖墙。

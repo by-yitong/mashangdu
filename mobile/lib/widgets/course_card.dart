@@ -50,7 +50,7 @@ String _dateLabel(DateTime? time) {
       '${time.day.toString().padLeft(2, '0')}';
 }
 
-/// 课程卡：状态行 → 20/w700 标题 → 底部行（语言标签 + mono 进度）→ 4px 进度条。
+/// 课程卡：状态行 → 20/w700 标题 → 底部行（语言标签 + mono 进度 + 离线标）→ 4px 进度条。
 class CourseCard extends StatelessWidget {
   const CourseCard({
     super.key,
@@ -58,12 +58,16 @@ class CourseCard extends StatelessWidget {
     required this.readCount,
     required this.progress,
     required this.onTap,
+    this.offline = false,
   });
 
   final CourseSummary course;
   final int readCount;
   final double progress;
   final VoidCallback onTap;
+
+  /// 已整课离线下载时在底部行尾显示“离线”小标。
+  final bool offline;
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +107,19 @@ class CourseCard extends StatelessWidget {
                 '$readCount/${course.chapterCount}',
                 color: colors.inkMuted,
               ),
+              if (offline) ...[
+                const SizedBox(width: 10),
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: colors.accent,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                MonoText('离线', color: colors.inkMuted, fontSize: 11),
+              ],
             ],
           ),
           const SizedBox(height: 10),

@@ -42,15 +42,28 @@ var adminDistCandidates = []string{
 	"backend/admin/dist", // 在仓库根目录启动
 }
 
+// imagesRoot 教程图片静态目录，相对进程工作目录（在 backend/ 下启动即
+// backend/static/images）。目录可不存在，缺失时请求一律 404，启动不强行创建；
+// 声明为 var 仅供测试注入临时目录。
+var imagesRoot = "static/images"
+
 // NewRouter 构建 Gin 引擎：CORS、统一错误信封与全部 /api/v1 路由。
 // 可选参数 adminDist 指定后台 SPA 静态目录（挂载到 /admin，未知路径回退
 // index.html）；不传时按候选路径自动探测，目录不存在则不挂载、行为不变。
+// 另将 GET /images/*filepath 挂载到 imagesRoot（教程图片静态托管，无需认证）。
 func NewRouter(db *gorm.DB, adminDist ...string) *gin.Engine {
 	s := &Server{db: db}
 	r := gin.New()
 	r.Use(gin.Logger(), cors(), recovery())
 
 	adminIndex := mountAdmin(r, adminDist)
+
+	// GET /images/*filepath 教程图片静态托管（离线下载配套，无需认证）。
+	// 目录不存在时不强行创建：文件缺失或目录未落盘时 gin 静态处理器回退
+	// NoRoute，统一返回 404 JSON 信封（.. 穿越由 http.Dir 清洗、同样 404）；
+	// 目录后续落盘后无需重启即可生效。
+	r.Static("/images", imagesRoot)
+
 	r.NoRoute(func(c *gin.Context) {
 		if adminIndex != "" && isAdminPageRequest(c) {
 			c.File(adminIndex)

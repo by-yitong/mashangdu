@@ -5,7 +5,7 @@
 
 > 给定 $n$ 个物品，第 $i$ 个物品的重量为 $wgt[i-1]$、价值为 $val[i-1]$ ，和一个容量为 $cap$ 的背包。**每个物品可以重复选取**，问在限定背包容量下能放入物品的最大价值。示例如下图所示。
 
-![完全背包问题的示例数据](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/unbounded_knapsack_example.png)
+![完全背包问题的示例数据](images/hello-algo/dp/unbounded_knapsack_example.png)
 
 ### 动态规划思路
 
@@ -86,17 +86,17 @@ func unboundedKnapsackDP(wgt, val []int, cap int) int {
 这个遍历顺序与 0-1 背包正好相反。请借助下图来理解两者的区别。
 
 
-![完全背包问题在空间优化后的动态规划过程](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/unbounded_knapsack_dp_comp_step1.png)
+![完全背包问题在空间优化后的动态规划过程](images/hello-algo/dp/unbounded_knapsack_dp_comp_step1.png)
 
-![unbounded_knapsack_dp_comp_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/unbounded_knapsack_dp_comp_step2.png)
+![unbounded_knapsack_dp_comp_step2](images/hello-algo/dp/unbounded_knapsack_dp_comp_step2.png)
 
-![unbounded_knapsack_dp_comp_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/unbounded_knapsack_dp_comp_step3.png)
+![unbounded_knapsack_dp_comp_step3](images/hello-algo/dp/unbounded_knapsack_dp_comp_step3.png)
 
-![unbounded_knapsack_dp_comp_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/unbounded_knapsack_dp_comp_step4.png)
+![unbounded_knapsack_dp_comp_step4](images/hello-algo/dp/unbounded_knapsack_dp_comp_step4.png)
 
-![unbounded_knapsack_dp_comp_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/unbounded_knapsack_dp_comp_step5.png)
+![unbounded_knapsack_dp_comp_step5](images/hello-algo/dp/unbounded_knapsack_dp_comp_step5.png)
 
-![unbounded_knapsack_dp_comp_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/unbounded_knapsack_dp_comp_step6.png)
+![unbounded_knapsack_dp_comp_step6](images/hello-algo/dp/unbounded_knapsack_dp_comp_step6.png)
 
 代码实现比较简单，仅需将数组 `dp` 的第一维删除：
 
@@ -155,7 +155,7 @@ func unboundedKnapsackDPComp(wgt, val []int, cap int) int {
 
 > 给定 $n$ 种硬币，第 $i$ 种硬币的面值为 $coins[i - 1]$ ，目标金额为 $amt$ ，**每种硬币可以重复选取**，问能够凑出目标金额的最少硬币数量。如果无法凑出目标金额，则返回 $-1$ 。示例如下图所示。
 
-![零钱兑换问题的示例数据](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_example.png)
+![零钱兑换问题的示例数据](images/hello-algo/dp/coin_change_example.png)
 
 ### 动态规划思路
 
@@ -259,35 +259,35 @@ func coinChangeDP(coins []int, amt int) int {
 下图展示了零钱兑换的动态规划过程，和完全背包问题非常相似。
 
 
-![零钱兑换问题的动态规划过程](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step1.png)
+![零钱兑换问题的动态规划过程](images/hello-algo/dp/coin_change_dp_step1.png)
 
-![coin_change_dp_step2](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step2.png)
+![coin_change_dp_step2](images/hello-algo/dp/coin_change_dp_step2.png)
 
-![coin_change_dp_step3](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step3.png)
+![coin_change_dp_step3](images/hello-algo/dp/coin_change_dp_step3.png)
 
-![coin_change_dp_step4](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step4.png)
+![coin_change_dp_step4](images/hello-algo/dp/coin_change_dp_step4.png)
 
-![coin_change_dp_step5](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step5.png)
+![coin_change_dp_step5](images/hello-algo/dp/coin_change_dp_step5.png)
 
-![coin_change_dp_step6](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step6.png)
+![coin_change_dp_step6](images/hello-algo/dp/coin_change_dp_step6.png)
 
-![coin_change_dp_step7](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step7.png)
+![coin_change_dp_step7](images/hello-algo/dp/coin_change_dp_step7.png)
 
-![coin_change_dp_step8](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step8.png)
+![coin_change_dp_step8](images/hello-algo/dp/coin_change_dp_step8.png)
 
-![coin_change_dp_step9](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step9.png)
+![coin_change_dp_step9](images/hello-algo/dp/coin_change_dp_step9.png)
 
-![coin_change_dp_step10](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step10.png)
+![coin_change_dp_step10](images/hello-algo/dp/coin_change_dp_step10.png)
 
-![coin_change_dp_step11](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step11.png)
+![coin_change_dp_step11](images/hello-algo/dp/coin_change_dp_step11.png)
 
-![coin_change_dp_step12](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step12.png)
+![coin_change_dp_step12](images/hello-algo/dp/coin_change_dp_step12.png)
 
-![coin_change_dp_step13](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step13.png)
+![coin_change_dp_step13](images/hello-algo/dp/coin_change_dp_step13.png)
 
-![coin_change_dp_step14](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step14.png)
+![coin_change_dp_step14](images/hello-algo/dp/coin_change_dp_step14.png)
 
-![coin_change_dp_step15](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_dp_step15.png)
+![coin_change_dp_step15](images/hello-algo/dp/coin_change_dp_step15.png)
 
 ### 空间优化
 
@@ -356,7 +356,7 @@ func coinChangeDPComp(coins []int, amt int) int {
 
 > 给定 $n$ 种硬币，第 $i$ 种硬币的面值为 $coins[i - 1]$ ，目标金额为 $amt$ ，每种硬币可以重复选取，**问凑出目标金额的硬币组合数量**。示例如下图所示。
 
-![零钱兑换问题 II 的示例数据](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/chapter_dynamic_programming/unbounded_knapsack_problem.assets/coin_change_ii_example.png)
+![零钱兑换问题 II 的示例数据](images/hello-algo/dp/coin_change_ii_example.png)
 
 ### 动态规划思路
 

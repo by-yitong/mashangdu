@@ -1,4 +1,4 @@
-![哈希表](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_hashing.jpg)
+![哈希表](images/hello-algo/assets/chapter_hashing.jpg)
 
 
 > 在计算机世界中，哈希表如同一位聪慧的图书管理员。

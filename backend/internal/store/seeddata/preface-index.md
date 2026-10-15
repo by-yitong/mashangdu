@@ -1,4 +1,4 @@
-![前言](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_preface.jpg)
+![前言](images/hello-algo/assets/chapter_preface.jpg)
 
 
 > 算法犹如美妙的交响乐，每一行代码都像韵律般流淌。

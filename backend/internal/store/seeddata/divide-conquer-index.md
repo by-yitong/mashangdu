@@ -1,4 +1,4 @@
-![分治](https://cdn.jsdelivr.net/gh/krahets/hello-algo@main/docs/assets/covers/chapter_divide_and_conquer.jpg)
+![分治](images/hello-algo/assets/chapter_divide_and_conquer.jpg)
 
 
 > 难题被逐层拆解，每一次的拆解都使它变得更为简单。
