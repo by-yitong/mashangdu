@@ -7,14 +7,17 @@ import 'package:highlight/highlight.dart' as hl;
 import 'package:markdown/markdown.dart' as md;
 
 import 'design.dart';
+import 'reading_theme.dart';
 
-/// 代码块：深色圆角容器 + 语法高亮 + 右上角复制按钮（设计固定深底，不随主题）。
+/// 代码块：圆角容器 + 语法高亮 + 右上角复制按钮；底色随阅读主题 codeBg
+/// （默认深底），codeBg 与页面 bg 相同（纯黑主题）时加 divider 色 1px 描边。
 class CodeBlock extends StatelessWidget {
   const CodeBlock({
     super.key,
     required this.code,
     this.language,
     this.fontSize = 13,
+    this.readingTheme,
   });
 
   final String code;
@@ -22,6 +25,9 @@ class CodeBlock extends StatelessWidget {
 
   /// 代码字号（阅读字号档位：13 / 14 / 15）。
   final double fontSize;
+
+  /// 阅读主题（codeBg / 描边取色）；null 用默认深底。
+  final ReadingTheme? readingTheme;
 
   static const Color _blockBg = Color(0xFF0C0F0E);
   static const Color _plainText = Color(0xFFE6EDEA);
@@ -148,6 +154,7 @@ class CodeBlock extends StatelessWidget {
         ? code.substring(0, code.length - 1)
         : code;
     final langLabel = (language ?? '').replaceFirst('language-', '');
+    final blockBorder = readingTheme?.codeBlockBorder;
     return Stack(
       children: [
         Container(
@@ -155,8 +162,9 @@ class CodeBlock extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 10),
           padding: const EdgeInsets.fromLTRB(14, 34, 14, 14),
           decoration: BoxDecoration(
-            color: _blockBg,
+            color: readingTheme?.codeBg ?? _blockBg,
             borderRadius: BorderRadius.circular(12),
+            border: blockBorder == null ? null : Border.all(color: blockBorder),
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -197,10 +205,13 @@ class CodeBlock extends StatelessWidget {
 
 /// flutter_markdown 自定义 `pre` 元素构建器：把围栏代码块渲染为 [CodeBlock]。
 class CodeBlockBuilder extends MarkdownElementBuilder {
-  CodeBlockBuilder({this.fontSize = 13});
+  CodeBlockBuilder({this.fontSize = 13, this.readingTheme});
 
   /// 代码字号（阅读字号档位：13 / 14 / 15）。
   final double fontSize;
+
+  /// 阅读主题（codeBg / 描边取色）。
+  final ReadingTheme? readingTheme;
 
   @override
   bool isBlockElement() => true;
@@ -220,6 +231,7 @@ class CodeBlockBuilder extends MarkdownElementBuilder {
       code: element.textContent,
       language: language,
       fontSize: fontSize,
+      readingTheme: readingTheme,
     );
   }
 }

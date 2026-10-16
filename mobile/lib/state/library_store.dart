@@ -42,16 +42,27 @@ class LibraryStore extends ChangeNotifier {
     MetaInfo? newMeta;
     List<CourseSummary>? newCourses;
     Object? networkError;
+    // 两个请求并行发出（服务器失联时最多等一个超时，而不是两个串行叠加）。
+    final metaFuture = _api.fetchMeta();
+    final coursesFuture = _api.fetchCourses();
     try {
-      newMeta = await _api.fetchMeta();
+      newMeta = await metaFuture;
+    } catch (error) {
+      networkError = error;
+    }
+    if (newMeta != null) {
       await _cache.put(ApiPaths.meta, newMeta.toJson());
-      newCourses = await _api.fetchCourses();
+    }
+    try {
+      newCourses = await coursesFuture;
+    } catch (error) {
+      networkError ??= error;
+    }
+    if (newCourses != null) {
       await _cache.put(
         ApiPaths.courses,
         newCourses.map((c) => c.toJson()).toList(),
       );
-    } catch (error) {
-      networkError = error;
     }
 
     if (newCourses != null) {

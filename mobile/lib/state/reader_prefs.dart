@@ -3,8 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../widgets/reading_theme.dart';
 
-/// 阅读偏好：字号三档 / 阅读主题 / 行距 / 翻页模式 / 章节内进度，
-/// 全部持久化到 shared_preferences（key 前缀 `reader.`）。
+/// 阅读偏好：字号三档 / 阅读主题（auto + 亮暗记忆槽）/ 行距 / 翻页模式 /
+/// 章节内进度，全部持久化到 shared_preferences（key 前缀 `reader.`）。
 class ReaderPrefs extends ChangeNotifier {
   ReaderPrefs(this._prefs);
 
@@ -12,8 +12,11 @@ class ReaderPrefs extends ChangeNotifier {
 
   static const String _key = 'reader.font_scale';
   static const String _themeKey = 'reader.reading_theme';
+  static const String _themeLightKey = 'reader.reading_theme_light';
+  static const String _themeDarkKey = 'reader.reading_theme_dark';
   static const String _lineHeightKey = 'reader.line_height';
   static const String _pageModeKey = 'reader.page_mode';
+  static const String _coachKey = 'reader.coach_shown';
 
   /// 档位缩放倍率（持久化值）。
   static const List<double> scales = [1.0, 1.125, 1.25];
@@ -25,9 +28,16 @@ class ReaderPrefs extends ChangeNotifier {
   static const List<String> pageModes = ['tap', 'scroll'];
 
   double _scale = scales[0];
-  String _readingTheme = ReadingTheme.paper.id;
   double _lineHeight = 1.4;
   String _pageMode = 'tap';
+
+  /// 首次阅读指引是否已展示过（展示一次后永久记录）。
+  bool get coachShown => _prefs.getBool(_coachKey) ?? false;
+
+  Future<void> markCoachShown() async {
+    await _prefs.setBool(_coachKey, true);
+    notifyListeners();
+  }
 
   // —— 字号三档（原有行为，保留不动） ——
 
@@ -67,14 +77,54 @@ class ReaderPrefs extends ChangeNotifier {
 
   // —— 阅读主题 ——
 
-  /// 当前阅读主题 id：'paper'（默认）/'cream'/'green'/'night'。
+  /// 'auto'：主题选择里的自动档（跟随 App 深浅色取记忆槽）。
+  static const String autoTheme = 'auto';
+
+  String _readingTheme = autoTheme;
+  String _readingThemeLight = ReadingTheme.paper.id;
+  String _readingThemeDark = ReadingTheme.night.id;
+
+  /// 当前主题档位：'auto'（默认）或固定主题 id。
   String get readingTheme => _readingTheme;
 
-  /// 切换阅读主题并持久化；非法 id 忽略。
+  /// auto 档在 App 浅色下使用的记忆槽主题 id。
+  String get readingThemeLight => _readingThemeLight;
+
+  /// auto 档在 App 深色下使用的记忆槽主题 id。
+  String get readingThemeDark => _readingThemeDark;
+
+  /// 实际生效的主题 id：'auto' → 按 [appBrightness] 取记忆槽；
+  /// 固定 → 返回固定 id（非法值回退 paper）。
+  String effectiveReadingTheme(Brightness appBrightness) {
+    if (_readingTheme != autoTheme) {
+      return ReadingTheme.ids.contains(_readingTheme)
+          ? _readingTheme
+          : ReadingTheme.paper.id;
+    }
+    final slot = appBrightness == Brightness.dark
+        ? _readingThemeDark
+        : _readingThemeLight;
+    return ReadingTheme.ids.contains(slot) ? slot : ReadingTheme.paper.id;
+  }
+
+  /// 切换主题档位并持久化：'auto' 只改档位；固定主题 id 同时按该主题
+  /// 亮暗写入对应记忆槽（auto 档切回时沿用最近一次的手动选择）。
+  /// 非法 id 忽略。
   Future<void> setReadingTheme(String id) async {
-    if (!ReadingTheme.ids.contains(id) || id == _readingTheme) return;
+    if (id != autoTheme && !ReadingTheme.ids.contains(id)) return;
+    if (id == _readingTheme) return;
     _readingTheme = id;
     await _prefs.setString(_themeKey, id);
+    if (id != autoTheme) {
+      final theme = ReadingTheme.of(id);
+      if (theme.isDark) {
+        _readingThemeDark = id;
+        await _prefs.setString(_themeDarkKey, id);
+      } else {
+        _readingThemeLight = id;
+        await _prefs.setString(_themeLightKey, id);
+      }
+    }
     notifyListeners();
   }
 
@@ -137,8 +187,20 @@ class ReaderPrefs extends ChangeNotifier {
     final saved = _prefs.getDouble(_key);
     if (saved != null && scales.contains(saved)) _scale = saved;
     final theme = _prefs.getString(_themeKey);
-    if (theme != null && ReadingTheme.ids.contains(theme)) {
+    if (theme == autoTheme) {
+      _readingTheme = autoTheme;
+    } else if (theme != null && ReadingTheme.ids.contains(theme)) {
+      // 兼容旧版（只存过 paper/cream/green/night 固定主题）：
+      // 直接沿用为固定主题，无需写回。
       _readingTheme = theme;
+    }
+    final themeLight = _prefs.getString(_themeLightKey);
+    if (themeLight != null && ReadingTheme.ids.contains(themeLight)) {
+      _readingThemeLight = themeLight;
+    }
+    final themeDark = _prefs.getString(_themeDarkKey);
+    if (themeDark != null && ReadingTheme.ids.contains(themeDark)) {
+      _readingThemeDark = themeDark;
     }
     final lineHeight = _prefs.getDouble(_lineHeightKey);
     if (lineHeight != null && lineHeights.contains(lineHeight)) {

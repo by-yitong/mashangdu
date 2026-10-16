@@ -58,7 +58,8 @@ class ApiClient {
     return '$base$path';
   }
 
-  static const Duration _timeout = Duration(seconds: 10);
+  // 局域网/正常公网 4 秒足够；服务器失联时尽快回退缓存，别让每步操作都卡满超时。
+  static const Duration _timeout = Duration(seconds: 4);
 
   Future<Object?> get(String path) async {
     final uri = Uri.parse('$_serverUrl$path');

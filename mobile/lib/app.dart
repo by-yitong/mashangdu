@@ -7,6 +7,7 @@ import 'pages/settings_page.dart';
 import 'state/library_store.dart';
 import 'state/theme_store.dart';
 import 'widgets/design.dart';
+import 'widgets/glass_swipe_tab_bar.dart';
 
 class CodeTutorialsApp extends StatelessWidget {
   const CodeTutorialsApp({super.key});
@@ -82,6 +83,9 @@ class HomeShell extends StatefulWidget {
 
 class _HomeShellState extends State<HomeShell> {
   int _tabIndex = 0;
+  late final PageController _pageController = PageController(
+    initialPage: _tabIndex,
+  );
 
   @override
   void initState() {
@@ -93,46 +97,60 @@ class _HomeShellState extends State<HomeShell> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  /// 点 tab / 「去设置」跳页：页面与底部药丸一起动画过去。
+  void _goToPage(int index) {
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    return GlassScaffold(
-      backgroundColor: colors.paper,
-      // GlassScaffold 不是 Material Scaffold，不提供 Material 祖先；
-      // 页面里的 InkWell/TextButton 需要它才能渲染。
-      body: Material(
-        type: MaterialType.transparency,
-        child: IndexedStack(
-          index: _tabIndex,
+    // GlassScaffold 不是 Material Scaffold，不提供 Material 祖先；
+    // body 和 bottomBar 是它的两个平行子树，都得包进来——漏掉
+    // bottomBar 的话，导航标签会落回框架兜底文本样式（双下划线）。
+    return Material(
+      type: MaterialType.transparency,
+      child: GlassScaffold(
+        backgroundColor: colors.paper,
+        body: PageView(
+          controller: _pageController,
+          onPageChanged: (index) => setState(() => _tabIndex = index),
           children: [
-            HomePage(onGoSettings: () => setState(() => _tabIndex = 1)),
+            HomePage(onGoSettings: () => _goToPage(1)),
             const SettingsPage(),
           ],
         ),
-      ),
-      bottomBar: GlassTabBar.bottom(
-        selectedIndex: _tabIndex,
-        onTabSelected: (index) => setState(() => _tabIndex = index),
-        iconSize: 20,
-        horizontalPadding: 24,
-        verticalPadding: 18,
-        barHeight: 56,
-        indicatorColor: colors.accentDim,
-        selectedIconColor: colors.accent,
-        selectedLabelColor: colors.accent,
-        unselectedIconColor: colors.inkMuted,
-        unselectedLabelColor: colors.inkMuted,
-        tabs: const [
-          GlassTab(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home_rounded),
-            label: '首页',
-          ),
-          GlassTab(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings_rounded),
-            label: '设置',
-          ),
-        ],
+        bottomBar: GlassSwipeTabBar(
+          controller: _pageController,
+          selectedIndex: _tabIndex,
+          onTabSelected: _goToPage,
+          indicatorColor: colors.accentDim,
+          selectedIconColor: colors.accent,
+          selectedLabelColor: colors.accent,
+          unselectedIconColor: colors.inkMuted,
+          unselectedLabelColor: colors.inkMuted,
+          tabs: const [
+            GlassSwipeTab(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home_rounded),
+              label: '首页',
+            ),
+            GlassSwipeTab(
+              icon: Icon(Icons.settings_outlined),
+              activeIcon: Icon(Icons.settings_rounded),
+              label: '设置',
+            ),
+          ],
+        ),
       ),
     );
   }

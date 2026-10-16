@@ -21,11 +21,17 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin {
   HomeFilter _filter = HomeFilter.all;
+
+  /// PageView 划走后保住筛选与滚动位置（原来由 IndexedStack 常驻保证）。
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin 需要。
     final colors = AppColors.of(context);
     final library = context.watch<LibraryStore>();
     final progress = context.watch<ProgressStore>();

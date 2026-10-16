@@ -18,15 +18,20 @@ import '../widgets/reading_theme.dart';
 /// 阅读页：小说 App 式沉浸阅读。
 ///
 /// Stack 分层：内容层（CustomScrollView，外层包全屏 translucent 手势层）
-/// → 菜单层（顶/底半透明沉浸条，200ms 动画）→ 目录抽屉（Scaffold.drawer）。
+/// → 过卷翻章胶囊（IgnorePointer，菜单层之下）→ 菜单层（顶/底半透明沉浸条，
+/// 200ms 动画）→ 目录抽屉（Scaffold.drawer）。
 ///
 /// 翻页为纵向平滑滚屏（非横向真分页，代码块永不被切断）：
 /// - tap 模式：点右 1/3 或左滑 = 下一屏（末屏进下一章）；点左 1/3 或右滑 = 上一屏
 ///   （首页进上一章）；点中间 1/3 = 切换菜单层；
 /// - scroll 模式：自由滚动，点中间 1/3 同样切换菜单层；
+/// - 到底/到顶继续拖拽：TG 式过卷胶囊，刻意慢拉累计 200 逻辑像素松手翻章
+///   （快速甩动不计入）；下一章提示在页面底部、上一章在顶部
+///   （dragDetails 为空 = 惯性滚动，不参与累计；首/末章对应方向只提示不导航）；
 /// - 菜单层可见时，点任意处收起菜单。
 ///
-/// 阅读主题/字号/行距/翻页模式走 [ReaderPrefs] + [ReadingTheme]；
+/// 阅读主题/字号/行距/翻页模式走 [ReaderPrefs] + [ReadingTheme]，主题档
+/// 'auto' 时按 App 深浅色取记忆槽（Theme.of(context).brightness 变化即时跟随）；
 /// 章节内进度按 offset/maxExtent 比例记忆（节流 500ms + 离页/切章兜底）。
 /// 手势层是内容的手势祖先（translucent）：代码块复制按钮等子组件点击
 /// 在手势竞技场中先于翻页手势加入，天然优先，不会被吞。
@@ -54,6 +59,9 @@ class _ReaderPageState extends State<ReaderPage> {
   ChapterContent? _chapter;
   List<ChapterRef> _chapters = const [];
   bool _loading = true;
+
+  /// 首次阅读指引本次会话是否已关闭（持久记忆见 ReaderPrefs.coachShown）。
+  bool _coachVisible = true;
   bool _notFound = false;
   bool _menuVisible = false;
 
@@ -88,6 +96,22 @@ class _ReaderPageState extends State<ReaderPage> {
   /// Slider 整数细分数（0~10000）。
   static const double _sliderSteps = 10000;
 
+  /// 过卷翻章触发阈值（逻辑像素）。
+  /// 过卷翻章阈值：需刻意慢拉累计 200 逻辑像素松手才翻章。
+  static const double _flipThreshold = 200;
+
+  /// 甩动守卫：单帧过卷超过此值视为快速甩动（惯性到边），不计入累计，
+  /// 避免快速滑动碰到底部就瞬间翻章。
+  static const double _flipFlickGuard = 24;
+
+  /// 过卷翻章胶囊状态（ValueNotifier 驱动，避免拖拽期间整页 setState）。
+  final ValueNotifier<_FlipHint> _flipHint = ValueNotifier<_FlipHint>(
+    const _FlipHint.initial(),
+  );
+
+  /// 翻章触发时胶囊跳过消失动画（立即隐藏）。
+  bool _flipHideInstant = false;
+
   @override
   void initState() {
     super.initState();
@@ -108,6 +132,7 @@ class _ReaderPageState extends State<ReaderPage> {
     _savePositionNow();
     _scroll.dispose();
     _ratio.dispose();
+    _flipHint.dispose();
     // 恢复全局主题样式（返回后各页 AppBar 也会自行声明，这里兜底）。
     SystemChrome.setSystemUIOverlayStyle(_globalOverlay);
     super.dispose();
@@ -138,9 +163,10 @@ class _ReaderPageState extends State<ReaderPage> {
     if (chapter == null) return;
 
     // 恢复该章上次保存的位置（无则到顶）；等首帧排版完成后 jumpTo。
-    final ratio = context
-        .read<ReaderPrefs>()
-        .positionOf(widget.course.slug, chapter.slug);
+    final ratio = context.read<ReaderPrefs>().positionOf(
+      widget.course.slug,
+      chapter.slug,
+    );
     _scheduleRestore(ratio ?? 0);
 
     if (markRead) {
@@ -291,22 +317,220 @@ class _ReaderPageState extends State<ReaderPage> {
 
   void _toggleMenu() => setState(() => _menuVisible = !_menuVisible);
 
+  // —— 过卷翻章（TG 式过卷提示） ——
+
+  /// 过卷累计：仅在用户拖拽（dragDetails 非空）时生效，惯性滚动忽略。
+  /// Flutter 约定：越过 maxScrollExtent 时 overscroll 为正、越过 min 为负，
+  /// 即底部继续上拉 → 下一章；顶部对称（继续下拉）→ 上一章；换向清零。
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification.metrics.axis != Axis.vertical) return false;
+    if (notification is OverscrollNotification) {
+      if (notification.dragDetails == null) return false;
+      if (_loading || _chapter == null) return false;
+      if (notification.overscroll.abs() > _flipFlickGuard) return false;
+      final metrics = notification.metrics;
+      final atBottom =
+          notification.overscroll > 0 &&
+          metrics.pixels >= metrics.maxScrollExtent - _pageEpsilon;
+      final atTop =
+          notification.overscroll < 0 &&
+          metrics.pixels <= metrics.minScrollExtent + _pageEpsilon;
+      if (!atBottom && !atTop) return false;
+      final direction = atBottom ? 1 : -1;
+      final current = _flipHint.value;
+      final amount = current.direction == direction
+          ? current.amount + notification.overscroll.abs()
+          : notification.overscroll.abs();
+      final target = direction > 0 ? _nextChapter : _prevChapter;
+      _flipHideInstant = false;
+      _flipHint.value = _FlipHint(
+        direction: direction,
+        amount: amount,
+        blocked: target == null,
+        title: target?.title ?? '',
+        visible: true,
+      );
+    } else if (notification is ScrollEndNotification) {
+      final current = _flipHint.value;
+      if (current.direction == 0) return false;
+      if (current.visible && current.progress >= 1 && !current.blocked) {
+        // 达到阈值：立即隐藏胶囊并翻章（复用 _goChapter 的加载过渡）。
+        _flipHideInstant = true;
+        _flipHint.value = _FlipHint(
+          direction: current.direction,
+          amount: current.amount,
+          blocked: current.blocked,
+          title: current.title,
+          visible: false,
+        );
+        final target = current.direction > 0 ? _nextChapter : _prevChapter;
+        if (target != null && !_loading) _goChapter(target.slug);
+      } else {
+        // 未达阈值/灰态：播放消失动画收起，累计清零。
+        _flipHideInstant = false;
+        _flipHint.value = _FlipHint(
+          direction: current.direction,
+          amount: 0,
+          blocked: current.blocked,
+          title: current.title,
+          visible: false,
+        );
+      }
+    }
+    return false;
+  }
+
+  /// 过卷翻章胶囊：方向决定位置——下一章从页面底部浮出（内容从下方来），
+  /// 上一章在顶部浮出；SafeArea 内、菜单层之下、IgnorePointer。
+  Widget _buildFlipHint(ReadingTheme theme) {
+    return IgnorePointer(
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 8),
+          child: ValueListenableBuilder<_FlipHint>(
+            valueListenable: _flipHint,
+            builder: (context, hint, _) {
+              // TweenAnimationBuilder 常驻：首次显示时 tween end 由 0 变 1，
+              // 才会播放 140ms 出现动画（新挂载会直接跳到终值）。
+              final isNext = hint.direction > 0;
+              final fromBelow = isNext;
+              final card = hint.direction == 0
+                  ? const SizedBox.shrink()
+                  : _buildFlipHintCard(hint, theme);
+              return Align(
+                alignment: isNext
+                    ? Alignment.bottomCenter
+                    : Alignment.topCenter,
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(end: hint.visible ? 1.0 : 0.0),
+                  duration: hint.visible
+                      ? const Duration(milliseconds: 140)
+                      : (_flipHideInstant
+                            ? Duration.zero
+                            : const Duration(milliseconds: 120)),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, t, child) => Opacity(
+                    opacity: t,
+                    child: Transform.translate(
+                      // 底部胶囊从下方 12px 滑入，顶部胶囊从上方滑入。
+                      offset: Offset(0, (fromBelow ? 12 : -12) * (1 - t)),
+                      child: child,
+                    ),
+                  ),
+                  child: card,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 胶囊本体：圆角 999、bg 92% 不透明 + divider 描边 + 轻阴影；
+  /// 两行文字（主 13 w500 / 副 12 sec 目标章标题）+ 底部 3px accent 进度条。
+  Widget _buildFlipHintCard(_FlipHint hint, ReadingTheme theme) {
+    final gray = hint.blocked;
+    final mainColor = gray ? theme.textSecondary : theme.text;
+    final barColor = gray
+        ? theme.textSecondary.withValues(alpha: 0.5)
+        : theme.accent;
+    final mainText = gray
+        ? (hint.direction > 0 ? '已是最后一章' : '已是第一章')
+        : (hint.direction > 0 ? '松开进入下一章' : '松开回到上一章');
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.bg.withValues(alpha: 0.92),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: theme.divider),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.10),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 10, 18, 11),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      mainText,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: mainColor,
+                      ),
+                    ),
+                    if (!gray && hint.title.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        hint.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              // 底部内嵌 3px 进度条：宽度 = 累计/阈值。
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: SizedBox(
+                  height: 3,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: FractionallySizedBox(
+                      widthFactor: hint.progress,
+                      child: Container(
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: barColor,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   // —— 构建 ——
 
   @override
   Widget build(BuildContext context) {
-    // watch：主题/字号/行距/翻页模式变化即时生效。
+    // watch：主题/字号/行距/翻页模式变化即时生效；Theme.of 依赖使
+    // App 外观（themeMode）切换时阅读页即时跟随 auto 档深浅色。
+    final appBrightness = Theme.of(context).brightness;
     final prefs = context.watch<ReaderPrefs>();
     final progress = context.watch<ProgressStore>();
-    final theme = ReadingTheme.of(prefs.readingTheme);
+    final theme = ReadingTheme.of(prefs.effectiveReadingTheme(appBrightness));
     final title = _chapter?.title ?? widget.course.title;
 
     // 记录全局主题样式，dispose 时恢复（阅读页 overlay 见 AnnotatedRegion）。
     final globalColors = AppColors.of(context);
     _globalOverlay = SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness:
-          globalColors.brightness == Brightness.dark
+      statusBarIconBrightness: globalColors.brightness == Brightness.dark
           ? Brightness.light
           : Brightness.dark,
       systemNavigationBarIconBrightness:
@@ -324,35 +548,148 @@ class _ReaderPageState extends State<ReaderPage> {
         body: Stack(
           children: [
             // 内容层 + 手势层：GestureDetector 是内容的全屏手势祖先
-            // （translucent），子组件点击（代码块复制等）在竞技场中优先。
+            // （translucent），子组件点击（代码块复制等）在竞技场中优先；
+            // NotificationListener 承接过卷翻章（tap/scroll 模式共享同一
+            // ScrollView，行为一致）。
             Positioned.fill(
               child: GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTapUp: _handleTapUp,
                 onHorizontalDragEnd: _handleHorizontalDragEnd,
-                child: SafeArea(
-                  bottom: false,
-                  child: CustomScrollView(
-                    controller: _scroll,
-                    slivers: [
-                      // 切章加载中：旧内容保持可见，顶部细进度条提示。
-                      if (_loading && _chapter != null)
-                        SliverToBoxAdapter(
-                          child: LinearProgressIndicator(
-                            minHeight: 2,
-                            color: theme.accent,
-                            backgroundColor: Colors.transparent,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: _handleScrollNotification,
+                  child: SafeArea(
+                    bottom: false,
+                    child: CustomScrollView(
+                      controller: _scroll,
+                      // 短章（内容不满一屏）时 maxScrollExtent 为 0，默认物理
+                      // 会拒绝拖拽、过卷通知不发出 → 强制接受，保证短章也能
+                      // 拉出翻章提示。
+                      physics: const _AlwaysAcceptDragPhysics(
+                        parent: ClampingScrollPhysics(),
+                      ),
+                      slivers: [
+                        // 切章加载中：旧内容保持可见，顶部细进度条提示。
+                        if (_loading && _chapter != null)
+                          SliverToBoxAdapter(
+                            child: LinearProgressIndicator(
+                              minHeight: 2,
+                              color: theme.accent,
+                              backgroundColor: Colors.transparent,
+                            ),
                           ),
-                        ),
-                      _buildBody(theme, prefs),
-                    ],
+                        _buildBody(theme, prefs),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
+            // 过卷翻章胶囊：菜单层之下，IgnorePointer 不挡任何点击。
+            _buildFlipHint(theme),
             // 菜单层：顶栏 + 底栏，200ms 滑入滑出。
             _buildTopBar(theme, title),
             _buildBottomBar(theme),
+            // 首次阅读指引：点按分区教学，展示一次。
+            if (_coachVisible && !prefs.coachShown)
+              Positioned.fill(child: _buildCoachOverlay(theme, prefs)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 首次阅读指引：半透明遮罩 + 左中右分区说明，点任意处消失并记忆。
+  Widget _buildCoachOverlay(ReadingTheme theme, ReaderPrefs prefs) {
+    Widget zone({
+      required IconData icon,
+      required String title,
+      required String subtitle,
+    }) => Expanded(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 30, color: theme.accent),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.72), fontSize: 13, height: 1.5),
+          ),
+        ],
+      ),
+    );
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        setState(() => _coachVisible = false);
+        prefs.markCoachShown();
+      },
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.58),
+        child: Column(
+          children: [
+            const Spacer(),
+            Expanded(
+              flex: 3,
+              child: Row(
+                children: [
+                  zone(
+                    icon: Icons.west,
+                    title: '上一页',
+                    subtitle: '点击左侧区域',
+                  ),
+                  VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: Colors.white.withValues(alpha: 0.22),
+                  ),
+                  zone(
+                    icon: Icons.touch_app_outlined,
+                    title: '菜单',
+                    subtitle: '点击中间区域\n目录 · 设置 · 进度',
+                  ),
+                  VerticalDivider(
+                    width: 1,
+                    thickness: 1,
+                    color: Colors.white.withValues(alpha: 0.22),
+                  ),
+                  zone(
+                    icon: Icons.east,
+                    title: '下一页',
+                    subtitle: '点击右侧区域',
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 48),
+              child: Column(
+                children: [
+                  Text(
+                    prefs.pageMode == 'tap' ? '上下滑动也可翻页 · 滚到底继续拉动进入下一章' : '上下滑动自由阅读 · 滚到底继续拉动进入下一章',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.66), fontSize: 13),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    '点击任意处开始阅读',
+                    style: TextStyle(color: theme.accent, fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -374,7 +711,11 @@ class _ReaderPageState extends State<ReaderPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.cloud_off_rounded, size: 40, color: theme.textSecondary),
+              Icon(
+                Icons.cloud_off_rounded,
+                size: 40,
+                color: theme.textSecondary,
+              ),
               const SizedBox(height: 12),
               Text(
                 '章节内容加载失败',
@@ -450,7 +791,10 @@ class _ReaderPageState extends State<ReaderPage> {
         color: theme.accentTint(0.10),
         borderRadius: BorderRadius.circular(8),
       ),
-      blockquotePadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      blockquotePadding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: 8,
+      ),
       code: MonoText.monoBase.copyWith(
         fontSize: prefs.codeFontSize,
         color: theme.accent,
@@ -476,7 +820,10 @@ class _ReaderPageState extends State<ReaderPage> {
           data: _chapter!.contentMd,
           styleSheet: styleSheet,
           builders: {
-            'pre': CodeBlockBuilder(fontSize: prefs.codeFontSize),
+            'pre': CodeBlockBuilder(
+              fontSize: prefs.codeFontSize,
+              readingTheme: theme,
+            ),
           },
           // 图片：优先读离线缓存，缺失时按需下载（与整课下载同一落盘规则）；
           // 相对路径经 ApiClient.resolve 拼到当前服务器地址。
@@ -537,10 +884,7 @@ class _ReaderPageState extends State<ReaderPage> {
                       ),
                       IconButton(
                         tooltip: '目录',
-                        icon: Icon(
-                          Icons.menu_book_rounded,
-                          color: theme.text,
-                        ),
+                        icon: Icon(Icons.menu_book_rounded, color: theme.text),
                         onPressed: () =>
                             _scaffoldKey.currentState?.openDrawer(),
                       ),
@@ -646,12 +990,15 @@ class _ReaderPageState extends State<ReaderPage> {
                           navButton(
                             '上一章',
                             enabled: prev != null,
-                            onTap: prev == null ? null : () => _goChapter(prev.slug),
+                            onTap: prev == null
+                                ? null
+                                : () => _goChapter(prev.slug),
                           ),
                           navButton(
                             '目录',
                             enabled: true,
-                            onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                            onTap: () =>
+                                _scaffoldKey.currentState?.openDrawer(),
                           ),
                           navButton(
                             'Aa 设置',
@@ -661,7 +1008,9 @@ class _ReaderPageState extends State<ReaderPage> {
                           navButton(
                             '下一章',
                             enabled: next != null,
-                            onTap: next == null ? null : () => _goChapter(next.slug),
+                            onTap: next == null
+                                ? null
+                                : () => _goChapter(next.slug),
                           ),
                         ],
                       ),
@@ -699,7 +1048,9 @@ class _ReaderPageState extends State<ReaderPage> {
   /// 目录抽屉：整课章节列表（详情缺失时占位），当前章 accent 高亮 + 已读打勾，
   /// 点击跳章并恢复该章保存位置（无则到顶）。
   Widget _buildDrawer(ReadingTheme theme, ProgressStore progress) {
-    final detail = context.read<LibraryStore>().cachedDetail(widget.course.slug);
+    final detail = context.read<LibraryStore>().cachedDetail(
+      widget.course.slug,
+    );
     final chapters = detail?.chapters ?? _chapters;
     return Drawer(
       backgroundColor: theme.bg,
@@ -795,7 +1146,8 @@ class _ReaderPageState extends State<ReaderPage> {
     );
   }
 
-  /// 阅读设置面板：翻页模式 / 字号步进 / 行距 / 背景主题，改动即时生效并持久化。
+  /// 阅读设置面板：翻页模式 / 字号步进 / 行距 / 主题（自动 + 7 档），
+  /// 改动即时生效并持久化。
   void _showSettingsSheet() {
     showModalBottomSheet<void>(
       context: context,
@@ -813,7 +1165,10 @@ class _ReadingSettingsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = context.watch<ReaderPrefs>();
-    final theme = ReadingTheme.of(prefs.readingTheme);
+    // 面板内取色同样走 effective 主题（auto 档跟随 App 深浅色）。
+    final theme = ReadingTheme.of(
+      prefs.effectiveReadingTheme(Theme.of(context).brightness),
+    );
     var scaleIndex = ReaderPrefs.scales.indexOf(prefs.scale);
     if (scaleIndex < 0) scaleIndex = 0;
     final segStyle = SegmentedButton.styleFrom(
@@ -876,9 +1231,9 @@ class _ReadingSettingsSheet extends StatelessWidget {
                     tooltip: '减小字号',
                     enabled: scaleIndex > 0,
                     theme: theme,
-                    onTap: () => context
-                        .read<ReaderPrefs>()
-                        .setScale(ReaderPrefs.scales[scaleIndex - 1]),
+                    onTap: () => context.read<ReaderPrefs>().setScale(
+                      ReaderPrefs.scales[scaleIndex - 1],
+                    ),
                   ),
                   Expanded(
                     child: Center(
@@ -893,9 +1248,9 @@ class _ReadingSettingsSheet extends StatelessWidget {
                     tooltip: '增大字号',
                     enabled: scaleIndex < ReaderPrefs.scales.length - 1,
                     theme: theme,
-                    onTap: () => context
-                        .read<ReaderPrefs>()
-                        .setScale(ReaderPrefs.scales[scaleIndex + 1]),
+                    onTap: () => context.read<ReaderPrefs>().setScale(
+                      ReaderPrefs.scales[scaleIndex + 1],
+                    ),
                   ),
                 ],
               ),
@@ -909,20 +1264,27 @@ class _ReadingSettingsSheet extends StatelessWidget {
                 selected: {prefs.lineHeight},
                 showSelectedIcon: false,
                 style: segStyle,
-                onSelectionChanged: (selection) => context
-                    .read<ReaderPrefs>()
-                    .setLineHeight(selection.first),
+                onSelectionChanged: (selection) =>
+                    context.read<ReaderPrefs>().setLineHeight(selection.first),
               ),
-              _SectionLabel('背景', theme),
+              _SectionLabel('主题', theme),
               Row(
                 children: [
+                  Expanded(
+                    child: _AutoThemeCell(
+                      selected: prefs.readingTheme == ReaderPrefs.autoTheme,
+                      theme: theme,
+                      onTap: () => context.read<ReaderPrefs>().setReadingTheme(
+                        ReaderPrefs.autoTheme,
+                      ),
+                    ),
+                  ),
                   for (final t in ReadingTheme.all)
                     Expanded(
                       child: _ThemeSwatch(
                         swatch: t,
                         selected: prefs.readingTheme == t.id,
                         selectedColor: theme.accent,
-                        ringColor: theme.divider,
                         onTap: () =>
                             context.read<ReaderPrefs>().setReadingTheme(t.id),
                       ),
@@ -1004,20 +1366,66 @@ class _StepButton extends StatelessWidget {
   }
 }
 
-/// 背景主题圆形色块：选中描当前主题 accent 边 + 打勾。
+/// 主题自动档格子：圆形描边容器 + brightness_auto 图标，下方小字
+/// 「跟随 App 深浅色」；选中时描当前主题 accent 边。
+class _AutoThemeCell extends StatelessWidget {
+  const _AutoThemeCell({
+    required this.selected,
+    required this.theme,
+    required this.onTap,
+  });
+
+  final bool selected;
+  final ReadingTheme theme;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? theme.accent : theme.textSecondary;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: theme.bg,
+              border: Border.all(
+                color: selected ? theme.accent : theme.divider,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: Icon(Icons.brightness_auto_rounded, size: 20, color: color),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '跟随 App\n深浅色',
+            maxLines: 2,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 10, height: 1.3, color: color),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 背景主题圆形色块：bg 填充 + 自身 divider 色 1px 描边，选中 accent 2px。
 class _ThemeSwatch extends StatelessWidget {
   const _ThemeSwatch({
     required this.swatch,
     required this.selected,
     required this.selectedColor,
-    required this.ringColor,
     required this.onTap,
   });
 
   final ReadingTheme swatch;
   final bool selected;
   final Color selectedColor;
-  final Color ringColor;
   final VoidCallback onTap;
 
   @override
@@ -1029,25 +1437,24 @@ class _ThemeSwatch extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: swatch.bg,
               shape: BoxShape.circle,
               border: Border.all(
-                color: selected ? selectedColor : ringColor,
+                color: selected ? selectedColor : swatch.divider,
                 width: selected ? 2 : 1,
               ),
             ),
-            child: selected
-                ? Icon(Icons.check_rounded, size: 18, color: swatch.text)
-                : null,
           ),
           const SizedBox(height: 6),
           Text(
             swatch.label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               color: selected ? selectedColor : swatch.textSecondary,
             ),
           ),
@@ -1055,4 +1462,56 @@ class _ThemeSwatch extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 过卷翻章胶囊的瞬时状态（ValueNotifier 驱动，避免整页 setState）。
+class _FlipHint {
+  const _FlipHint.initial()
+    : direction = 0,
+      amount = 0,
+      blocked = false,
+      title = '',
+      visible = false;
+
+  const _FlipHint({
+    required this.direction,
+    required this.amount,
+    required this.blocked,
+    required this.title,
+    required this.visible,
+  });
+
+  /// 1 = 底部过卷（下一章），-1 = 顶部过卷（上一章），0 = 隐藏。
+  final int direction;
+
+  /// 当前方向累计的过卷量（逻辑像素）。
+  final double amount;
+
+  /// 首章/末章：对应方向只提示「已是第一/最后一章」，永不导航。
+  final bool blocked;
+
+  /// 目标章标题（灰态为空）。
+  final String title;
+
+  /// 胶囊是否可见（收起动画期间保留内容但 visible=false）。
+  final bool visible;
+
+  /// 累计/阈值（0~1）。
+  double get progress =>
+      (amount / _ReaderPageState._flipThreshold).clamp(0.0, 1.0).toDouble();
+}
+
+/// 始终接受用户拖拽的滚动物理：内容不满一屏（maxScrollExtent==0）时默认
+/// 物理会拒绝拖拽，短章就拉不出过卷翻章提示；此物理强制接受。
+class _AlwaysAcceptDragPhysics extends ScrollPhysics {
+  const _AlwaysAcceptDragPhysics({required ScrollPhysics parent})
+    : super(parent: parent);
+
+  @override
+  @override
+  ScrollPhysics applyTo(ScrollPhysics? ancestor) =>
+      _AlwaysAcceptDragPhysics(parent: parent!.applyTo(ancestor));
+
+  @override
+  bool shouldAcceptUserOffset(ScrollMetrics position) => true;
 }
