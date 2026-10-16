@@ -6,7 +6,6 @@ package api_test
 import (
 	"encoding/json"
 	"net/http"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -15,22 +14,13 @@ import (
 
 	"code-tutorials/backend/internal/api"
 	"code-tutorials/backend/internal/model"
-	"code-tutorials/backend/internal/store"
 )
 
 // newRouterWithDB 与 newRouter 相同，但把 *gorm.DB 也交还给用例（用于直接
 // 回拨 read_at 等确定性操作）。
 func newRouterWithDB(t *testing.T) (*gin.Engine, *gorm.DB) {
 	t.Helper()
-	db, err := store.OpenSeed(filepath.Join(t.TempDir(), "test.db"), t.TempDir())
-	if err != nil {
-		t.Fatalf("open test store: %v", err)
-	}
-	t.Cleanup(func() {
-		if sqlDB, err := db.DB(); err == nil {
-			_ = sqlDB.Close()
-		}
-	})
+	db := openTestStore(t)
 	return api.NewRouter(db), db
 }
 

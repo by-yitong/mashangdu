@@ -20,3 +20,9 @@ mobile/build/
 # editor / os
 .DS_Store
 Thumbs.db
+
+# 课程包构建产物
+dist/
+
+# ZCode 会话元数据
+.zcode/

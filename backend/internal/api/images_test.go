@@ -96,10 +96,10 @@ func TestImagesStaticNotFound(t *testing.T) {
 	r := newImagesRouter(t)
 
 	cases := []string{
-		"/images/no-such.png",                                    // 文件不存在
+		"/images/no-such.png", // 文件不存在
 		"/images/hello-algo/sorting/quick_sort.assets/step1.png", // 目录未落盘（整树不存在）
-		"/images/../main.go",                                     // .. 穿越，禁止越出图片根目录
-		"/images/../api/v1/courses",                              // .. 穿越到 API 路由，同样不可达
+		"/images/../main.go",        // .. 穿越，禁止越出图片根目录
+		"/images/../api/v1/courses", // .. 穿越到 API 路由，同样不可达
 	}
 	for _, path := range cases {
 		status, _, body := doGetRaw(t, r, path)

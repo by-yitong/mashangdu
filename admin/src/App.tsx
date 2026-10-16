@@ -2,7 +2,9 @@ import { Navigate, Outlet, RouterProvider, createHashRouter, useLocation } from 
 import { TopBar } from './components/TopBar'
 import { AppVersionListPage } from './pages/AppVersionListPage'
 import { ChapterEditPage } from './pages/ChapterEditPage'
+import { CommentListPage } from './pages/CommentListPage'
 import { CourseDetailPage } from './pages/CourseDetailPage'
+import { CourseImportPage } from './pages/CourseImportPage'
 import { CourseListPage } from './pages/CourseListPage'
 import { LoginPage } from './pages/LoginPage'
 import { SettingsProvider, useSettings } from './SettingsContext'
@@ -36,7 +38,9 @@ const routes = [
     element: <RequireToken />,
     children: [
       { path: '/', element: <CourseListPage /> },
+      { path: '/course-import', element: <CourseImportPage /> },
       { path: '/app-versions', element: <AppVersionListPage /> },
+      { path: '/comments', element: <CommentListPage /> },
       { path: '/courses/:slug', element: <CourseDetailPage /> },
       { path: '/courses/:slug/chapters/new', element: <ChapterEditPage /> },
       { path: '/courses/:slug/chapters/:chapterSlug', element: <ChapterEditPage /> },

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"code-tutorials/backend/internal/api"
 	"code-tutorials/backend/internal/store"
@@ -21,12 +22,56 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// newRouter 为每个用例打开独立的临时数据库，不污染 backend/data。
-// seedDir 指向不含 courses.json 的空目录，固定走内置硬编码种子（2 门课程 5 章），
-// 使断言不依赖真实 seeddata/courses.json 的内容。
-func newRouter(t *testing.T) *gin.Engine {
+// copyExampleSeed 把 ../store/seeddata/courses.example.json 与其引用的 md 文件
+// 复制到临时目录，组装出可用作 seedDir 的目录（不读写真实 courses.json）。
+// embed 兜底种子已移除（课程内容不进二进制），测试基建自行从磁盘组装种子。
+func copyExampleSeed(t *testing.T, dir string) string {
 	t.Helper()
-	db, err := store.OpenSeed(filepath.Join(t.TempDir(), "test.db"), t.TempDir())
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("mkdir seed dir: %v", err)
+	}
+	raw, err := os.ReadFile(filepath.Join("..", "store", "seeddata", "courses.example.json"))
+	if err != nil {
+		t.Fatalf("read courses.example.json: %v", err)
+	}
+	var payload struct {
+		Courses []struct {
+			Chapters []struct {
+				File string `json:"file"`
+			} `json:"chapters"`
+		} `json:"courses"`
+	}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		t.Fatalf("parse courses.example.json: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "courses.json"), raw, 0o644); err != nil {
+		t.Fatalf("write courses.json: %v", err)
+	}
+	copied := map[string]bool{}
+	for _, course := range payload.Courses {
+		for _, chapter := range course.Chapters {
+			if copied[chapter.File] {
+				continue
+			}
+			copied[chapter.File] = true
+			content, err := os.ReadFile(filepath.Join("..", "store", "seeddata", chapter.File))
+			if err != nil {
+				t.Fatalf("read seed md %s: %v", chapter.File, err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, chapter.File), content, 0o644); err != nil {
+				t.Fatalf("write seed md %s: %v", chapter.File, err)
+			}
+		}
+	}
+	return dir
+}
+
+// openTestStore 为每个用例打开独立的临时数据库，不污染 backend/data。
+// 种子来自临时目录里的 courses.example.json（2 门课程 5 章），使断言不依赖
+// 真实 seeddata/courses.json 的内容。
+func openTestStore(t *testing.T) *gorm.DB {
+	t.Helper()
+	db, err := store.OpenSeed(filepath.Join(t.TempDir(), "test.db"), copyExampleSeed(t, filepath.Join(t.TempDir(), "seed")))
 	if err != nil {
 		t.Fatalf("open test store: %v", err)
 	}
@@ -35,7 +80,13 @@ func newRouter(t *testing.T) *gin.Engine {
 			_ = sqlDB.Close()
 		}
 	})
-	return api.NewRouter(db)
+	return db
+}
+
+// newRouter 打开独立临时数据库并返回路由引擎（种子见 openTestStore）。
+func newRouter(t *testing.T) *gin.Engine {
+	t.Helper()
+	return api.NewRouter(openTestStore(t))
 }
 
 type response struct {

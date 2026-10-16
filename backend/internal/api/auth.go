@@ -52,6 +52,29 @@ func newAuthToken(user model.User) (string, error) {
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(authSecret()))
 }
 
+// parseBearerUserID 校验并解析 JWT 字符串，返回用户 id；任何一步失败返回 false。
+func parseBearerUserID(tokenString string) (uint, bool) {
+	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+		return []byte(authSecret()), nil
+	})
+	if err != nil || !token.Valid {
+		return 0, false
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, false
+	}
+	sub, _ := claims["sub"].(string)
+	userID, err := strconv.ParseUint(sub, 10, 64)
+	if err != nil || userID == 0 {
+		return 0, false
+	}
+	return uint(userID), true
+}
+
 // userAuth 校验 Authorization: Bearer <token>；失败一律 401 AUTH_UNAUTHORIZED，
 // 成功把 userID（uint）写入 context。
 func userAuth() gin.HandlerFunc {
@@ -63,31 +86,28 @@ func userAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		token, err := jwt.Parse(strings.TrimPrefix(header, prefix), func(t *jwt.Token) (interface{}, error) {
-			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, errors.New("unexpected signing method")
-			}
-			return []byte(authSecret()), nil
-		})
-		if err != nil || !token.Valid {
-			fail(c, http.StatusUnauthorized, "AUTH_UNAUTHORIZED", "invalid or expired token")
-			c.Abort()
-			return
-		}
-		claims, ok := token.Claims.(jwt.MapClaims)
+		userID, ok := parseBearerUserID(strings.TrimPrefix(header, prefix))
 		if !ok {
 			fail(c, http.StatusUnauthorized, "AUTH_UNAUTHORIZED", "invalid or expired token")
 			c.Abort()
 			return
 		}
-		sub, _ := claims["sub"].(string)
-		userID, parseErr := strconv.ParseUint(sub, 10, 64)
-		if parseErr != nil || userID == 0 {
-			fail(c, http.StatusUnauthorized, "AUTH_UNAUTHORIZED", "invalid or expired token")
-			c.Abort()
-			return
+		c.Set(ctxUserID, userID)
+		c.Next()
+	}
+}
+
+// optionalUserAuth 可选 Bearer：有合法 token 则把 userID 写入 context，
+// 缺失或无效 token 一律放行（匿名），handler 用 currentUserID==0 判定匿名。
+func optionalUserAuth() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		header := c.GetHeader("Authorization")
+		const prefix = "Bearer "
+		if strings.HasPrefix(header, prefix) {
+			if userID, ok := parseBearerUserID(strings.TrimPrefix(header, prefix)); ok {
+				c.Set(ctxUserID, userID)
+			}
 		}
-		c.Set(ctxUserID, uint(userID))
 		c.Next()
 	}
 }
@@ -121,11 +141,13 @@ func bindUserJSON(c *gin.Context, in interface{}) bool {
 	return true
 }
 
-// userPayload 用户公开字段（不含密码哈希），时间 RFC3339。
+// userPayload 用户公开字段（不含密码哈希），时间 RFC3339；avatar 为头像相对
+// URL（如 "/avatars/3-ab12cd34.jpg"），未设置时为空串。
 func userPayload(user model.User) gin.H {
 	return gin.H{
 		"id":        user.ID,
 		"username":  user.Username,
+		"avatar":    user.Avatar,
 		"createdAt": user.CreatedAt.UTC().Format(time.RFC3339),
 	}
 }

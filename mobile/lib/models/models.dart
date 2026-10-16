@@ -162,21 +162,32 @@ DateTime? _parseDate(Object? value) {
 
 /// POST /api/v1/auth/register|login 返回 data 里的 user。
 class AuthUser {
-  const AuthUser({required this.id, required this.username, this.createdAt});
+  const AuthUser({
+    required this.id,
+    required this.username,
+    this.avatar = '',
+    this.createdAt,
+  });
 
   final int id;
   final String username;
+
+  /// 头像相对路径（如 /avatars/xx.jpg），空串 = 无头像；展示时经
+  /// ApiClient.resolve 拼成绝对 URL。
+  final String avatar;
   final DateTime? createdAt;
 
   factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
     id: (json['id'] as num?)?.toInt() ?? 0,
     username: json['username'] as String? ?? '',
+    avatar: json['avatar'] as String? ?? '',
     createdAt: _parseDate(json['createdAt']),
   );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'username': username,
+    'avatar': avatar,
     'createdAt': createdAt?.toIso8601String(),
   };
 }
@@ -247,5 +258,104 @@ class AppRelease {
     apkUrl: json['apkUrl'] as String? ?? '',
     force: json['force'] as bool? ?? false,
     releasedAt: _parseDate(json['releasedAt']),
+  );
+}
+
+/// GET /api/v1/courses/{c}/chapters/{ch}/stats 的 data。
+class ChapterStats {
+  const ChapterStats({
+    required this.viewCount,
+    required this.likeCount,
+    required this.commentCount,
+    required this.liked,
+  });
+
+  final int viewCount;
+  final int likeCount;
+  final int commentCount;
+
+  /// 当前登录用户是否已点赞（未登录恒为 false）。
+  final bool liked;
+
+  factory ChapterStats.fromJson(Map<String, dynamic> json) => ChapterStats(
+    viewCount: (json['viewCount'] as num?)?.toInt() ?? 0,
+    likeCount: (json['likeCount'] as num?)?.toInt() ?? 0,
+    commentCount: (json['commentCount'] as num?)?.toInt() ?? 0,
+    liked: json['liked'] as bool? ?? false,
+  );
+
+  ChapterStats copyWith({
+    int? viewCount,
+    int? likeCount,
+    int? commentCount,
+    bool? liked,
+  }) => ChapterStats(
+    viewCount: viewCount ?? this.viewCount,
+    likeCount: likeCount ?? this.likeCount,
+    commentCount: commentCount ?? this.commentCount,
+    liked: liked ?? this.liked,
+  );
+}
+
+/// 章节 / 评论相关字段（camelCase，对应冻结契约）。
+class ChapterComment {
+  const ChapterComment({
+    required this.id,
+    required this.userId,
+    required this.username,
+    required this.avatar,
+    required this.content,
+    required this.createdAt,
+  });
+
+  final int id;
+  final int userId;
+  final String username;
+
+  /// 头像相对路径，空串 = 无头像。
+  final String avatar;
+  final String content;
+  final DateTime? createdAt;
+
+  factory ChapterComment.fromJson(Map<String, dynamic> json) => ChapterComment(
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    userId: (json['userId'] as num?)?.toInt() ?? 0,
+    username: json['username'] as String? ?? '',
+    avatar: json['avatar'] as String? ?? '',
+    content: json['content'] as String? ?? '',
+    createdAt: _parseDate(json['createdAt']),
+  );
+
+  /// 防御式列表解析（同 ReadRecord.listFromJson：跳过非 Map 元素）。
+  static List<ChapterComment> listFromJson(Object? data) =>
+      (data as List<Object?>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(ChapterComment.fromJson)
+          .toList();
+}
+
+/// GET /api/v1/courses/{c}/chapters/{ch}/comments 的 data（分页信封）。
+class CommentPage {
+  const CommentPage({
+    required this.comments,
+    required this.total,
+    required this.page,
+    required this.pageSize,
+    required this.pageCount,
+  });
+
+  /// 最新在前。
+  final List<ChapterComment> comments;
+  final int total;
+  final int page;
+  final int pageSize;
+  final int pageCount;
+
+  factory CommentPage.fromJson(Map<String, dynamic> json) => CommentPage(
+    comments: ChapterComment.listFromJson(json['comments']),
+    total: (json['total'] as num?)?.toInt() ?? 0,
+    page: (json['page'] as num?)?.toInt() ?? 1,
+    pageSize: (json['pageSize'] as num?)?.toInt() ?? 20,
+    pageCount: (json['pageCount'] as num?)?.toInt() ?? 1,
   );
 }

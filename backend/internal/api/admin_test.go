@@ -372,14 +372,15 @@ func TestAdminStaticSPA(t *testing.T) {
 	t.Setenv("ADMIN_TOKEN", "dev123")
 	r := newRouter(t)
 
-	// 嵌入的占位 index.html：/admin/ 可直接 GET（SPA 入口，hash 路由也由
-	// 它承载），未知子路径回退到同一页面。
+	// 嵌入的 index.html（真实后台构建产物）：/admin/ 可直接 GET（SPA 入口，
+	// hash 路由也由它承载），未知子路径回退到同一页面。只断言 SPA 挂载点，
+	// 不依赖具体构建产物内容。
 	index, err := web.DistFS.ReadFile("dist/index.html")
 	if err != nil {
 		t.Fatalf("read embedded index.html: %v", err)
 	}
-	if !strings.Contains(string(index), "admin frontend placeholder") {
-		t.Fatalf("embedded index.html missing placeholder text: %q", string(index))
+	if !strings.Contains(string(index), `<div id="root">`) {
+		t.Fatalf("embedded index.html missing SPA root element: %q", string(index))
 	}
 	for _, path := range []string{"/admin/", "/admin/courses/new", "/admin/a/b/c"} {
 		w := httptest.NewRecorder()

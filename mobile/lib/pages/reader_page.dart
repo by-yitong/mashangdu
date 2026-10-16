@@ -15,6 +15,7 @@ import '../state/progress_store.dart';
 import '../state/reader_prefs.dart';
 import '../utils/drawer_snap.dart';
 import '../utils/relative_time.dart' show formatHm;
+import '../widgets/chapter_interaction.dart';
 import '../widgets/code_block.dart';
 import '../widgets/design.dart';
 import '../widgets/offline_image.dart';
@@ -256,6 +257,9 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
               .catchError((Object _) {}),
         );
       }
+      // 阅读量上报：无需登录（未登录也计入），recordView 内部吞掉异常，
+      // 同样 fire-and-forget，离线/失败静默。
+      async.unawaited(api.recordView(widget.course.slug, chapter.slug));
     }
   }
 
@@ -675,6 +679,21 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
                             padding: const EdgeInsets.only(top: 20),
                             sliver: _buildBody(theme, prefs),
                           ),
+                          // 章节末互动区：随正文滚动（不悬浮），按章节 slug
+                          // 挂 key——切章即重挂载、互动状态重置；配色走
+                          // ReadingTheme。章节未就绪（加载中/失败页）不显示。
+                          if (_chapter != null)
+                            SliverPadding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+                              sliver: SliverToBoxAdapter(
+                                child: ChapterInteraction(
+                                  key: ValueKey('interaction-${_chapter!.slug}'),
+                                  courseSlug: widget.course.slug,
+                                  chapterSlug: _chapter!.slug,
+                                  theme: theme,
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -1114,9 +1133,11 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
     );
     // Markdown 组件自带滚动容器，不能嵌进 CustomScrollView 的 sliver；
     // 用非滚动的 MarkdownBody，滚动统一交给外层列表 + 手势层。
+    // 底部仅留小间距：正文之后紧跟章节末互动区，滚动尾部留白由互动区
+    // 的 sliver padding 承担。
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
         child: MarkdownBody(
           data: _chapter!.contentMd,
           styleSheet: styleSheet,
@@ -1128,9 +1149,9 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
           },
           // 图片：优先读离线缓存，缺失时按需下载（与整课下载同一落盘规则）；
           // 相对路径经 ApiClient.resolve 拼到当前服务器地址。
-          imageBuilder: (uri, title, alt) => OfflineImage(
-            url: uri.toString(),
-            alt: alt ?? '',
+          sizedImageBuilder: (config) => OfflineImage(
+            url: config.uri.toString(),
+            alt: config.alt ?? '',
             resolver: (raw) => context.read<ApiClient>().resolve(raw),
           ),
           softLineBreak: true,

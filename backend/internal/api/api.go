@@ -8,12 +8,14 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
 	"code-tutorials/backend/internal/model"
+	"code-tutorials/backend/internal/store"
 	"code-tutorials/backend/web"
 )
 
@@ -37,9 +39,16 @@ func fail(c *gin.Context, status int, code, message string) {
 	c.JSON(status, envelope{Code: code, Message: message, Data: nil})
 }
 
-// Server 持有所有 handler 共享的依赖。
+// Server 持有所有 handler 共享的依赖；lastCommentAt 为评论频控（同一用户
+// 两次评论最小间隔，进程内 map + 互斥锁，重启清零可接受）。
+// seedDir 为课程包落盘目录（courses.json 与章节 md，管理端导入接口写入）；
+// imagesRoot 为教程图片根目录（/images 静态托管与导入接口共用）。
 type Server struct {
-	db *gorm.DB
+	db            *gorm.DB
+	seedDir       string
+	imagesRoot    string
+	commentMu     sync.Mutex
+	lastCommentAt map[uint]time.Time
 }
 
 // imagesRoot 教程图片静态目录，相对进程工作目录（在 backend/ 下启动即
@@ -47,13 +56,32 @@ type Server struct {
 // 声明为 var 仅供测试注入临时目录。
 var imagesRoot = "static/images"
 
+// avatarsRoot 用户头像静态目录（backend/data/avatars），行为与 imagesRoot 一致；
+// 上传接口（POST /api/v1/me/avatar）保存文件时会 MkdirAll 创建。
+var avatarsRoot = "data/avatars"
+
 // NewRouter 构建 Gin 引擎：CORS、统一错误信封与全部 /api/v1 路由。
+// seedDir 默认取 store.ResolveSeedDir()（磁盘 seeddata 探测），imagesRoot
+// 默认取包级变量（测试可整体替换后再构造）。
 // 后台 SPA（/admin）由编译期嵌入的 web.DistFS 托管（构建流程：先在仓库根
 // admin/ 执行 npm run build，产物拷贝到 backend/web/dist/ 后再 go build），
 // 静态文件 200；/admin 前缀下未知的 GET/HEAD 路径回退 index.html。
 // 另将 GET /images/*filepath 挂载到 imagesRoot（教程图片静态托管，无需认证）。
 func NewRouter(db *gorm.DB) *gin.Engine {
-	s := &Server{db: db}
+	return NewRouterWithDirs(db, store.ResolveSeedDir(), imagesRoot)
+}
+
+// NewRouterWithDirs 与 NewRouter 相同，但显式指定课程包目录（seedDir）与
+// 教程图片根目录（imgRoot），空串回退各自默认值；供测试注入临时目录，
+// 生产调用点仍走 NewRouter。
+func NewRouterWithDirs(db *gorm.DB, seedDir, imgRoot string) *gin.Engine {
+	if seedDir == "" {
+		seedDir = store.ResolveSeedDir()
+	}
+	if imgRoot == "" {
+		imgRoot = imagesRoot
+	}
+	s := &Server{db: db, seedDir: seedDir, imagesRoot: imgRoot, lastCommentAt: make(map[uint]time.Time)}
 	r := gin.New()
 	r.Use(gin.Logger(), cors(), recovery())
 
@@ -67,7 +95,11 @@ func NewRouter(db *gorm.DB) *gin.Engine {
 	// 目录不存在时不强行创建：文件缺失或目录未落盘时 gin 静态处理器回退
 	// NoRoute，统一返回 404 JSON 信封（.. 穿越由 http.Dir 清洗、同样 404）；
 	// 目录后续落盘后无需重启即可生效。
-	r.Static("/images", imagesRoot)
+	r.Static("/images", s.imagesRoot)
+
+	// GET /avatars/*filepath 用户头像静态托管（无需认证），行为与 /images 一致：
+	// 目录缺失/文件不存在统一 404 信封；目录由上传接口按需创建。
+	r.Static("/avatars", avatarsRoot)
 
 	r.NoRoute(func(c *gin.Context) {
 		if isAdminPageRequest(c) {
@@ -94,11 +126,25 @@ func NewRouter(db *gorm.DB) *gin.Engine {
 	v1.DELETE("/records", userAuth(), s.clearRecords)
 	v1.DELETE("/records/:courseSlug/:chapterSlug", userAuth(), s.deleteRecord)
 
+	// 用户头像：上传需要 Bearer；GET /avatars/*filepath 静态托管见上方。
+	v1.POST("/me/avatar", userAuth(), s.uploadAvatar)
+
+	// 章节互动：阅读量/评论列表无认证；stats 支持可选 Bearer（liked 字段）；
+	// 点赞与发评论需要 Bearer。
+	v1.POST("/courses/:slug/chapters/:chapterSlug/view", s.chapterView)
+	v1.GET("/courses/:slug/chapters/:chapterSlug/stats", optionalUserAuth(), s.chapterStats)
+	v1.POST("/courses/:slug/chapters/:chapterSlug/like", userAuth(), s.likeChapter)
+	v1.DELETE("/courses/:slug/chapters/:chapterSlug/like", userAuth(), s.unlikeChapter)
+	v1.GET("/courses/:slug/chapters/:chapterSlug/comments", s.listChapterComments)
+	v1.POST("/courses/:slug/chapters/:chapterSlug/comments", userAuth(), s.createChapterComment)
+	v1.DELETE("/comments/:id", userAuth(), s.deleteComment)
+
 	// App 版本：latest 供客户端无认证检查更新。
 	v1.GET("/app/latest", s.appLatest)
 
 	admin := v1.Group("/admin", adminAuth())
 	admin.POST("/courses", s.createCourse)
+	admin.POST("/courses/import", s.importCourses)
 	admin.PUT("/courses/:slug", s.updateCourse)
 	admin.DELETE("/courses/:slug", s.deleteCourse)
 	admin.POST("/courses/:slug/chapters", s.createChapter)
@@ -108,6 +154,8 @@ func NewRouter(db *gorm.DB) *gin.Engine {
 	admin.POST("/app-versions", s.createAppVersion)
 	admin.PUT("/app-versions/:id", s.updateAppVersion)
 	admin.DELETE("/app-versions/:id", s.deleteAppVersion)
+	admin.GET("/comments", s.adminListComments)
+	admin.DELETE("/comments/:id", s.adminDeleteComment)
 	return r
 }
 

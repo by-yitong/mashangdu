@@ -3,8 +3,8 @@
 教程内容 API。Golang + Gin + GORM + SQLite（驱动 `github.com/glebarez/sqlite`，纯 Go 无 CGO）。
 
 - Base URL：`http://localhost:8080/api/v1`
-- 方法：内容接口（1～4）为只读 `GET`；管理端接口（5～10、13b，`/api/v1/admin` 前缀）提供写操作；用户认证（11）与观看记录（12）为 `POST/GET/PUT/DELETE`
-- 认证：内容接口与 `GET /app/latest` 无认证；用户认证与观看记录接口需要请求头 `Authorization: Bearer <token>`（见下文"用户认证（Bearer）"）；管理端接口需要请求头 `X-Admin-Token`（见下文"管理端鉴权"）
+- 方法：内容接口（1～4）为只读 `GET`；管理端接口（5～10、13b、16，`/api/v1/admin` 前缀）提供写操作；用户认证（11）与观看记录（12）为 `POST/GET/PUT/DELETE`；用户头像（14）与章节互动（15）为 `POST/GET/DELETE`
+- 认证：内容接口、`GET /app/latest`、阅读量/评论列表（15a/15b/15d）无认证；`stats` 支持可选 Bearer；用户认证、头像上传、观看记录、点赞与发评论接口需要请求头 `Authorization: Bearer <token>`（见下文"用户认证（Bearer）"）；管理端接口需要请求头 `X-Admin-Token`（见下文"管理端鉴权"）
 - CORS：允许所有来源（开发期），预检 `OPTIONS` 返回 204；允许方法 `GET, POST, PUT, DELETE, OPTIONS`，允许头含 `X-Admin-Token`、`Authorization`
 
 ## 启动
@@ -42,7 +42,7 @@ admin 前端在编译期通过 go:embed 嵌入二进制（`backend/web/dist`，�
 | code | HTTP | data |
 | --- | --- | --- |
 | `OK` | 200 | 具体数据，`message` 固定为 `"ok"` |
-| `OK` | 201 | 同上（仅注册、管理端创建 App 版本） |
+| `OK` | 201 | 同上（仅注册、发布评论、管理端创建 App 版本） |
 | `FORBIDDEN` | 403 | `null`（仅管理端） |
 | `BAD_REQUEST` | 400 | `null`（管理端与用户端均有使用，code 语义按接口区分） |
 | `AUTH_INVALID_INPUT` | 400 | `null`（仅用户端接口） |
@@ -50,6 +50,10 @@ admin 前端在编译期通过 go:embed 嵌入二进制（`backend/web/dist`，�
 | `AUTH_INVALID_CREDENTIALS` | 401 | `null`（仅登录） |
 | `AUTH_USERNAME_TAKEN` | 409 | `null`（仅注册） |
 | `VERSION_CONFLICT` | 409 | `null`（仅管理端 App 版本） |
+| `AVATAR_INVALID` | 400 | `null`（仅头像上传） |
+| `COMMENT_INVALID_INPUT` | 400 | `null`（仅发布评论） |
+| `COMMENT_FORBIDDEN` | 403 | `null`（仅删除他人评论） |
+| `COMMENT_TOO_FAST` | 429 | `null`（仅发布评论频控） |
 | `NOT_FOUND` | 404 | `null` |
 | `INTERNAL` | 500 | `null` |
 
@@ -572,7 +576,7 @@ App 端用户接口（11～12）使用 JWT 认证：
   "message": "ok",
   "data": {
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {"id": 1, "username": "alice", "createdAt": "2026-10-16T08:00:00Z"}
+    "user": {"id": 1, "username": "alice", "avatar": "", "createdAt": "2026-10-16T08:00:00Z"}
   }
 }
 ```
@@ -609,7 +613,7 @@ App 端用户接口（11～12）使用 JWT 认证：
   "message": "ok",
   "data": {
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {"id": 1, "username": "alice", "createdAt": "2026-10-16T08:00:00Z"}
+    "user": {"id": 1, "username": "alice", "avatar": "", "createdAt": "2026-10-16T08:00:00Z"}
   }
 }
 ```
@@ -632,9 +636,18 @@ App 端用户接口（11～12）使用 JWT 认证：
 {
   "code": "OK",
   "message": "ok",
-  "data": {"user": {"id": 1, "username": "alice", "createdAt": "2026-10-16T08:00:00Z"}}
+  "data": {"user": {"id": 1, "username": "alice", "avatar": "/avatars/1-ab12cd34.png", "createdAt": "2026-10-16T08:00:00Z"}}
 }
 ```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | int | 用户 id |
+| `username` | string | 用户名 |
+| `avatar` | string | 头像相对 URL（如 `/avatars/1-ab12cd34.png`），未上传时为空串 |
+| `createdAt` | string | 注册时间（RFC3339 UTC） |
+
+注册/登录返回的 `user` 对象同构（新用户 `avatar` 为空串）。
 
 ### 失败响应 401
 
@@ -827,27 +840,321 @@ App 端用户接口（11～12）使用 JWT 认证：
 
 ---
 
+## 14. 用户头像
+
+`POST /api/v1/me/avatar`（Bearer）上传头像；`GET /avatars/{filepath}` 静态取回（无需认证）。
+
+### 14a. POST /api/v1/me/avatar（Bearer，multipart/form-data）
+
+#### 请求
+
+`multipart/form-data`，文件字段名 `file`：
+
+```bash
+curl -X POST http://localhost:8080/api/v1/me/avatar \
+  -H "Authorization: Bearer <token>" \
+  -F "file=@avatar.png"
+```
+
+#### 校验规则
+
+- 文件字段必须存在；
+- 大小 ≤ 5MB（读内容前按 multipart 头部判断）；
+- 魔数只允许 JPEG（`FF D8 FF`）/ PNG（`89 50 4E 47`）/ WEBP（`RIFF....WEBP`）。
+
+任一不满足返回 400：
+
+```json
+{"code": "AVATAR_INVALID", "message": "only JPEG, PNG or WEBP images are allowed", "data": null}
+```
+
+`message` 取值：`invalid multipart form` / `file field is required` / `file exceeds 5MB limit` / `cannot read uploaded file` / `only JPEG, PNG or WEBP images are allowed`。
+
+#### 存储与替换
+
+- 落盘目录 `backend/data/avatars/`（不存在时自动创建），文件名 `{userId}-{8位hex随机}.{jpg|png|webp}`，如 `3-ab12cd34.jpg`；
+- 成功后更新 `users.avatar` 为相对 URL（如 `/avatars/3-ab12cd34.jpg`），并删除旧头像文件；
+- 重复上传即替换。
+
+#### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "user": {"id": 1, "username": "alice", "avatar": "/avatars/1-ab12cd34.png", "createdAt": "2026-10-16T08:00:00Z"}
+  }
+}
+```
+
+#### 失败响应 401
+
+未带 token / token 无效：`AUTH_UNAUTHORIZED`（见"用户认证（Bearer）"）。
+
+### 14b. GET /avatars/{filepath}（无认证）
+
+用户头像静态文件路由，行为与 `GET /images/{filepath}` 一致：`Content-Type` 按扩展名映射（`.png` → `image/png`、`.jpg` → `image/jpeg`、`.webp` → `image/webp`），文件不存在、`..` 越界统一 404 信封。目录不提供列表。
+
+```bash
+curl -s -o avatar.png http://localhost:8080/avatars/1-ab12cd34.png
+```
+
+---
+
+## 15. 章节互动
+
+章节级阅读量 / 点赞 / 评论。路径前缀 `/api/v1/courses/{slug}/chapters/{chapterSlug}`；课程不存在、章节不存在或章节不属于该课程时统一 404：
+
+```json
+{"code": "NOT_FOUND", "message": "course or chapter not found", "data": null}
+```
+
+### 15a. POST /api/v1/courses/{slug}/chapters/{chapterSlug}/view（无认证）
+
+上报一次阅读，章节 `viewCount` 自增（仅更新该列，不改变章节 `updated_at`，因此不会抬升 `/meta` 的 `content_version`）。
+
+#### 成功响应 200
+
+```json
+{"code": "OK", "message": "ok", "data": {"viewCount": 42}}
+```
+
+### 15b. GET /api/v1/courses/{slug}/chapters/{chapterSlug}/stats（可选 Bearer）
+
+章节互动统计。无 token 或 token 无效均放行（匿名 `liked=false`）；带合法 token 时返回当前用户是否已点赞。
+
+#### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {"viewCount": 42, "likeCount": 3, "commentCount": 5, "liked": true}
+}
+```
+
+### 15c. POST / DELETE /api/v1/courses/{slug}/chapters/{chapterSlug}/like（Bearer）
+
+点赞 / 取消点赞，均幂等（重复调用返回当前状态，不报错）。
+
+#### 成功响应 200
+
+```json
+{"code": "OK", "message": "ok", "data": {"liked": true, "likeCount": 3}}
+```
+
+取消后：`{"liked": false, "likeCount": 2}`。
+
+#### 失败响应 401
+
+未带 token / token 无效：`AUTH_UNAUTHORIZED`。
+
+### 15d. GET /api/v1/courses/{slug}/chapters/{chapterSlug}/comments（无认证，分页）
+
+评论列表，最新在前（`createdAt` 降序，同秒按 `id` 降序）。
+
+#### 参数
+
+| 参数 | 位置 | 说明 |
+| --- | --- | --- |
+| `page` | query | 页码，≥1，默认 1；非法值回落 1 |
+| `pageSize` | query | 每页条数，1～50，默认 20；越界回落边界内默认 |
+
+#### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "comments": [
+      {
+        "id": 2,
+        "userId": 2,
+        "username": "bob",
+        "avatar": "/avatars/2-9f8e7d6c.jpg",
+        "content": "写得不错！",
+        "createdAt": "2026-10-16T09:30:00Z"
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "pageSize": 20,
+    "pageCount": 1
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `comments` | array | 无评论时为 `[]`（不是 `null`） |
+| `total` | int | 该章节评论总数 |
+| `pageCount` | int | `ceil(total/pageSize)`，total=0 时为 0 |
+| `avatar` | string | 作者当前头像相对 URL，可为 `""` |
+
+### 15e. POST /api/v1/courses/{slug}/chapters/{chapterSlug}/comments（Bearer）
+
+发布评论。
+
+#### 请求体
+
+```json
+{"content": "写得不错！"}
+```
+
+`content` 去除首尾空白后长度须为 1～1000 个字符（rune 计），否则 400：
+
+```json
+{"code": "COMMENT_INVALID_INPUT", "message": "content must be 1-1000 characters after trimming", "data": null}
+```
+
+同一用户两次发布间隔不足 10 秒返回 429（进程内计时，服务重启后清零）：
+
+```json
+{"code": "COMMENT_TOO_FAST", "message": "commenting too fast, retry in 10s", "data": null}
+```
+
+#### 成功响应 201
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "comment": {
+      "id": 3,
+      "userId": 1,
+      "username": "alice",
+      "avatar": "",
+      "content": "写得不错！",
+      "createdAt": "2026-10-16T09:31:00Z"
+    }
+  }
+}
+```
+
+#### 失败响应 401
+
+未带 token / token 无效：`AUTH_UNAUTHORIZED`。
+
+### 15f. DELETE /api/v1/comments/{id}（Bearer）
+
+删除评论，仅作者本人。
+
+#### 参数
+
+| 参数 | 位置 | 说明 |
+| --- | --- | --- |
+| `id` | path | 评论 id；不存在或 id 非数字返回 404 |
+
+#### 成功响应 200
+
+```json
+{"code": "OK", "message": "ok", "data": {"deleted": 1}}
+```
+
+#### 失败响应
+
+404（评论不存在）：
+
+```json
+{"code": "NOT_FOUND", "message": "comment not found", "data": null}
+```
+
+403（删除他人评论）：
+
+```json
+{"code": "COMMENT_FORBIDDEN", "message": "only the author can delete this comment", "data": null}
+```
+
+---
+
+## 16. 管理端评论管理（X-Admin-Token）
+
+### 16a. GET /api/v1/admin/comments?courseSlug=&page=&pageSize=
+
+全部评论列表（跨章节），最新在前；`courseSlug` 为空表示全部课程；分页参数同 15d。
+
+#### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "comments": [
+      {
+        "id": 3,
+        "userId": 1,
+        "username": "alice",
+        "courseSlug": "go-basics",
+        "courseTitle": "Go 语言入门",
+        "chapterSlug": "hello-world",
+        "chapterTitle": "Hello World",
+        "content": "写得不错！",
+        "createdAt": "2026-10-16T09:31:00Z"
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "pageSize": 20,
+    "pageCount": 1
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `courseTitle` | string | 联表自 courses；课程已被删除时兜底 `"(已删除课程)"` |
+| `chapterTitle` | string | 联表自 chapters；章节已被删除时兜底 `"(已删除章节)"` |
+| `username` | string | 联表自 users；作者已被删除时兜底 `"(已删除用户)"` |
+
+### 16b. DELETE /api/v1/admin/comments/{id}
+
+删除任意评论。
+
+#### 成功响应 200
+
+```json
+{"code": "OK", "message": "ok", "data": {"deleted": 1}}
+```
+
+#### 失败响应 404
+
+```json
+{"code": "NOT_FOUND", "message": "comment not found", "data": null}
+```
+
+---
+
 ## 错误码汇总
 
 | HTTP | code | 场景 |
 | --- | --- | --- |
-| 200/201 | `OK` | 成功（201 仅注册、管理端创建 App 版本） |
+| 200/201 | `OK` | 成功（201 仅注册、发布评论、管理端创建 App 版本） |
 | 400 | `BAD_REQUEST` | 管理端：请求体非法 JSON（`invalid request body`）、缺 slug/`slug is required`、缺 title/`title is required`、color 非法（`invalid color: want #RRGGBB`）、课程 slug 重复（`course slug already exists`）、章节 slug 重复（`chapter slug already exists`）、App 版本入参不合法（`version is required` / `apkUrl is required` / `versionCode must be a positive integer`） |
 | 400 | `AUTH_INVALID_INPUT` | 用户端：注册/登录字段长度不合法（`username must be 3-32 bytes and password must be 6-64 bytes`）、请求体非法 JSON（`invalid request body`） |
+| 400 | `AVATAR_INVALID` | 头像上传：multipart 非法、缺 file 字段、超 5MB、非 JPEG/PNG/WEBP 魔数（见 14a） |
+| 400 | `COMMENT_INVALID_INPUT` | 发布评论：content 去空白后为空或超过 1000 字符（`content must be 1-1000 characters after trimming`） |
 | 401 | `AUTH_UNAUTHORIZED` | 用户端：Bearer token 缺失（`missing bearer token`）或无效/过期（`invalid or expired token`） |
 | 401 | `AUTH_INVALID_CREDENTIALS` | 登录：用户不存在或密码错误（`invalid username or password`） |
 | 403 | `FORBIDDEN` | 管理端：`ADMIN_TOKEN` 未设置（`admin disabled: ADMIN_TOKEN not set`）或 token 不匹配（`invalid admin token`） |
-| 404 | `NOT_FOUND` | 路径不存在、课程不存在（`course not found`）、章节不存在（`chapter not found`）、观看记录的课程/章节校验失败（`course or chapter not found`）、无可用 App 版本（`app release not found`）、App 版本 id 不存在（`app version not found`） |
+| 403 | `COMMENT_FORBIDDEN` | 删除他人评论（`only the author can delete this comment`） |
+| 404 | `NOT_FOUND` | 路径不存在、课程不存在（`course not found`）、章节不存在（`chapter not found`）、观看记录/章节互动的课程章节校验失败（`course or chapter not found`）、评论不存在（`comment not found`）、无可用 App 版本（`app release not found`）、App 版本 id 不存在（`app version not found`） |
 | 409 | `AUTH_USERNAME_TAKEN` | 注册：用户名已存在（`username already exists`） |
 | 409 | `VERSION_CONFLICT` | 管理端：versionCode 与其他版本重复（`versionCode already exists`） |
+| 429 | `COMMENT_TOO_FAST` | 发布评论：同一用户两次发布间隔 <10s（`commenting too fast, retry in 10s`） |
 | 500 | `INTERNAL` | 服务器内部错误（`internal error`） |
 
 ## 数据模型
 
 - **courses**：`ID`、`Slug`（唯一）、`Title`、`Summary`、`Language`、`Color`、`SortOrder`、`CreatedAt`、`UpdatedAt`
-- **chapters**：`ID`、`CourseID`（外键，联合唯一首列 + 可作单列索引前缀）、`Slug`（联合唯一 `idx_chapters_course_slug(CourseID, Slug)`）、`Title`、`ContentMD`（markdown 正文）、`SortOrder`、`CreatedAt`、`UpdatedAt`
-- **users**：`ID`、`Username`（唯一，3～32 字节）、`PasswordHash`（bcrypt，永不出库）、`CreatedAt`、`UpdatedAt`
+- **chapters**：`ID`、`CourseID`（外键，联合唯一首列 + 可作单列索引前缀）、`Slug`（联合唯一 `idx_chapters_course_slug(CourseID, Slug)`）、`Title`、`ContentMD`（markdown 正文）、`SortOrder`、`ViewCount`（阅读量，view 接口自增且不抬 `UpdatedAt`）、`CreatedAt`、`UpdatedAt`
+- **users**：`ID`、`Username`（唯一，3～32 字节）、`PasswordHash`（bcrypt，永不出库）、`Avatar`（头像相对 URL，空串=无头像）、`CreatedAt`、`UpdatedAt`
 - **reading_records**：`ID`、`UserID`（索引）、`CourseSlug`、`ChapterSlug`（联合唯一 `idx_records_user_chapter(UserID, CourseSlug, ChapterSlug)`）、`ChapterTitle`、`ReadAt`（最近观看时间）
+- **chapter_comments**：`ID`、`UserID`（索引）、`CourseSlug`、`ChapterSlug`（联合索引 `idx_comments_chapter(CourseSlug, ChapterSlug)`）、`Content`（≤2000 字节）、`CreatedAt`、`UpdatedAt`
+- **chapter_likes**：`ID`、`UserID`、`CourseSlug`、`ChapterSlug`（三元联合唯一 `idx_likes_user_chapter(UserID, CourseSlug, ChapterSlug)`，点赞幂等）、`CreatedAt`
 - **app_releases**：`ID`、`Version`、`VersionCode`（唯一，正整数）、`Notes`、`ApkURL`、`Force`、`Enabled`（latest 仅取 enabled 中 versionCode 最大者）、`CreatedAt`（对外的 `releasedAt`）、`UpdatedAt`
 
 表结构由 GORM AutoMigrate 自动创建。

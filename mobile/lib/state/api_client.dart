@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -20,6 +21,18 @@ abstract final class ApiPaths {
   static String record(String courseSlug, String chapterSlug) =>
       '/api/v1/records/$courseSlug/$chapterSlug';
   static const appLatest = '/api/v1/app/latest';
+
+  // —— 头像与章节互动（对应冻结契约） ——
+  static const meAvatar = '/api/v1/me/avatar';
+  static String chapterView(String courseSlug, String chapterSlug) =>
+      '/api/v1/courses/$courseSlug/chapters/$chapterSlug/view';
+  static String chapterStats(String courseSlug, String chapterSlug) =>
+      '/api/v1/courses/$courseSlug/chapters/$chapterSlug/stats';
+  static String chapterLike(String courseSlug, String chapterSlug) =>
+      '/api/v1/courses/$courseSlug/chapters/$chapterSlug/like';
+  static String chapterComments(String courseSlug, String chapterSlug) =>
+      '/api/v1/courses/$courseSlug/chapters/$chapterSlug/comments';
+  static String comment(Object id) => '/api/v1/comments/$id';
 }
 
 /// 业务错误：信封 code 非 OK，或 HTTP 状态异常。
@@ -113,6 +126,14 @@ class ApiClient {
     } on TimeoutException {
       throw ApiException('TIMEOUT', '请求超时');
     }
+    return _parseEnvelope(response);
+  }
+
+  /// 信封解析（[uploadAvatar] 的 multipart 发送与 [_send] 共用）：
+  /// 空/非 JSON 响应、HTTP 异常、code 非 OK 均抛 [ApiException]；
+  /// 401（AUTH_UNAUTHORIZED）触发 [onUnauthorized]；2xx + OK 返回 data
+  /// （POST 评论等创建接口成功状态码为 201）。
+  Object? _parseEnvelope(http.Response response) {
     if (response.bodyBytes.isEmpty) {
       throw ApiException('HTTP_${response.statusCode}', '空响应');
     }
@@ -128,7 +149,9 @@ class ApiClient {
       // Token 过期/被顶下线：通知上层清登录态并引导重新登录。
       onUnauthorized?.call();
     }
-    if (response.statusCode == 200 && code == 'OK') {
+    if (response.statusCode >= 200 &&
+        response.statusCode < 300 &&
+        code == 'OK') {
       return envelope['data'];
     }
     throw ApiException(code, envelope['message'] as String? ?? '请求失败');
@@ -211,6 +234,101 @@ class ApiClient {
 
   Future<void> deleteRecord(String courseSlug, String chapterSlug) =>
       delete(ApiPaths.record(courseSlug, chapterSlug)).then((_) {});
+
+  // —— 头像 ——
+
+  /// 头像上传超时单独放宽：移动网络上传 5MB 级图片 4 秒不够。
+  static const Duration _uploadTimeout = Duration(seconds: 15);
+
+  /// POST /api/v1/me/avatar（Bearer，multipart 字段 file）。
+  /// 走独立的 MultipartRequest 发送，信封解析复用 [_parseEnvelope]。
+  Future<AuthUser> uploadAvatar(Uint8List bytes, String filename) async {
+    final uri = Uri.parse('$_serverUrl${ApiPaths.meAvatar}');
+    final request = http.MultipartRequest('POST', uri)
+      ..files.add(
+        http.MultipartFile.fromBytes('file', bytes, filename: filename),
+      )
+      ..headers.addAll({
+        if (bearerToken != null) 'Authorization': 'Bearer $bearerToken',
+      });
+    final http.Response response;
+    try {
+      response = await _client
+          .send(request)
+          .then(http.Response.fromStream)
+          .timeout(_uploadTimeout);
+    } on TimeoutException {
+      throw ApiException('TIMEOUT', '请求超时');
+    }
+    final data = _parseEnvelope(response);
+    return AuthUser.fromJson(
+      ((data as Map)['user'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  // —— 章节互动（阅读量 / 点赞 / 评论） ——
+
+  /// 阅读量上报（无需登录）。fire-and-forget：内部吞掉异常，调用方
+  /// 直接 unawaited 即可，离线/失败静默不影响阅读。
+  Future<void> recordView(String courseSlug, String chapterSlug) =>
+      post(ApiPaths.chapterView(courseSlug, chapterSlug))
+          .then((_) {})
+          .catchError((Object _) {});
+
+  Future<ChapterStats> fetchChapterStats(
+    String courseSlug,
+    String chapterSlug,
+  ) async {
+    final data = await get(ApiPaths.chapterStats(courseSlug, chapterSlug));
+    return ChapterStats.fromJson((data as Map).cast<String, dynamic>());
+  }
+
+  /// 点赞 / 取消点赞（POST / DELETE .../like），返回服务端确认值。
+  Future<({bool liked, int likeCount})> setLike(
+    String courseSlug,
+    String chapterSlug,
+    bool liked,
+  ) async {
+    final path = ApiPaths.chapterLike(courseSlug, chapterSlug);
+    final data = await (liked ? post(path) : delete(path));
+    final map = (data as Map).cast<String, dynamic>();
+    return (
+      liked: map['liked'] as bool? ?? liked,
+      likeCount: (map['likeCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  Future<CommentPage> fetchComments(
+    String courseSlug,
+    String chapterSlug, {
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    final path =
+        '${ApiPaths.chapterComments(courseSlug, chapterSlug)}'
+        '?page=$page&pageSize=$pageSize';
+    final data = await get(path);
+    return CommentPage.fromJson((data as Map).cast<String, dynamic>());
+  }
+
+  /// POST .../comments（Bearer，1..1000 字）；成功状态码 201。
+  Future<ChapterComment> addComment(
+    String courseSlug,
+    String chapterSlug,
+    String content,
+  ) async {
+    final data = await post(
+      ApiPaths.chapterComments(courseSlug, chapterSlug),
+      body: {'content': content},
+    );
+    return ChapterComment.fromJson(
+      ((data as Map)['comment'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// DELETE /api/v1/comments/{id}（Bearer，仅作者）。
+  Future<void> deleteComment(int id) =>
+      delete(ApiPaths.comment(id)).then((_) {});
 
   // —— 版本检查 ——
 

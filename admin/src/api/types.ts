@@ -74,3 +74,43 @@ export interface AppVersionCreateInput {
 export interface AppVersionUpdateInput extends AppVersionCreateInput {
   enabled: boolean
 }
+
+/** 管理端评论（契约冻结，camelCase） */
+export interface AdminComment {
+  id: number
+  userId: number
+  username: string
+  courseSlug: string
+  courseTitle: string
+  chapterSlug: string
+  chapterTitle: string
+  content: string
+  /** 创建时间（RFC3339） */
+  createdAt: string
+}
+
+/** GET /api/v1/admin/comments 响应 data（分页信封） */
+export interface AdminCommentPage {
+  comments: AdminComment[]
+  total: number
+  page: number
+  pageSize: number
+  pageCount: number
+}
+
+/** 课程导入结果：单门课程处理明细（created=新建，updated=覆盖更新） */
+export interface ImportedCourse {
+  slug: string
+  title: string
+  chapters: number
+  state: 'created' | 'updated'
+}
+
+/** POST /api/v1/admin/courses/import 成功响应 data（契约冻结） */
+export interface CourseImportResult {
+  courses: ImportedCourse[]
+  images: {
+    count: number
+    bytes: number
+  }
+}

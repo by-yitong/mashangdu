@@ -180,17 +180,30 @@ func TestUpsertFromCoursesJSON(t *testing.T) {
 	}
 }
 
-// TestSeedFallbackWithoutJSON 无 courses.json 时保持原有行为：空库播种 5 章。
-func TestSeedFallbackWithoutJSON(t *testing.T) {
+// TestSeedWithoutJSONStartsEmpty 无磁盘 courses.json 时直接空库启动：
+// 二进制不再携带任何课程内容（embed 已移除），空 seeddata 目录不播种任何数据。
+func TestSeedWithoutJSONStartsEmpty(t *testing.T) {
 	db, err := store.OpenSeed(filepath.Join(t.TempDir(), "test.db"), t.TempDir())
 	if err != nil {
 		t.Fatalf("OpenSeed without courses.json: %v", err)
 	}
 	defer closeDB(db)
-	if got := countRows(t, db, &model.Course{}); got != 2 {
-		t.Fatalf("course count = %d, want 2", got)
+	if got := countRows(t, db, &model.Course{}); got != 0 {
+		t.Fatalf("course count = %d, want 0 (empty start)", got)
 	}
-	if got := countRows(t, db, &model.Chapter{}); got != 5 {
-		t.Fatalf("chapter count = %d, want 5", got)
+	if got := countRows(t, db, &model.Chapter{}); got != 0 {
+		t.Fatalf("chapter count = %d, want 0 (empty start)", got)
+	}
+}
+
+// TestResolveSeedDir 探测结果：找到存在的候选目录；全不存在时返回首选候选
+// （可能尚不存在，供导入接口按需创建）。
+func TestResolveSeedDir(t *testing.T) {
+	if dir := store.ResolveSeedDir(); dir == "" {
+		t.Fatal("ResolveSeedDir returned empty string")
+	}
+	// 测试工作目录为 internal/store，"seeddata" 候选必命中真实目录。
+	if dir := store.ResolveSeedDir(); dir != "seeddata" {
+		t.Fatalf("ResolveSeedDir in store package = %q, want seeddata", dir)
 	}
 }

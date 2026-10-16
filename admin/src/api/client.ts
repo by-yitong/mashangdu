@@ -1,4 +1,5 @@
 import { loadSettings } from '../lib/settings'
+import type { AdminCommentPage, CourseImportResult } from './types'
 
 /** 响应信封 {"code":"OK","message":"ok","data":...} */
 export interface ApiEnvelope<T> {
@@ -39,8 +40,10 @@ export interface ApiOptions {
  */
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const { token } = loadSettings()
+  // FormData 分支：不手动设置 Content-Type，让浏览器自动携带 multipart boundary
+  const isFormData = options.body instanceof FormData
   const headers: Record<string, string> = {}
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  if (options.body !== undefined && !isFormData) headers['Content-Type'] = 'application/json'
   if (token) headers['X-Admin-Token'] = token
 
   let res: Response
@@ -48,7 +51,12 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     res = await fetch(`/api/v1${path}`, {
       method: options.method ?? 'GET',
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body:
+        options.body === undefined
+          ? undefined
+          : isFormData
+            ? (options.body as FormData)
+            : JSON.stringify(options.body),
     })
   } catch {
     throw new ApiError('NETWORK', '网络请求失败，请检查网络', 0)
@@ -66,4 +74,33 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     throw new ApiError(env.code || 'INTERNAL', env.message || `HTTP ${res.status}`, res.status)
   }
   return env.data as T
+}
+
+/** GET /api/v1/admin/comments 查询参数 */
+export interface AdminCommentQuery {
+  courseSlug?: string
+  page?: number
+  pageSize?: number
+}
+
+/** 评论管理：分页查询评论列表（可按课程筛选） */
+export async function listComments(query: AdminCommentQuery = {}): Promise<AdminCommentPage> {
+  const search = new URLSearchParams()
+  if (query.courseSlug) search.set('courseSlug', query.courseSlug)
+  if (query.page !== undefined) search.set('page', String(query.page))
+  if (query.pageSize !== undefined) search.set('pageSize', String(query.pageSize))
+  const qs = search.toString()
+  return api<AdminCommentPage>(`/admin/comments${qs ? `?${qs}` : ''}`)
+}
+
+/** 评论管理：删除单条评论 */
+export async function deleteComment(id: number): Promise<{ deleted: number }> {
+  return api<{ deleted: number }>(`/admin/comments/${id}`, { method: 'DELETE' })
+}
+
+/** 课程管理：上传课程包 zip（multipart 字段 file），返回导入结果 */
+export async function importCoursePackage(file: File): Promise<CourseImportResult> {
+  const form = new FormData()
+  form.append('file', file)
+  return api<CourseImportResult>('/admin/courses/import', { method: 'POST', body: form })
 }

@@ -4,7 +4,9 @@ import { btnGhost } from './ui'
 
 const NAV_LINKS = [
   { to: '/', label: '课程', end: true },
+  { to: '/course-import', label: '课程导入' },
   { to: '/app-versions', label: '版本管理' },
+  { to: '/comments', label: '评论管理' },
 ]
 
 function navLinkCls({ isActive }: { isActive: boolean }) {

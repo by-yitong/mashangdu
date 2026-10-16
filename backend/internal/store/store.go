@@ -1,8 +1,7 @@
-// Package store 负责 SQLite 数据库的打开、迁移与示例数据播种。
+// Package store 负责 SQLite 数据库的打开、迁移与磁盘 seeddata 的播种。
 package store
 
 import (
-	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,9 +15,6 @@ import (
 
 	"code-tutorials/backend/internal/model"
 )
-
-//go:embed seeddata
-var seedFS embed.FS
 
 // seedDirCandidates 自动探测 seeddata 目录时的候选路径（相对进程工作目录）。
 var seedDirCandidates = []string{
@@ -51,52 +47,6 @@ type coursesJSONChapter struct {
 	File      string `json:"file"`
 }
 
-type seedChapter struct {
-	Slug  string
-	Title string
-	Order int
-	File  string
-}
-
-type seedCourse struct {
-	Slug      string
-	Title     string
-	Summary   string
-	Language  string
-	Color     string
-	SortOrder int
-	Chapters  []seedChapter
-}
-
-// seedHardcoded 无 courses.json 时的兜底种子（5 章）。
-var seedHardcodedData = []seedCourse{
-	{
-		Slug:      "go-basics",
-		Title:     "Go 语言入门",
-		Summary:   "从零开始学 Go：写出第一个程序、认识变量与类型，再到 goroutine 并发入门，跑通 Go 学习的第一段路。",
-		Language:  "Go",
-		Color:     "#14B8A6",
-		SortOrder: 1,
-		Chapters: []seedChapter{
-			{Slug: "hello-world", Title: "Hello World", Order: 1, File: "go-hello-world.md"},
-			{Slug: "variables", Title: "变量与基本类型", Order: 2, File: "go-variables.md"},
-			{Slug: "goroutine", Title: "goroutine 并发入门", Order: 3, File: "go-goroutine.md"},
-		},
-	},
-	{
-		Slug:      "python-basics",
-		Title:     "Python 基础",
-		Summary:   "面向零基础读者的 Python 入门：装好环境、玩转 REPL，掌握变量与控制流，迈出编程第一步。",
-		Language:  "Python",
-		Color:     "#4C6BB0",
-		SortOrder: 2,
-		Chapters: []seedChapter{
-			{Slug: "install-repl", Title: "安装与 REPL", Order: 1, File: "python-install-repl.md"},
-			{Slug: "variables-controlflow", Title: "变量与控制流", Order: 2, File: "python-variables-controlflow.md"},
-		},
-	},
-}
-
 // Open 创建数据库文件（含父目录）、执行迁移并播种内容，等价于 OpenSeed(path, "")。
 func Open(path string) (*gorm.DB, error) {
 	return OpenSeed(path, "")
@@ -105,9 +55,11 @@ func Open(path string) (*gorm.DB, error) {
 // OpenSeed 打开数据库并播种内容；seedDir 显式指定 seeddata 目录（含 courses.json 与
 // md 文件），为空串时按候选路径自动探测。
 //
-// 播种规则：若 seeddata/courses.json 存在则按其 upsert（课程按 slug、章节按
-// (course_id, slug) 存在则更新、不存在则创建，永不删除）；否则在 courses 表为空时
-// 播种内置示例数据（5 章）。
+// 播种规则：课程内容是运行时数据，二进制不携带任何文章。只来自磁盘
+// seeddata/courses.json（相对进程工作目录探测）或管理端导入接口写入的同一目录。
+// 若 seeddata/courses.json 存在则按其 upsert（课程按 slug、章节按
+// (course_id, slug) 存在则更新、不存在则创建，永不删除）；否则空库启动，
+// 不播种任何内容。
 func OpenSeed(dbPath, seedDir string) (*gorm.DB, error) {
 	if dir := filepath.Dir(dbPath); dir != "" && dir != "." {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -121,11 +73,12 @@ func OpenSeed(dbPath, seedDir string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite database: %w", err)
 	}
-	if err := db.AutoMigrate(&model.Course{}, &model.Chapter{}, &model.User{}, &model.ReadingRecord{}, &model.AppRelease{}); err != nil {
+	if err := db.AutoMigrate(&model.Course{}, &model.Chapter{}, &model.User{}, &model.ReadingRecord{},
+		&model.AppRelease{}, &model.ChapterComment{}, &model.ChapterLike{}); err != nil {
 		return nil, fmt.Errorf("migrate schema: %w", err)
 	}
 	if err := seed(db, seedDir); err != nil {
-		return nil, fmt.Errorf("seed sample data: %w", err)
+		return nil, fmt.Errorf("seed courses: %w", err)
 	}
 	return db, nil
 }
@@ -146,6 +99,19 @@ func resolveSeedDir(explicit string) (string, bool) {
 	return "", false
 }
 
+// ResolveSeedDir 按候选路径（相对进程工作目录）探测 seeddata 目录并返回；
+// 未找到任何候选时返回首选候选 internal/store/seeddata（目录可能尚不存在，
+// 供管理端导入接口按需创建落盘），保证运行时数据目录位置确定。
+func ResolveSeedDir() string {
+	if dir, ok := resolveSeedDir(""); ok {
+		return dir
+	}
+	return seedDirCandidates[0]
+}
+
+// seed 播种磁盘 seeddata/courses.json；课程内容是运行时数据，只来自磁盘
+// seeddata/（相对进程工作目录探测）或管理端导入接口，二进制不携带任何文章，
+// 找不到 courses.json 时直接空库启动，不播种任何内容。
 func seed(db *gorm.DB, seedDir string) error {
 	if dir, ok := resolveSeedDir(seedDir); ok {
 		jsonPath := filepath.Join(dir, "courses.json")
@@ -153,50 +119,15 @@ func seed(db *gorm.DB, seedDir string) error {
 			return upsertFromCoursesJSON(db, dir, jsonPath)
 		}
 	}
-	return seedFallback(db)
+	return nil
 }
 
-// seedFallback 原有行为：courses 表为空时播种内置示例数据。
-func seedFallback(db *gorm.DB) error {
-	var count int64
-	if err := db.Model(&model.Course{}).Count(&count).Error; err != nil {
-		return err
-	}
-	if count > 0 {
-		return nil
-	}
-	return db.Transaction(func(tx *gorm.DB) error {
-		for _, sc := range seedHardcodedData {
-			course := model.Course{
-				Slug:      sc.Slug,
-				Title:     sc.Title,
-				Summary:   sc.Summary,
-				Language:  sc.Language,
-				Color:     sc.Color,
-				SortOrder: sc.SortOrder,
-			}
-			if err := tx.Create(&course).Error; err != nil {
-				return err
-			}
-			for _, sch := range sc.Chapters {
-				content, err := seedFS.ReadFile("seeddata/" + sch.File)
-				if err != nil {
-					return err
-				}
-				chapter := model.Chapter{
-					CourseID:  course.ID,
-					Slug:      sch.Slug,
-					Title:     sch.Title,
-					ContentMD: string(content),
-					SortOrder: sch.Order,
-				}
-				if err := tx.Create(&chapter).Error; err != nil {
-					return err
-				}
-			}
-		}
-		return nil
-	})
+// UpsertCoursesJSON 按 dir/courses.json（路径由 jsonPath 显式指定）upsert 课程
+// 与章节进已打开的 db，供管理端导入接口在运行时调用，无需重启服务。
+// 语义与启动播种一致：存在则更新（仅在内容有变化时写库），不存在则创建，
+// 永不删除。
+func UpsertCoursesJSON(db *gorm.DB, dir, jsonPath string) error {
+	return upsertFromCoursesJSON(db, dir, jsonPath)
 }
 
 // upsertFromCoursesJSON 按 courses.json upsert 课程与章节：存在则更新（仅在内容

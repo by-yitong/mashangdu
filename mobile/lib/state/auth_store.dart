@@ -91,4 +91,11 @@ class AuthStore extends ChangeNotifier {
     await _prefs.setString(_userKey, jsonEncode(_user!.toJson()));
     notifyListeners();
   }
+
+  /// 采用服务端返回的最新 user（如头像上传响应）并持久化。
+  Future<void> applyUser(AuthUser user) async {
+    _user = user;
+    await _prefs.setString(_userKey, jsonEncode(user.toJson()));
+    notifyListeners();
+  }
 }

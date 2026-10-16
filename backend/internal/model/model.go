@@ -24,15 +24,18 @@ type Chapter struct {
 	Title     string `gorm:"size:256;not null"`
 	ContentMD string `gorm:"not null"`
 	SortOrder int    `gorm:"not null;default:0"`
+	ViewCount int64  `gorm:"column:view_count;not null;default:0"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-// User App 端注册用户；密码仅存 bcrypt 哈希，永不出库。
+// User App 端注册用户；密码仅存 bcrypt 哈希，永不出库。Avatar 存相对 URL
+// （如 /avatars/3-ab12cd34.jpg），空串表示无头像。
 type User struct {
 	ID           uint   `gorm:"primaryKey"`
 	Username     string `gorm:"size:32;not null;uniqueIndex"`
 	PasswordHash string `gorm:"size:128;not null"`
+	Avatar       string `gorm:"column:avatar;size:256;not null;default:''"`
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
@@ -46,6 +49,28 @@ type ReadingRecord struct {
 	ChapterSlug  string    `gorm:"size:128;not null;uniqueIndex:idx_records_user_chapter,priority:3"`
 	ChapterTitle string    `gorm:"size:256;not null"`
 	ReadAt       time.Time `gorm:"not null"`
+}
+
+// ChapterComment 用户对某章节的评论；(course_slug, chapter_slug) 联合索引
+// 支撑按章节拉取，按 created_at 降序展示。
+type ChapterComment struct {
+	ID          uint   `gorm:"primaryKey"`
+	UserID      uint   `gorm:"not null;index"`
+	CourseSlug  string `gorm:"size:128;not null;index:idx_comments_chapter,priority:1"`
+	ChapterSlug string `gorm:"size:128;not null;index:idx_comments_chapter,priority:2"`
+	Content     string `gorm:"size:2000;not null"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+// ChapterLike 用户对某章节的点赞；(user_id, course_slug, chapter_slug) 三列
+// 联合唯一，重复点赞靠唯一索引幂等。
+type ChapterLike struct {
+	ID          uint   `gorm:"primaryKey"`
+	UserID      uint   `gorm:"not null;uniqueIndex:idx_likes_user_chapter,priority:1"`
+	CourseSlug  string `gorm:"size:128;not null;uniqueIndex:idx_likes_user_chapter,priority:2"`
+	ChapterSlug string `gorm:"size:128;not null;uniqueIndex:idx_likes_user_chapter,priority:3"`
+	CreatedAt   time.Time
 }
 
 // AppRelease App 安装包版本；version_code 全局唯一，latest 接口取 enabled 中最大者。

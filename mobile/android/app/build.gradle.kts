@@ -45,6 +45,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    packaging {
+        jniLibs {
+            // 只保留 arm64：插件 AAR 带入的其他架构 so 在此剔除
+            // （abiFilters 管不住 AAR 里的 so，Dart/引擎侧由 --target-platform android-arm64 控制）
+            excludes += listOf("lib/armeabi-v7a/**", "lib/x86_64/**")
+        }
+    }
 }
 
 kotlin {
