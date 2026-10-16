@@ -1,10 +1,13 @@
+
 # backend
 backend/backend.exe
 backend/backend
 backend/backend.exe~
 backend/data/
 backend/server.log
+backend/server.err.log
 *.db
+backend-linux
 
 # python
 __pycache__/
