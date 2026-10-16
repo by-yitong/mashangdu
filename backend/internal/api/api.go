@@ -3,9 +3,10 @@ package api
 
 import (
 	"errors"
+	"io/fs"
+	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"gorm.io/gorm"
 
 	"code-tutorials/backend/internal/model"
+	"code-tutorials/backend/web"
 )
 
 // envelope 统一响应信封：{"code","message","data"}。
@@ -26,6 +28,11 @@ func ok(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusOK, envelope{Code: "OK", Message: "ok", Data: data})
 }
 
+// created 与 ok 相同信封，但状态码为 201（注册、创建 App 版本等）。
+func created(c *gin.Context, data interface{}) {
+	c.JSON(http.StatusCreated, envelope{Code: "OK", Message: "ok", Data: data})
+}
+
 func fail(c *gin.Context, status int, code, message string) {
 	c.JSON(status, envelope{Code: code, Message: message, Data: nil})
 }
@@ -35,28 +42,26 @@ type Server struct {
 	db *gorm.DB
 }
 
-// adminDistCandidates 未显式指定托管目录时，自动探测后台静态目录的候选路径
-// （相对进程工作目录，目录需已构建完成，含 index.html）。
-var adminDistCandidates = []string{
-	"admin/dist",         // 在 backend/ 目录启动（go run .）
-	"backend/admin/dist", // 在仓库根目录启动
-}
-
 // imagesRoot 教程图片静态目录，相对进程工作目录（在 backend/ 下启动即
 // backend/static/images）。目录可不存在，缺失时请求一律 404，启动不强行创建；
 // 声明为 var 仅供测试注入临时目录。
 var imagesRoot = "static/images"
 
 // NewRouter 构建 Gin 引擎：CORS、统一错误信封与全部 /api/v1 路由。
-// 可选参数 adminDist 指定后台 SPA 静态目录（挂载到 /admin，未知路径回退
-// index.html）；不传时按候选路径自动探测，目录不存在则不挂载、行为不变。
+// 后台 SPA（/admin）由编译期嵌入的 web.DistFS 托管（构建流程：先在仓库根
+// admin/ 执行 npm run build，产物拷贝到 backend/web/dist/ 后再 go build），
+// 静态文件 200；/admin 前缀下未知的 GET/HEAD 路径回退 index.html。
 // 另将 GET /images/*filepath 挂载到 imagesRoot（教程图片静态托管，无需认证）。
-func NewRouter(db *gorm.DB, adminDist ...string) *gin.Engine {
+func NewRouter(db *gorm.DB) *gin.Engine {
 	s := &Server{db: db}
 	r := gin.New()
 	r.Use(gin.Logger(), cors(), recovery())
 
-	adminIndex := mountAdmin(r, adminDist)
+	if os.Getenv("AUTH_SECRET") == "" {
+		log.Printf("AUTH_SECRET not set; using default development secret (set AUTH_SECRET in production)")
+	}
+
+	mountAdmin(r)
 
 	// GET /images/*filepath 教程图片静态托管（离线下载配套，无需认证）。
 	// 目录不存在时不强行创建：文件缺失或目录未落盘时 gin 静态处理器回退
@@ -65,8 +70,8 @@ func NewRouter(db *gorm.DB, adminDist ...string) *gin.Engine {
 	r.Static("/images", imagesRoot)
 
 	r.NoRoute(func(c *gin.Context) {
-		if adminIndex != "" && isAdminPageRequest(c) {
-			c.File(adminIndex)
+		if isAdminPageRequest(c) {
+			serveAdminIndex(c)
 			return
 		}
 		fail(c, http.StatusNotFound, "NOT_FOUND", "not found")
@@ -78,6 +83,20 @@ func NewRouter(db *gorm.DB, adminDist ...string) *gin.Engine {
 	v1.GET("/courses/:slug", s.getCourse)
 	v1.GET("/courses/:slug/chapters/:chapterSlug", s.getChapter)
 
+	// 用户认证：注册/登录无需 token；me 需要 Bearer。
+	v1.POST("/auth/register", s.register)
+	v1.POST("/auth/login", s.login)
+	v1.GET("/auth/me", userAuth(), s.me)
+
+	// 观看记录：全部需要 Bearer。
+	v1.PUT("/records", userAuth(), s.upsertRecord)
+	v1.GET("/records", userAuth(), s.listRecords)
+	v1.DELETE("/records", userAuth(), s.clearRecords)
+	v1.DELETE("/records/:courseSlug/:chapterSlug", userAuth(), s.deleteRecord)
+
+	// App 版本：latest 供客户端无认证检查更新。
+	v1.GET("/app/latest", s.appLatest)
+
 	admin := v1.Group("/admin", adminAuth())
 	admin.POST("/courses", s.createCourse)
 	admin.PUT("/courses/:slug", s.updateCourse)
@@ -85,34 +104,40 @@ func NewRouter(db *gorm.DB, adminDist ...string) *gin.Engine {
 	admin.POST("/courses/:slug/chapters", s.createChapter)
 	admin.PUT("/courses/:slug/chapters/:chapterSlug", s.updateChapter)
 	admin.DELETE("/courses/:slug/chapters/:chapterSlug", s.deleteChapter)
+	admin.GET("/app-versions", s.listAppVersions)
+	admin.POST("/app-versions", s.createAppVersion)
+	admin.PUT("/app-versions/:id", s.updateAppVersion)
+	admin.DELETE("/app-versions/:id", s.deleteAppVersion)
 	return r
 }
 
-// mountAdmin 若目录存在则挂载 /admin 静态目录，返回 index.html 路径（用作 SPA
-// 回退）；目录不存在或未指定时返回空串、不挂载。candidates 为空时按默认候选探测。
-func mountAdmin(r *gin.Engine, candidates []string) string {
-	if len(candidates) == 0 {
-		candidates = adminDistCandidates
+// mountAdmin 把编译期嵌入的后台静态产物（web.DistFS，dist 位于嵌入 FS 根）
+// 挂载到 /admin：真实文件直接 200；/admin 前缀下不存在的 GET/HEAD 路径由
+// gin 静态处理器落入 NoRoute、回退 index.html（SPA）。OnlyFilesFS 包装保持
+// 与原磁盘托管一致的行为（禁目录列表）。
+func mountAdmin(r *gin.Engine) {
+	dist, err := fs.Sub(web.DistFS, "dist")
+	if err != nil {
+		// dist 由 go:embed 编译期保证存在，此分支不可达。
+		panic("api: embedded admin dist: " + err.Error())
 	}
-	dir := ""
-	for _, cand := range candidates {
-		if cand == "" {
-			continue
-		}
-		if st, err := os.Stat(cand); err == nil && st.IsDir() {
-			dir = cand
-			break
-		}
+	r.StaticFS("/admin", &gin.OnlyFilesFS{FileSystem: http.FS(dist)})
+}
+
+// serveAdminIndex 以嵌入的 dist/index.html 响应 SPA 回退请求（内容为编译
+// 期常量，直接整体写出）。读取失败不可达（go:embed 保证文件存在），此时
+// 返回与其他未知路径一致的 404 信封。
+func serveAdminIndex(c *gin.Context) {
+	index, err := web.DistFS.ReadFile("dist/index.html")
+	if err != nil {
+		fail(c, http.StatusNotFound, "NOT_FOUND", "not found")
+		return
 	}
-	if dir == "" {
-		return ""
-	}
-	r.Static("/admin", dir)
-	return filepath.Join(dir, "index.html")
+	c.Data(http.StatusOK, "text/html; charset=utf-8", index)
 }
 
 // isAdminPageRequest 判断是否为需要回退到后台 SPA index.html 的请求：
-// /admin 前缀的 GET/HEAD（静态文件已由 r.Static 处理，此处只接未知路径）。
+// /admin 前缀的 GET/HEAD（静态文件已由 r.StaticFS 处理，此处只接未知路径）。
 func isAdminPageRequest(c *gin.Context) bool {
 	if c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead {
 		return false
@@ -121,12 +146,12 @@ func isAdminPageRequest(c *gin.Context) bool {
 	return p == "/admin" || strings.HasPrefix(p, "/admin/")
 }
 
-// cors 开发期放开所有来源；允许管理端需要的写方法与 X-Admin-Token 头。
+// cors 开发期放开所有来源；允许写方法与 X-Admin-Token / Authorization 头。
 func cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, X-Admin-Token")
+		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, X-Admin-Token, Authorization")
 		if c.Request.Method == http.MethodOptions {
 			c.AbortWithStatus(http.StatusNoContent)
 			return

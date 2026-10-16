@@ -19,7 +19,7 @@ export class ApiError extends Error {
   }
 }
 
-/** 403 时派发的全局事件，ToastProvider 监听后提示去设置 Token */
+/** 403 时派发的全局事件，ToastProvider 监听后清 token 并跳转登录页 */
 export const FORBIDDEN_EVENT = 'mashangdu:forbidden'
 
 export function errMsg(e: unknown): string {
@@ -34,25 +34,24 @@ export interface ApiOptions {
 }
 
 /**
- * 统一请求入口：路径以 /api/v1 为前缀，同源或指向设置中的 Base URL。
+ * 统一请求入口：路径以 /api/v1 为前缀，固定同源请求（前端将嵌入 Go 二进制，与后端永远同源）。
  * 成功返回信封 data；失败抛 ApiError（含后端 message）。
  */
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
-  const { baseUrl, token } = loadSettings()
-  const base = baseUrl.trim().replace(/\/+$/, '')
+  const { token } = loadSettings()
   const headers: Record<string, string> = {}
   if (options.body !== undefined) headers['Content-Type'] = 'application/json'
   if (token) headers['X-Admin-Token'] = token
 
   let res: Response
   try {
-    res = await fetch(`${base}/api/v1${path}`, {
+    res = await fetch(`/api/v1${path}`, {
       method: options.method ?? 'GET',
       headers,
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
     })
   } catch {
-    throw new ApiError('NETWORK', '网络请求失败，请检查网络或服务器地址设置', 0)
+    throw new ApiError('NETWORK', '网络请求失败，请检查网络', 0)
   }
 
   let env: ApiEnvelope<unknown>

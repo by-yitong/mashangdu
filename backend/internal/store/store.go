@@ -121,7 +121,7 @@ func OpenSeed(dbPath, seedDir string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite database: %w", err)
 	}
-	if err := db.AutoMigrate(&model.Course{}, &model.Chapter{}); err != nil {
+	if err := db.AutoMigrate(&model.Course{}, &model.Chapter{}, &model.User{}, &model.ReadingRecord{}, &model.AppRelease{}); err != nil {
 		return nil, fmt.Errorf("migrate schema: %w", err)
 	}
 	if err := seed(db, seedDir); err != nil {

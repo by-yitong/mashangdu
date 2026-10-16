@@ -1,8 +1,6 @@
-/** 服务器连接设置，localStorage 持久化 + 模块级缓存（fetch 同步读取） */
+/** 管理端设置，localStorage 持久化 + 模块级缓存（fetch 同步读取） */
 
 export interface Settings {
-  /** 服务器 Base URL，空 = 同源（dev 由 Vite proxy 转发） */
-  baseUrl: string
   /** 管理接口鉴权令牌，请求头 X-Admin-Token */
   token: string
 }
@@ -13,13 +11,13 @@ let cache: Settings | null = null
 
 export function loadSettings(): Settings {
   if (cache) return cache
-  let next: Settings = { baseUrl: '', token: '' }
+  let next: Settings = { token: '' }
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
+      // 旧版本数据含 baseUrl 字段，此处只读取 token，多余字段自然忽略
       const parsed = JSON.parse(raw) as Partial<Settings>
       next = {
-        baseUrl: typeof parsed.baseUrl === 'string' ? parsed.baseUrl : '',
         token: typeof parsed.token === 'string' ? parsed.token : '',
       }
     }
@@ -31,7 +29,7 @@ export function loadSettings(): Settings {
 }
 
 export function saveSettings(s: Settings): void {
-  cache = { baseUrl: s.baseUrl, token: s.token }
+  cache = { token: s.token }
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cache))
   } catch {

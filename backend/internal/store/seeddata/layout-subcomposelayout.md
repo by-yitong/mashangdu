@@ -1,0 +1,117 @@
+SubcomposeLayout 允许子组件的合成过程延迟到父组件实际发生测量时机进行，为我们提供了更强的测量定制能力。前面我们曾提到，固有特性测量的本质是子组件通过父组件对其他子组件产生影响，利用 SubcomposeLayout，我们可以做到将某个子组件的合成过程延迟至他所依赖的组件测量结束后进行。这也说明这个组件可以根据其他组件的测量信息确定自身的尺寸，从而具备取代固有特性测量的能力。
+
+## SubcomposeLayout 使用示例
+
+我们仍然使用前面固有特性测量中的例子，使用 SubcomposeLayout 可以允许组件根据定制测量顺序直接相互作用影响，与固有特性测量具有本质的区别。
+
+![](images/jetpack-compose/layout-subcomposelayout/demo.png)
+
+在前面的例子中，我们可以先测量两侧文本的高度，并计算出 Divider 应占有的高度然后为 Divider 指定高度后再进行测量，从而达到设计要求。与固有特性测量不同的是，在这整个过程中父组件是没有参与的。
+
+接下来，我们来看看 SubcomposeLayout 组件该如何使用。
+
+```kotlin
+@Composable
+fun SubcomposeLayout(
+    modifier: Modifier = Modifier,
+    measurePolicy: SubcomposeMeasureScope.(Constraints) -> MeasureResult
+)
+```
+
+其实 SubcomposeLayout 和 Layout 组件是差不多的。不同的是，此时需要传入一个 SubcomposeMeasureScope 类型 Lambda，打开接口声明可以看到其中仅有一个名为 subcompose。
+
+```kotlin
+interface SubcomposeMeasureScope : MeasureScope {
+    fun subcompose(slotId: Any?, content: @Composable () -> Unit): List<Measurable>
+}
+```
+
+subcompose 会根据传入的 slotId 和 Composable 生成一个 LayoutNode 用于构建子 Composition，最终会返回所有子 LayoutNode 的 Measurable 测量句柄。其中 Composable 是我们声明的子组件信息，这没什么好说的。slotId 是用来让 SubcomposeLayout 追踪管理我们所创建的子 Composition 的，作为唯一索引每个 Composition 都需要具有唯一的 slotId，接下来我们来看看如何在前面的示例场景中使用 SubcomposeLayout。
+
+实际上我们可以把所有待测量的组件分为文字组件和分隔符组件两部分。由于我们的分隔符组件的高度是依赖文字组件的，所以声明分隔符组件时我们传入一个 Int 值作为测量高度。首先我们定义一个 Composable。
+
+```kotlin
+@Composable
+fun SubcomposeRow(
+    modifier: Modifier,
+    text: @Composable () -> Unit,
+    divider: @Composable (Int) -> Unit // 传入高度
+){
+    SubcomposeLayout(modifier = modifier) { constraints->
+        ...
+    }
+}
+```
+我们首先可以使用 subcompose 来先测量 text 中的所有 LayoutNode。并根据测量结果计算出最大高度。
+
+```kotlin
+SubcomposeLayout(modifier = modifier) { constraints->
+    var maxHeight = 0
+    var placeables = subcompose("text", text).map {
+        var placeable = it.measure(constraints)
+        maxHeight = placeable.height.coerceAtLeast(maxHeight)
+        placeable
+    }
+    ...
+}
+```
+
+既然计算得到了文本的最大高度，我们接下来可以将高度只传入分隔符组件中并进行测量了。
+
+```kotlin
+SubcomposeLayout(modifier = modifier) { constraints->
+    ...
+    var dividerPlaceable = subcompose("divider") {
+        divider(maxHeight)
+    }.map {
+        it.measure(constraints.copy(minWidth = 0))
+    }
+    assert(dividerPlaceable.size == 1, { "DividerScope Error!" })
+    ...
+}
+```
+
+值得注意，测量 Divider 组件时我们将 minWidth 设置为零，这是由于 constraints 布局约束中宽度可能是固定的，如果不修改的话，Divider 组件宽度默认会与整个组件宽度相同。接下来分别对文字组件和分隔符组件进行布局就可以了。
+
+```kotlin
+SubcomposeLayout(modifier = modifier) { constraints->
+    ...
+    layout(constraints.maxWidth, constraints.maxHeight){
+        placeables.forEach {
+            it.placeRelative(0, 0)
+        }
+        dividerPlaceable.forEach {
+            it.placeRelative(midPos, 0)
+        }
+    }
+}
+```
+
+使用也非常简单，我们只需将文本组件和分隔符组件分开传入到我们定制的 SubcomposeRow 组件。
+
+```kotlin
+SubcomposeRow(
+    modifier = Modifier
+        .fillMaxWidth(),
+    text = {
+        Text(text = "Left", Modifier.wrapContentWidth(Alignment.Start))
+        Text(text = "Right", Modifier.wrapContentWidth(Alignment.End))
+    }
+) {
+    var heightPx = with( LocalDensity.current) { it.toDp() }
+    Divider(
+        color = Color.Black,
+        modifier = Modifier
+            .width(4.dp)
+            .height(heightPx)
+    )
+}
+```
+
+最终效果与使用固有特性测量完全相同。
+
+![](images/jetpack-compose/layout-subcomposelayout/demo.png)
+
+SubcomposeLayout 具有更强的灵活性，然而性能上不如常规 Layout，因为子组件的合成需要要迟到父组件测量时才能进行，并且需要还需要额外创建一个子 Composition，因此 SubcomposeLayout 可能并不适用在一些对性能要求比较高的 UI 部分。
+
+> 本文来自 [你好 Compose](https://jetpackcompose.cn/docs/)，作者 compose-museum，采用 [CC BY-NC-SA 2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/) 授权转载，禁止商用。

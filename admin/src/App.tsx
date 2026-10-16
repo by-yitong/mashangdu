@@ -1,9 +1,11 @@
-import { Outlet, RouterProvider, createHashRouter } from 'react-router-dom'
+import { Navigate, Outlet, RouterProvider, createHashRouter, useLocation } from 'react-router-dom'
 import { TopBar } from './components/TopBar'
+import { AppVersionListPage } from './pages/AppVersionListPage'
 import { ChapterEditPage } from './pages/ChapterEditPage'
 import { CourseDetailPage } from './pages/CourseDetailPage'
 import { CourseListPage } from './pages/CourseListPage'
-import { SettingsProvider } from './SettingsContext'
+import { LoginPage } from './pages/LoginPage'
+import { SettingsProvider, useSettings } from './SettingsContext'
 import { ToastProvider } from './ToastProvider'
 
 function Layout() {
@@ -17,11 +19,24 @@ function Layout() {
   )
 }
 
+/** 路由守卫：未保存管理令牌时跳登录页，并记录来路供登录成功后回跳 */
+function RequireToken() {
+  const { settings } = useSettings()
+  const location = useLocation()
+  if (!settings.token) {
+    return <Navigate to="/login" replace state={{ from: location }} />
+  }
+  return <Layout />
+}
+
 const routes = [
+  // 登录页独立于 Layout（无 TopBar），不受守卫保护
+  { path: '/login', element: <LoginPage /> },
   {
-    element: <Layout />,
+    element: <RequireToken />,
     children: [
       { path: '/', element: <CourseListPage /> },
+      { path: '/app-versions', element: <AppVersionListPage /> },
       { path: '/courses/:slug', element: <CourseDetailPage /> },
       { path: '/courses/:slug/chapters/new', element: <ChapterEditPage /> },
       { path: '/courses/:slug/chapters/:chapterSlug', element: <ChapterEditPage /> },

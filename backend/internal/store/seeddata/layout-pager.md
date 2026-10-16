@@ -1,0 +1,80 @@
+> **注意**
+> Pager 在 Compose 1.4 中“转正”。在此之前，你需要使用 [Accompanist](https://github.com/google/accompanist/tree/main/pager) 的实现
+
+
+`Pager` 即传统 View 体系中 `ViewPager` 的替代，但在使用上大大降低了复杂度。它包括 `VerticalPager` 和 `HorizontalPager` 两类，分别对应纵向和横向的滑动。`Pager` 的底层基于 [LazyColumn/LazyRow](/docs/design/lists/overview) 实现，在使用上也基本与它们等同。简单使用如下：
+
+```kotlin
+ // 显示 10 个项目
+ HorizontalPager(pageCount = 10) { page ->
+     // 每一页的内容，比如显示个文本
+     Text(
+         text = "Page: $page",
+         modifier = Modifier.fillMaxWidth()
+     )
+ }
+```
+
+如果你需要在 `Pager` 中 添加 `Indicator`（指示器，比如 Tab 或者小圆点等），仍然可以沿用 [accompanist/pager-indicators](https://github.com/google/accompanist/tree/main/pager-indicators) 的实现，最新版已经对 Jetpack Compose 1.4 的 Pager 做了适配。
+
+比如下面这个简易的带 Tab 指示器的横向 Pager 例子：
+
+```kotlin
+ @Composable
+fun HorizontalPagerWithIndicator() {
+    val pagerState = rememberPagerState()
+    val scope = rememberCoroutineScope()
+
+    Column {
+        TabRow(
+            modifier = Modifier.fillMaxWidth(),
+            // Our selected tab is our current page
+            selectedTabIndex = pagerState.currentPage,
+            // Override the indicator, using the provided pagerTabIndicatorOffset modifier
+            indicator = { tabPositions ->
+                TabRowDefaults.Indicator(
+                    Modifier.pagerTabIndicatorOffset(
+                        pagerState = pagerState,
+                        tabPositions = tabPositions
+                    )
+                )
+            }
+        ) {
+            // Add tabs for all of our pages
+            pages.forEachIndexed { index, title ->
+                Tab(
+                    text = { Text(title) },
+                    selected = pagerState.currentPage == index,
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    },
+                )
+            }
+        }
+
+        HorizontalPager(
+            pageCount = pages.size,
+            state = pagerState,
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colors.surface)
+        ) { page ->
+            Text(
+                text = "Page $page",
+                style = MaterialTheme.typography.h5,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .wrapContentSize(Alignment.Center),
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+```
+效果如下：
+
+![](images/jetpack-compose/layout-pager/image_1.webp)
+
+要查看更多的 Pager 例子，或者想把 Accompanist 实现迁移到新版，请查看[迁移指南](https://google.github.io/accompanist/pager/#migration)。更多内容，请参阅[Pager 的文档](https://developer.android.com/jetpack/compose/layouts/pager)。
+
+> 本文来自 [你好 Compose](https://jetpackcompose.cn/docs/)，作者 compose-museum，采用 [CC BY-NC-SA 2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/) 授权转载，禁止商用。

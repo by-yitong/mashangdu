@@ -3,9 +3,9 @@
 教程内容 API。Golang + Gin + GORM + SQLite（驱动 `github.com/glebarez/sqlite`，纯 Go 无 CGO）。
 
 - Base URL：`http://localhost:8080/api/v1`
-- 方法：内容接口（1～4）为只读 `GET`；管理端接口（5～10，`/api/v1/admin` 前缀）提供写操作
-- 认证：内容接口无认证；管理端接口需要请求头 `X-Admin-Token`（见下文"管理端鉴权"）
-- CORS：允许所有来源（开发期），预检 `OPTIONS` 返回 204；允许方法 `GET, POST, PUT, DELETE, OPTIONS`，允许头含 `X-Admin-Token`
+- 方法：内容接口（1～4）为只读 `GET`；管理端接口（5～10、13b，`/api/v1/admin` 前缀）提供写操作；用户认证（11）与观看记录（12）为 `POST/GET/PUT/DELETE`
+- 认证：内容接口与 `GET /app/latest` 无认证；用户认证与观看记录接口需要请求头 `Authorization: Bearer <token>`（见下文"用户认证（Bearer）"）；管理端接口需要请求头 `X-Admin-Token`（见下文"管理端鉴权"）
+- CORS：允许所有来源（开发期），预检 `OPTIONS` 返回 204；允许方法 `GET, POST, PUT, DELETE, OPTIONS`，允许头含 `X-Admin-Token`、`Authorization`
 
 ## 启动
 
@@ -19,6 +19,7 @@ go run .
 | `PORT` | `8080` | 监听端口 |
 | `TUTORIALS_DB` | `data/tutorials.db` | SQLite 数据库文件路径（相对 backend/ 启动目录） |
 | `ADMIN_TOKEN` | （空） | 管理端鉴权 token；未设置或为空时管理端整体禁用（一律 403） |
+| `AUTH_SECRET` | `dev-auth-secret` | 用户认证 JWT（HS256）签名密钥；未设置时使用开发默认值并在启动日志提醒，生产环境必须设置 |
 
 ## 数据播种（seed）
 
@@ -28,7 +29,7 @@ go run .
 
 ## 后台静态托管（生产部署）
 
-若目录 `backend/admin/dist` 存在（React 后台构建产物），服务自动将其挂载到 `/admin`，且 `/admin/` 前缀的未知路径回退到 `dist/index.html`（SPA history 路由）；目录不存在时该行为完全不存在。`admin/dist/` 已加入 `backend/.gitignore`。
+admin 前端在编译期通过 go:embed 嵌入二进制（`backend/web/dist`，构建时由 admin 构建产物覆盖：先在仓库根 `admin/` 执行 `npm run build`，产物拷贝到 `backend/web/dist/` 后再 `go build`），`/admin` 永远可用且与 API 同源；`/admin/` 前缀的未知路径回退到 `dist/index.html`（SPA）。本地开发用 Vite dev server（`/api` 代理到 `:8080`），无需重建二进制。`backend/web/dist/` 中除占位 `index.html` 外均已加入 `backend/.gitignore`。
 
 ## 响应信封
 
@@ -41,8 +42,14 @@ go run .
 | code | HTTP | data |
 | --- | --- | --- |
 | `OK` | 200 | 具体数据，`message` 固定为 `"ok"` |
+| `OK` | 201 | 同上（仅注册、管理端创建 App 版本） |
 | `FORBIDDEN` | 403 | `null`（仅管理端） |
-| `BAD_REQUEST` | 400 | `null`（仅管理端） |
+| `BAD_REQUEST` | 400 | `null`（管理端与用户端均有使用，code 语义按接口区分） |
+| `AUTH_INVALID_INPUT` | 400 | `null`（仅用户端接口） |
+| `AUTH_UNAUTHORIZED` | 401 | `null`（仅用户端接口） |
+| `AUTH_INVALID_CREDENTIALS` | 401 | `null`（仅登录） |
+| `AUTH_USERNAME_TAKEN` | 409 | `null`（仅注册） |
+| `VERSION_CONFLICT` | 409 | `null`（仅管理端 App 版本） |
 | `NOT_FOUND` | 404 | `null` |
 | `INTERNAL` | 500 | `null` |
 
@@ -205,7 +212,7 @@ go run .
 
 ---
 
-## 管理端接口（5～10）
+## 管理端接口（5～10、13b）
 
 供 React 后台（`/admin`）调用的内容管理接口。除下方差异外，信封、时间格式与内容接口一致。
 
@@ -524,20 +531,324 @@ go run .
 
 ---
 
+## 用户认证（Bearer）
+
+App 端用户接口（11～12）使用 JWT 认证：
+
+- 签发：注册/登录成功后返回 `token`；算法 HS256，有效期 30 天，claims 为 `sub`（用户 id）、`username`、`iat`、`exp`。
+- 密钥：环境变量 `AUTH_SECRET`；未设置时使用开发默认值 `dev-auth-secret`（启动日志会提醒，生产环境必须设置）。
+- 携带方式：请求头 `Authorization: Bearer <token>`；CORS 已放开 `Authorization` 头。
+- 校验失败（缺失、非 Bearer 前缀、签名不对、过期、格式非法）一律 401：
+
+```json
+{"code": "AUTH_UNAUTHORIZED", "message": "missing bearer token", "data": null}
+```
+
+`message` 取值：`missing bearer token` / `invalid or expired token`。
+密码仅存 bcrypt 哈希，任何响应都不包含明文密码或哈希。
+
+---
+
+## 11. POST /api/v1/auth/register
+
+注册并直接返回 token（注册即登录）。
+
+### 请求体
+
+```json
+{"username": "alice", "password": "secret123"}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `username` | string | 是 | 3～32 字节，全局唯一 |
+| `password` | string | 是 | 6～64 字节 |
+
+### 成功响应 201
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {"id": 1, "username": "alice", "createdAt": "2026-10-16T08:00:00Z"}
+  }
+}
+```
+
+### 失败响应
+
+400（字段长度不合法或 body 非法 JSON）：
+
+```json
+{"code": "AUTH_INVALID_INPUT", "message": "username must be 3-32 bytes and password must be 6-64 bytes", "data": null}
+```
+
+409（用户名已存在）：
+
+```json
+{"code": "AUTH_USERNAME_TAKEN", "message": "username already exists", "data": null}
+```
+
+---
+
+## 11b. POST /api/v1/auth/login
+
+登录，成功返回与注册同构的 data。
+
+### 请求体
+
+同注册：`{"username": "...", "password": "..."}`（同样做长度校验，不合法返回 400 `AUTH_INVALID_INPUT`）。
+
+### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {"id": 1, "username": "alice", "createdAt": "2026-10-16T08:00:00Z"}
+  }
+}
+```
+
+### 失败响应 401（用户不存在或密码错误，不区分提示）
+
+```json
+{"code": "AUTH_INVALID_CREDENTIALS", "message": "invalid username or password", "data": null}
+```
+
+---
+
+## 11c. GET /api/v1/auth/me（Bearer）
+
+当前用户信息。
+
+### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {"user": {"id": 1, "username": "alice", "createdAt": "2026-10-16T08:00:00Z"}}
+}
+```
+
+### 失败响应 401
+
+未带 token / token 无效：`AUTH_UNAUTHORIZED`（见"用户认证（Bearer）"）。
+
+---
+
+## 12. 观看记录（Bearer）
+
+用户在各课程的阅读进度记录，全部需要 `Authorization: Bearer <token>`；同一 `(用户, 课程, 章节)` 只保留一条，重复观看更新时间。
+
+### 12a. PUT /api/v1/records
+
+记录/刷新一次观看（upsert：存在则更新 `chapterTitle` 与 `readAt`）。
+
+#### 请求体
+
+```json
+{"courseSlug": "go-basics", "chapterSlug": "hello-world", "chapterTitle": "Hello World"}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `courseSlug` | string | 是 | 必须存在于 courses 表 |
+| `chapterSlug` | string | 是 | 必须属于该课程（两条件任一不满足返回 404） |
+| `chapterTitle` | string | 否 | 缺省时用章节表标题兜底 |
+
+#### 成功响应 200
+
+```json
+{"code": "OK", "message": "ok", "data": {"ok": true}}
+```
+
+#### 失败响应
+
+404（课程不存在、章节不存在或章节不属于该课程）：
+
+```json
+{"code": "NOT_FOUND", "message": "course or chapter not found", "data": null}
+```
+
+400（body 非法 JSON）：`AUTH_INVALID_INPUT`（`invalid request body`）。
+
+### 12b. GET /api/v1/records
+
+当前用户的观看记录，按 `readAt` 降序，最多 200 条。
+
+#### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "records": [
+      {
+        "courseSlug": "python-basics",
+        "courseTitle": "Python 基础",
+        "chapterSlug": "install-repl",
+        "chapterTitle": "安装与 REPL",
+        "readAt": "2026-10-16T09:00:00Z"
+      },
+      {
+        "courseSlug": "go-basics",
+        "courseTitle": "Go 语言入门",
+        "chapterSlug": "hello-world",
+        "chapterTitle": "Hello World",
+        "readAt": "2026-10-16T07:30:00Z"
+      }
+    ]
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `courseSlug` | string | 记录时的课程标识 |
+| `courseTitle` | string | 来自 courses 表；课程已被删除时兜底为 `"(已删除课程)"` |
+| `chapterSlug` | string | 章节标识 |
+| `chapterTitle` | string | 记录时保存的标题 |
+| `readAt` | string | 最近一次观看时间（RFC3339 UTC） |
+
+### 12c. DELETE /api/v1/records/{courseSlug}/{chapterSlug}
+
+删除当前用户的一条记录。
+
+#### 参数
+
+| 参数 | 位置 | 说明 |
+| --- | --- | --- |
+| `courseSlug` | path | 课程标识 |
+| `chapterSlug` | path | 章节标识 |
+
+#### 成功响应 200（n 为实际删除条数，0 表示本来就没有）
+
+```json
+{"code": "OK", "message": "ok", "data": {"deleted": 1}}
+```
+
+### 12d. DELETE /api/v1/records
+
+清空当前用户全部记录。
+
+#### 成功响应 200
+
+```json
+{"code": "OK", "message": "ok", "data": {"deleted": 5}}
+```
+
+---
+
+## 13. App 版本
+
+客户端检查更新与管理端版本维护。`GET /app/latest` 无认证；管理端接口走 `X-Admin-Token`（见"管理端鉴权"）。
+
+### 13a. GET /api/v1/app/latest（无认证）
+
+取 `enabled` 的版本中 `versionCode` 最大的一条。
+
+#### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "version": "1.2.0",
+    "versionCode": 3,
+    "notes": "修复若干问题，优化阅读体验。",
+    "apkUrl": "https://example.com/app-1.2.0.apk",
+    "force": true,
+    "releasedAt": "2026-10-16T06:00:00Z"
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `version` | string | 版本号（展示用） |
+| `versionCode` | int | 递增整数，客户端据此判断新旧 |
+| `notes` | string | 更新说明 |
+| `apkUrl` | string | 安装包下载地址 |
+| `force` | bool | 是否强制更新 |
+| `releasedAt` | string | 发布时间（创建时间，RFC3339 UTC） |
+
+#### 失败响应 404（无任何 enabled 版本）
+
+```json
+{"code": "NOT_FOUND", "message": "app release not found", "data": null}
+```
+
+### 13b. 管理端 App 版本 CRUD（X-Admin-Token）
+
+- **GET /api/v1/admin/app-versions**：全部版本列表，按 `versionCode` 降序；data 为数组，元素含 `id`、`version`、`versionCode`、`notes`、`apkUrl`、`force`、`enabled`、`releasedAt`。
+- **POST /api/v1/admin/app-versions**：创建版本（默认 `enabled=true`），成功 201 返回版本对象。
+
+  请求体：
+
+  ```json
+  {"version": "1.3.0", "versionCode": 4, "notes": "新增离线缓存。", "apkUrl": "https://example.com/app-1.3.0.apk", "force": false}
+  ```
+
+- **PUT /api/v1/admin/app-versions/{id}**：更新全部字段，成功 200 返回更新后对象。
+
+  请求体在创建基础上增加 `enabled`（可选，缺省保持原值；`force` 同样缺省保持原值）：
+
+  ```json
+  {"version": "1.3.0", "versionCode": 4, "notes": "新增离线缓存。", "apkUrl": "https://example.com/app-1.3.0.apk", "force": false, "enabled": false}
+  ```
+
+- **DELETE /api/v1/admin/app-versions/{id}**：删除版本，成功 200 `{"ok": true}`。
+
+#### 失败响应（管理端 App 版本）
+
+400（`version`/`apkUrl` 为空、`versionCode <= 0`，与现有管理端错误码风格一致）：
+
+```json
+{"code": "BAD_REQUEST", "message": "version is required", "data": null}
+```
+
+`message` 取值：`version is required` / `apkUrl is required` / `versionCode must be a positive integer`。
+
+409（`versionCode` 与其他版本重复）：
+
+```json
+{"code": "VERSION_CONFLICT", "message": "versionCode already exists", "data": null}
+```
+
+404（id 不存在）：`{"code": "NOT_FOUND", "message": "app version not found", "data": null}`。
+
+---
+
 ## 错误码汇总
 
 | HTTP | code | 场景 |
 | --- | --- | --- |
-| 200 | `OK` | 成功 |
-| 400 | `BAD_REQUEST` | 管理端：请求体非法 JSON（`invalid request body`）、缺 slug/`slug is required`、缺 title/`title is required`、color 非法（`invalid color: want #RRGGBB`）、课程 slug 重复（`course slug already exists`）、章节 slug 重复（`chapter slug already exists`） |
+| 200/201 | `OK` | 成功（201 仅注册、管理端创建 App 版本） |
+| 400 | `BAD_REQUEST` | 管理端：请求体非法 JSON（`invalid request body`）、缺 slug/`slug is required`、缺 title/`title is required`、color 非法（`invalid color: want #RRGGBB`）、课程 slug 重复（`course slug already exists`）、章节 slug 重复（`chapter slug already exists`）、App 版本入参不合法（`version is required` / `apkUrl is required` / `versionCode must be a positive integer`） |
+| 400 | `AUTH_INVALID_INPUT` | 用户端：注册/登录字段长度不合法（`username must be 3-32 bytes and password must be 6-64 bytes`）、请求体非法 JSON（`invalid request body`） |
+| 401 | `AUTH_UNAUTHORIZED` | 用户端：Bearer token 缺失（`missing bearer token`）或无效/过期（`invalid or expired token`） |
+| 401 | `AUTH_INVALID_CREDENTIALS` | 登录：用户不存在或密码错误（`invalid username or password`） |
 | 403 | `FORBIDDEN` | 管理端：`ADMIN_TOKEN` 未设置（`admin disabled: ADMIN_TOKEN not set`）或 token 不匹配（`invalid admin token`） |
-| 404 | `NOT_FOUND` | 路径不存在、课程不存在（`course not found`）、章节不存在（`chapter not found`） |
+| 404 | `NOT_FOUND` | 路径不存在、课程不存在（`course not found`）、章节不存在（`chapter not found`）、观看记录的课程/章节校验失败（`course or chapter not found`）、无可用 App 版本（`app release not found`）、App 版本 id 不存在（`app version not found`） |
+| 409 | `AUTH_USERNAME_TAKEN` | 注册：用户名已存在（`username already exists`） |
+| 409 | `VERSION_CONFLICT` | 管理端：versionCode 与其他版本重复（`versionCode already exists`） |
 | 500 | `INTERNAL` | 服务器内部错误（`internal error`） |
 
 ## 数据模型
 
 - **courses**：`ID`、`Slug`（唯一）、`Title`、`Summary`、`Language`、`Color`、`SortOrder`、`CreatedAt`、`UpdatedAt`
 - **chapters**：`ID`、`CourseID`（外键，联合唯一首列 + 可作单列索引前缀）、`Slug`（联合唯一 `idx_chapters_course_slug(CourseID, Slug)`）、`Title`、`ContentMD`（markdown 正文）、`SortOrder`、`CreatedAt`、`UpdatedAt`
+- **users**：`ID`、`Username`（唯一，3～32 字节）、`PasswordHash`（bcrypt，永不出库）、`CreatedAt`、`UpdatedAt`
+- **reading_records**：`ID`、`UserID`（索引）、`CourseSlug`、`ChapterSlug`（联合唯一 `idx_records_user_chapter(UserID, CourseSlug, ChapterSlug)`）、`ChapterTitle`、`ReadAt`（最近观看时间）
+- **app_releases**：`ID`、`Version`、`VersionCode`（唯一，正整数）、`Notes`、`ApkURL`、`Force`、`Enabled`（latest 仅取 enabled 中 versionCode 最大者）、`CreatedAt`（对外的 `releasedAt`）、`UpdatedAt`
 
 表结构由 GORM AutoMigrate 自动创建。
 

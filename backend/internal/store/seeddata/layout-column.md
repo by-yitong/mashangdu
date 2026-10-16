@@ -1,0 +1,98 @@
+```kotlin
+@Composable
+inline fun Column(
+    modifier: Modifier? = Modifier,
+    verticalArrangement: Arrangement.Vertical? = Arrangement.Top,
+    horizontalAlignment: Alignment.Horizontal? = Alignment.Start,
+    content: (@Composable @ExtensionFunctionType ColumnScope.() -> Unit)?
+): Unit
+```
+
+Column 是一个布局组件，它能够将里面的子项按照从上到下的顺序垂直排列。
+
+`verticalArrangment` 和 `horizontalAlignment` 参数分别可以帮助我们安排子项的垂直/水平位置，在默认的情况下，子项会以垂直方向上靠上（Arrangment.Top），水平方向上靠左（Alignment.Start）来排布。
+
+接下来我们来简单体验一下 Column 组件吧！
+
+```kotlin
+Column {
+    Text(
+        text = "Hello, World!",
+        style = MaterialTheme.typography.h6
+    )
+    Text("Jetpack Compose")
+}
+```
+
+![](images/jetpack-compose/layout-column/demo.png)
+
+如上图所示，Column 将里面的两个 Text 组件按照垂直排列了，并且带有一定的间隔。
+
+接下来我们来了解一下 Column 组件的其他方面。我们先让刚才的 Column 组件加上边框效果，看看效果是怎么样的。
+
+```kotlin
+Column(
+    modifier = Modifier
+        .border(1.dp, Color.Black)
+) {
+    Text(
+        text = "Hello, World!",
+        style = MaterialTheme.typography.h6
+    )
+    Text("Jetpack Compose")
+}
+```
+
+![](images/jetpack-compose/layout-column/demo1.png)
+
+可以发现，Column 组件将我们的两个 Text 组件包裹起来了，没错，在不给 Column 指定高度、宽度、大小的情况下，Column 组件默认会尽可能小地包裹里面的子项。在这个时候，我们无法使用 Column 参数中的 verticalArrangement 或 horizontalAlignment 来定位子项在 Colunn 中的整体位置。
+只要我们给 Column 指定了
+
+1. 高度，那么就能使用 verticalArrangement 参数来定位子项在 Column 中的垂直位置。
+2. 宽度，那么就能使用 horizontalAlignment 参数来定位子项在 Column 中的水平位置。
+3. 大小，那么就可以同时使用以上的两个参数来定位子项的水平/垂直位置
+
+```kotlin
+Column(
+    modifier = Modifier
+        .border(1.dp, Color.Black)
+        .size(150.dp),
+    verticalArrangement = Arrangement.Center
+) {
+    Text(
+        text = "Hello, World!",
+        style = MaterialTheme.typography.h6
+    )
+    Text("Jetpack Compose")
+}
+```
+
+![](images/jetpack-compose/layout-column/demo2.png)
+
+通过 `verticalArrangement` 参数，我们将两个 Text 排布在了 Column 组件的中央，但水平方向上仍然是 Column 默认定义的 Alignment.Start（水平靠左）方向。
+
+在给 Column 定义了大小之后，我们能够使用 Modifier.align 来单独设置子项的水平方向。
+
+```kotlin
+Column(
+    modifier = Modifier
+        .border(1.dp, Color.Black)
+        .size(150.dp),
+    verticalArrangement = Arrangement.Center
+) {
+    Text(
+        text = "Hello, World!",
+        style = MaterialTheme.typography.h6,
+        modifier = Modifier.align(Alignment.CenterHorizontally)
+    )
+    Text("Jetpack Compose")
+}
+```
+
+![](images/jetpack-compose/layout-column/demo3.png)
+
+设置了 Modifier.align 属性的子项会优先于 Column 的 `horizontalAlignment` 参数来定位。
+
+![](images/jetpack-compose/layout-column/demo4.png)
+
+> 本文来自 [你好 Compose](https://jetpackcompose.cn/docs/)，作者 compose-museum，采用 [CC BY-NC-SA 2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/) 授权转载，禁止商用。

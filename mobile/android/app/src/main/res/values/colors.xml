@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 启动底色：深青，与 Flutter 侧 Splash 图标底色一致，消除白闪 -->
+    <color name="launch_bg">#0F766E</color>
+	<color name="ic_launcher_background">#0F766E</color>
+</resources>

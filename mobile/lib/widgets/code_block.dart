@@ -6,11 +6,11 @@ import 'package:highlight/highlight.dart' as hl;
 // ignore: depend_on_referenced_packages
 import 'package:markdown/markdown.dart' as md;
 
-import 'design.dart';
 import 'reading_theme.dart';
 
-/// 代码块：圆角容器 + 语法高亮 + 右上角复制按钮；底色随阅读主题 codeBg
-/// （默认深底），codeBg 与页面 bg 相同（纯黑主题）时加 divider 色 1px 描边。
+/// 代码块：圆角容器 + 语法高亮 + 右上角复制按钮；固定暗色模式渲染——
+/// 底色随阅读主题 codeBg（全部主题均为深底），前景固定浅色，不随亮色
+/// 阅读主题变深；codeBg 与页面 bg 相同（纯黑主题）时加 divider 色 1px 描边。
 class CodeBlock extends StatelessWidget {
   const CodeBlock({
     super.key,
@@ -70,11 +70,14 @@ class CodeBlock extends StatelessWidget {
     'selector-id': Color(0xFF61AFEF),
   };
 
+  // 固定浅色前景：无 className 的纯文本 token 从这里继承，
+  // 不会被亮色阅读主题的深色文字带黑。
   static const TextStyle _mono = TextStyle(
     fontFamily: 'monospace',
     fontFeatures: [FontFeature.tabularFigures()],
     fontSize: 13,
     height: 1.55,
+    color: _plainText,
   );
 
   /// 把 highlight 的节点树转成 TextSpan。
@@ -149,7 +152,6 @@ class CodeBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.of(context);
     final text = code.endsWith('\n')
         ? code.substring(0, code.length - 1)
         : code;
@@ -193,7 +195,12 @@ class CodeBlock extends StatelessWidget {
           right: 8,
           child: IconButton(
             tooltip: '复制代码',
-            icon: Icon(Icons.copy_rounded, size: 16, color: colors.inkMuted),
+            // 深底固定浅灰，不随 App 亮暗模式变深。
+            icon: const Icon(
+              Icons.copy_rounded,
+              size: 16,
+              color: Color(0xFF8A938E),
+            ),
             onPressed: () => _copy(context),
             visualDensity: VisualDensity.compact,
           ),

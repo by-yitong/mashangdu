@@ -1,0 +1,33 @@
+## 官方依赖
+
+
+> **注意**
+> 由于 Jetpack Compose 仍处在快速发展的阶段，下面所列的版本有极大可能已过时。请参考所附的链接寻找最新版本。
+
+
+|依赖名|版本|
+|------|-----|
+|GradlePlugin（最新稳定版）|[8.0.0](https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google)|
+|GradlePlugin (Android Studio Canary 等版本可用的最新版本)|[8.1.0-alpha11](https://mvnrepository.com/artifact/com.android.tools.build/gradle?repo=google)|
+|kotlin (Compose 编译器最低支持的 Kotlin 版本，和底下的 Compose 编译器（稳定版）版本对应) |[1.8.20](https://developer.android.google.cn/jetpack/androidx/releases/compose-kotlin)|
+|Jetpack Compose 编译器（稳定版）|[1.4.5](https://developer.android.com/jetpack/androidx/releases/compose)|
+|Jetpack Compose BOM|[2023.04.00](https://mvnrepository.com/artifact/androidx.compose/compose-bom?repo=google)|
+|NavigationCompose|[2.5.1](https://developer.android.com/jetpack/androidx/releases/navigation)|
+|Hilt|[2.43.1](https://mvnrepository.com/artifact/com.google.dagger/hilt-android)|
+
+## 库
+
+| 项目名 | 介绍 |
+| -------|------|
+|[Accompanist](https://github.com/google/accompanist) | Jetpack Compose 的一些功能补充库
+|[Ucrop](https://github.com/Yalantis/uCrop) | 可以完成图片的裁剪，对用户的图片上传功能有帮助(已知 Bilibili 在用)
+|[Material Design](https://material.io/design) | 安卓应用的设计标准，内涵丰富的图标按钮资源
+|[CMaterialColors](https://github.com/FunnySaltyFish/CMaterialColors) | 在 Jetpack Compose 中使用 Material Design Color
+|[Material Dialog](https://github.com/afollestad/material-dialogs) | 含有颜色、时间选择对话框等等
+|[Coil](https://coil-kt.github.io/coil/compose/) | Compose 额外的图像库，支持显示 Svg Gif，支持显示网络资源的图片
+|[Landscapist](https://github.com/skydoves/Landscapist) | 同样也是图像加载的库，支持使用 Glide, Coil, Fresco 等库
+|[ComposeDataSaver](https://github.com/FunnySaltyFish/ComposeDataSaver) | 在 Jetpack Compose 中优雅完成数据持久化 
+|[ComposeViews](https://github.com/ltttttttttttt/ComposeViews) | Compose 的一些开发常用控件补充库
+|[load-the-image](https://github.com/ltttttttttttt/load-the-image) | Compose-desktop 的图像加载库,适用于桌面端
+
+> 本文来自 [你好 Compose](https://jetpackcompose.cn/docs/)，作者 compose-museum，采用 [CC BY-NC-SA 2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/) 授权转载，禁止商用。

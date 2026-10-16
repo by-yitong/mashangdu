@@ -159,3 +159,93 @@ DateTime? _parseDate(Object? value) {
   if (value is! String || value.isEmpty) return null;
   return DateTime.tryParse(value);
 }
+
+/// POST /api/v1/auth/register|login 返回 data 里的 user。
+class AuthUser {
+  const AuthUser({required this.id, required this.username, this.createdAt});
+
+  final int id;
+  final String username;
+  final DateTime? createdAt;
+
+  factory AuthUser.fromJson(Map<String, dynamic> json) => AuthUser(
+    id: (json['id'] as num?)?.toInt() ?? 0,
+    username: json['username'] as String? ?? '',
+    createdAt: _parseDate(json['createdAt']),
+  );
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+    'id': id,
+    'username': username,
+    'createdAt': createdAt?.toIso8601String(),
+  };
+}
+
+/// 登录/注册成功后的会话（token + 用户）。
+class AuthSession {
+  const AuthSession({required this.token, required this.user});
+
+  final String token;
+  final AuthUser user;
+}
+
+/// GET /api/v1/records 返回 data.records 的元素（云端观看历史）。
+class ReadRecord {
+  const ReadRecord({
+    required this.courseSlug,
+    required this.courseTitle,
+    required this.chapterSlug,
+    required this.chapterTitle,
+    required this.readAt,
+  });
+
+  final String courseSlug;
+  final String courseTitle;
+  final String chapterSlug;
+  final String chapterTitle;
+  final DateTime? readAt;
+
+  factory ReadRecord.fromJson(Map<String, dynamic> json) => ReadRecord(
+    courseSlug: json['courseSlug'] as String? ?? '',
+    courseTitle: json['courseTitle'] as String? ?? '',
+    chapterSlug: json['chapterSlug'] as String? ?? '',
+    chapterTitle: json['chapterTitle'] as String? ?? '',
+    readAt: _parseDate(json['readAt']),
+  );
+
+  static List<ReadRecord> listFromJson(Object? data) =>
+      (data as List<Object?>? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(ReadRecord.fromJson)
+          .toList();
+}
+
+/// GET /api/v1/app/latest 的 data（新版 APK 信息）。
+class AppRelease {
+  const AppRelease({
+    required this.version,
+    required this.versionCode,
+    required this.notes,
+    required this.apkUrl,
+    required this.force,
+    this.releasedAt,
+  });
+
+  final String version;
+
+  /// 与 Android versionCode（buildNumber）比较判断是否更新。
+  final int versionCode;
+  final String notes;
+  final String apkUrl;
+  final bool force;
+  final DateTime? releasedAt;
+
+  factory AppRelease.fromJson(Map<String, dynamic> json) => AppRelease(
+    version: json['version'] as String? ?? '',
+    versionCode: (json['versionCode'] as num?)?.toInt() ?? 0,
+    notes: json['notes'] as String? ?? '',
+    apkUrl: json['apkUrl'] as String? ?? '',
+    force: json['force'] as bool? ?? false,
+    releasedAt: _parseDate(json['releasedAt']),
+  );
+}

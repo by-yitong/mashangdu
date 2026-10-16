@@ -1,2 +1,7 @@
 # React 后台构建产物（由根目录 admin/ 构建后复制到此处）
 admin/dist/
+
+# 编译期嵌入的后台产物（backend/web/dist）：忽略全部内容，仅保留占位 index.html，
+# 保证未跑 npm build 时 go:embed 仍有 dist 可嵌、go build 通过。
+web/dist/*
+!web/dist/index.html

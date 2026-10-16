@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../state/image_cache_store.dart';
 import 'design.dart';
@@ -9,6 +10,8 @@ import 'design.dart';
 /// Markdown 图片：本地已有直接显示，缺失则尝试下载后显示；
 /// 下载中/失败/不可下载一律显示同款占位（card 底 + alt 文本 + 图片图标）。
 /// 已加载的图片可点击进入全屏查看器（双指缩放 / 双击放大 / 点按关闭）。
+/// SVG 走 flutter_svg 分支渲染，且一律垫白底（课程图解按白底设计、
+/// 深色线条 + 透明背景，直接铺深色卡片上会看不清）。
 /// [url] 是 markdown 里的原文（相对路径或绝对 URL），落盘与去重都按原文；
 /// [resolver] 由调用方注入（一般传 `(raw) => context.read<ApiClient>().resolve(raw)`），
 /// 负责把原文拼成可下载地址。落盘路径规则与 DownloadStore 共用 ImageCacheStore。
@@ -30,6 +33,10 @@ class OfflineImage extends StatefulWidget {
 
 class _OfflineImageState extends State<OfflineImage> {
   File? _file;
+
+  /// 是否按 SVG 渲染：以 markdown 原文 url 的后缀为准
+  /// （落盘文件名保留原文后缀，两者一致）。
+  bool get _isSvg => widget.url.toLowerCase().endsWith('.svg');
 
   @override
   void initState() {
@@ -72,7 +79,7 @@ class _OfflineImageState extends State<OfflineImage> {
         reverseTransitionDuration: const Duration(milliseconds: 150),
         pageBuilder: (_, animation, _) => FadeTransition(
           opacity: animation,
-          child: _ImageViewerPage(file: file, alt: widget.alt),
+          child: _ImageViewerPage(file: file, alt: widget.alt, isSvg: _isSvg),
         ),
       ),
     );
@@ -87,13 +94,26 @@ class _OfflineImageState extends State<OfflineImage> {
       onTap: _openViewer,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
-        child: Image.file(
-          file,
-          width: double.infinity,
-          fit: BoxFit.fitWidth,
-          gaplessPlayback: true,
-          errorBuilder: (_, _, _) => _placeholder(colors),
-        ),
+        child: _isSvg
+            ? Container(
+                // 白底容器把宽度收紧成满宽，SvgPicture 内部的 FittedBox
+                // 在「宽受限、高不受限」下按 viewBox 等比给高，
+                // 与位图 Image(width: infinity, fit: fitWidth) 观感一致。
+                width: double.infinity,
+                color: Colors.white,
+                child: SvgPicture.file(
+                  file,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => _placeholder(colors),
+                ),
+              )
+            : Image.file(
+                file,
+                width: double.infinity,
+                fit: BoxFit.fitWidth,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) => _placeholder(colors),
+              ),
       ),
     );
   }
@@ -125,11 +145,17 @@ class _OfflineImageState extends State<OfflineImage> {
 
 /// 全屏图片查看器：黑底、双指缩放（0.6~5x）、双击在 1x/2.5x 间切换、
 /// 单击关闭、右上角关闭按钮。基于官方 InteractiveViewer，无额外依赖。
+/// SVG 单独分支：深色线条在纯黑背景上不可见，改用白底圆角容器承载。
 class _ImageViewerPage extends StatefulWidget {
-  const _ImageViewerPage({required this.file, required this.alt});
+  const _ImageViewerPage({
+    required this.file,
+    required this.alt,
+    required this.isSvg,
+  });
 
   final File file;
   final String alt;
+  final bool isSvg;
 
   @override
   State<_ImageViewerPage> createState() => _ImageViewerPageState();
@@ -201,11 +227,24 @@ class _ImageViewerPageState extends State<_ImageViewerPage>
                 panEnabled: true,
                 constrained: true,
                 child: Center(
-                  child: Image.file(
-                    widget.file,
-                    fit: BoxFit.contain,
-                    gaplessPlayback: true,
-                  ),
+                  // SVG：白底圆角容器随内容等比收缩（Center 放宽约束后
+                  // FittedBox 按 viewBox 尺寸夹紧到屏幕内），黑底只露边框。
+                  child: widget.isSvg
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(22),
+                          child: Container(
+                            color: Colors.white,
+                            child: SvgPicture.file(
+                              widget.file,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        )
+                      : Image.file(
+                          widget.file,
+                          fit: BoxFit.contain,
+                          gaplessPlayback: true,
+                        ),
                 ),
               ),
             ),

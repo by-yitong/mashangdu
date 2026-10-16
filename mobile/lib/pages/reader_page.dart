@@ -1,5 +1,7 @@
+import 'dart:async' as async;
 import 'dart:math' as math;
 
+import 'package:battery_plus/battery_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -7,19 +9,24 @@ import 'package:provider/provider.dart';
 
 import '../models/models.dart';
 import '../state/api_client.dart';
+import '../state/auth_store.dart';
 import '../state/library_store.dart';
 import '../state/progress_store.dart';
 import '../state/reader_prefs.dart';
+import '../utils/drawer_snap.dart';
+import '../utils/relative_time.dart' show formatHm;
 import '../widgets/code_block.dart';
 import '../widgets/design.dart';
 import '../widgets/offline_image.dart';
 import '../widgets/reading_theme.dart';
 
-/// 阅读页：小说 App 式沉浸阅读。
+/// 阅读页：小说 App 式沉浸阅读（immersiveSticky 沉浸式系统栏）。
 ///
 /// Stack 分层：内容层（CustomScrollView，外层包全屏 translucent 手势层）
-/// → 过卷翻章胶囊（IgnorePointer，菜单层之下）→ 菜单层（顶/底半透明沉浸条，
-/// 200ms 动画）→ 目录抽屉（Scaffold.drawer）。
+/// → 目录起手区（左 24px 竖条，仅横向拖动）→ 过卷翻章胶囊（IgnorePointer，
+/// 菜单层之下）→ 底部融入式状态条（IgnorePointer）→ 菜单层（顶/底半透明
+/// 沉浸条，200ms 动画）→ 目录层（自绘面板：遮罩 + 左侧 86% 宽面板，
+/// 右滑 1:1 跟手、松手速度+位置双判定 250ms easeOutCubic 吸附）。
 ///
 /// 翻页为纵向平滑滚屏（非横向真分页，代码块永不被切断）：
 /// - tap 模式：点右 1/3 或左滑 = 下一屏（末屏进下一章）；点左 1/3 或右滑 = 上一屏
@@ -49,8 +56,7 @@ class ReaderPage extends StatefulWidget {
   State<ReaderPage> createState() => _ReaderPageState();
 }
 
-class _ReaderPageState extends State<ReaderPage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
   final ScrollController _scroll = ScrollController();
 
   /// 当前阅读进度比例（0~1），驱动菜单 Slider 与百分比（避免整页 setState）。
@@ -112,11 +118,70 @@ class _ReaderPageState extends State<ReaderPage> {
   /// 翻章触发时胶囊跳过消失动画（立即隐藏）。
   bool _flipHideInstant = false;
 
+  // —— 自绘目录面板（替代 Scaffold.drawer） ——
+
+  /// 开合进度 0..1（0 关、1 开）：拖动 1:1 写 value，松手 animateTo 吸附。
+  late final AnimationController _drawerCtrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+    value: 0,
+  );
+
+  /// 目录起手区宽度（屏幕左侧竖条，逻辑像素）。
+  static const double _drawerEdgeWidth = 24;
+
+  /// 面板宽度占屏宽比例。
+  static const double _drawerWidthFactor = 0.86;
+
+  /// 面板像素宽（didChangeDependencies 里刷新；拖动回调直接读缓存，
+  /// 不在手势回调里查 MediaQuery）。
+  double _drawerWidthPx = 0;
+
+  double get _drawerPanelWidth => _drawerWidthPx;
+
+  bool get _isDrawerOpen => _drawerCtrl.value > 0;
+
+  void _openDrawerPanel() => _animateDrawer(to: 1);
+
+  void _closeDrawerPanel() => _animateDrawer(to: 0);
+
+  /// 250ms easeOutCubic 吸附动画（按钮开启 / 松手判定 / 遮罩点按共用）。
+  void _animateDrawer({required double to}) {
+    _drawerCtrl.animateTo(
+      to.clamp(0.0, 1.0),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// 拖动 1:1 跟手：dx / 面板宽 → 开启度增量（起手区与遮罩共用）。
+  void _onDrawerDragUpdate(DragUpdateDetails details) {
+    _drawerCtrl.value =
+        (_drawerCtrl.value + details.delta.dx / _drawerPanelWidth).clamp(
+          0.0,
+          1.0,
+        );
+  }
+
+  /// 松手：速度优先（≥600px/s 甩动）、位置兜底（≥0.5）。
+  void _onDrawerDragEnd(DragEndDetails details) {
+    _animateDrawer(
+      to: drawerSnapOpen(_drawerCtrl.value, details.velocity.pixelsPerSecond.dx)
+          ? 1
+          : 0,
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _currentSlug = widget.chapterSlug;
     _scroll.addListener(_onScroll);
+    // 沉浸式阅读：状态栏/导航栏隐藏（下滑可临时呼出）。
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.immersiveSticky,
+      overlays: [],
+    );
     _load(_currentSlug, markRead: true);
   }
 
@@ -124,6 +189,7 @@ class _ReaderPageState extends State<ReaderPage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _prefsRef ??= context.read<ReaderPrefs>();
+    _drawerWidthPx = MediaQuery.sizeOf(context).width * _drawerWidthFactor;
   }
 
   @override
@@ -133,7 +199,10 @@ class _ReaderPageState extends State<ReaderPage> {
     _scroll.dispose();
     _ratio.dispose();
     _flipHint.dispose();
-    // 恢复全局主题样式（返回后各页 AppBar 也会自行声明，这里兜底）。
+    _drawerCtrl.dispose();
+    // 恢复全局主题样式（返回后各页 AppBar 也会自行声明，这里兜底）+
+    // 退出沉浸模式，确保课程页状态栏正常回来。
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(_globalOverlay);
     super.dispose();
   }
@@ -170,11 +239,23 @@ class _ReaderPageState extends State<ReaderPage> {
     _scheduleRestore(ratio ?? 0);
 
     if (markRead) {
-      await context.read<ProgressStore>().markRead(
+      // 依赖先取引用再 await（BuildContext 不跨异步间隙使用）。
+      final progressStore = context.read<ProgressStore>();
+      final authStore = context.read<AuthStore>();
+      final api = context.read<ApiClient>();
+      await progressStore.markRead(
         widget.course.slug,
         chapter.slug,
         chapter.title,
       );
+      // 云端观看历史上报：已登录才发，fire-and-forget，失败静默不影响阅读。
+      if (authStore.isLoggedIn) {
+        async.unawaited(
+          api
+              .putRecord(widget.course.slug, chapter.slug, chapter.title)
+              .catchError((Object _) {}),
+        );
+      }
     }
   }
 
@@ -381,47 +462,46 @@ class _ReaderPageState extends State<ReaderPage> {
   }
 
   /// 过卷翻章胶囊：方向决定位置——下一章从页面底部浮出（内容从下方来），
-  /// 上一章在顶部浮出；SafeArea 内、菜单层之下、IgnorePointer。
+  /// 上一章在顶部浮出；菜单层之下、IgnorePointer。底部胶囊要避开
+  /// 状态条 HUD 区（28px + 余量），左右各留 20px——部分设备屏幕
+  /// 底部为圆角，贴边会被弯边裁切。不用 SafeArea——沉浸模式下它
+  /// 仍会虚占已隐藏系统栏的高度。
   Widget _buildFlipHint(ReadingTheme theme) {
     return IgnorePointer(
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8, bottom: 8),
-          child: ValueListenableBuilder<_FlipHint>(
-            valueListenable: _flipHint,
-            builder: (context, hint, _) {
-              // TweenAnimationBuilder 常驻：首次显示时 tween end 由 0 变 1，
-              // 才会播放 140ms 出现动画（新挂载会直接跳到终值）。
-              final isNext = hint.direction > 0;
-              final fromBelow = isNext;
-              final card = hint.direction == 0
-                  ? const SizedBox.shrink()
-                  : _buildFlipHintCard(hint, theme);
-              return Align(
-                alignment: isNext
-                    ? Alignment.bottomCenter
-                    : Alignment.topCenter,
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(end: hint.visible ? 1.0 : 0.0),
-                  duration: hint.visible
-                      ? const Duration(milliseconds: 140)
-                      : (_flipHideInstant
-                            ? Duration.zero
-                            : const Duration(milliseconds: 120)),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, t, child) => Opacity(
-                    opacity: t,
-                    child: Transform.translate(
-                      // 底部胶囊从下方 12px 滑入，顶部胶囊从上方滑入。
-                      offset: Offset(0, (fromBelow ? 12 : -12) * (1 - t)),
-                      child: child,
-                    ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+        child: ValueListenableBuilder<_FlipHint>(
+          valueListenable: _flipHint,
+          builder: (context, hint, _) {
+            // TweenAnimationBuilder 常驻：首次显示时 tween end 由 0 变 1，
+            // 才会播放 140ms 出现动画（新挂载会直接跳到终值）。
+            final isNext = hint.direction > 0;
+            final fromBelow = isNext;
+            final card = hint.direction == 0
+                ? const SizedBox.shrink()
+                : _buildFlipHintCard(hint, theme);
+            return Align(
+              alignment: isNext ? Alignment.bottomCenter : Alignment.topCenter,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(end: hint.visible ? 1.0 : 0.0),
+                duration: hint.visible
+                    ? const Duration(milliseconds: 140)
+                    : (_flipHideInstant
+                          ? Duration.zero
+                          : const Duration(milliseconds: 120)),
+                curve: Curves.easeOutCubic,
+                builder: (context, t, child) => Opacity(
+                  opacity: t,
+                  child: Transform.translate(
+                    // 底部胶囊从下方 12px 滑入，顶部胶囊从上方滑入。
+                    offset: Offset(0, (fromBelow ? 12 : -12) * (1 - t)),
+                    child: child,
                   ),
-                  child: card,
                 ),
-              );
-            },
-          ),
+                child: card,
+              ),
+            );
+          },
         ),
       ),
     );
@@ -539,60 +619,276 @@ class _ReaderPageState extends State<ReaderPage> {
           : Brightness.dark,
     );
 
+    // 状态条章节序号（与底栏「第 X / Y 章」同源）。
+    final chapterIndex = _chapters.indexWhere((c) => c.slug == _currentSlug);
+    final orderText = chapterIndex >= 0 && _chapters.isNotEmpty
+        ? '${_chapters[chapterIndex].order}/${_chapters.length}'
+        : '';
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: theme.overlayStyle,
-      child: Scaffold(
-        key: _scaffoldKey,
-        backgroundColor: theme.bg,
-        drawer: _buildDrawer(theme, progress),
-        body: Stack(
-          children: [
-            // 内容层 + 手势层：GestureDetector 是内容的全屏手势祖先
-            // （translucent），子组件点击（代码块复制等）在竞技场中优先；
-            // NotificationListener 承接过卷翻章（tap/scroll 模式共享同一
-            // ScrollView，行为一致）。
-            Positioned.fill(
-              child: GestureDetector(
-                behavior: HitTestBehavior.translucent,
-                onTapUp: _handleTapUp,
-                onHorizontalDragEnd: _handleHorizontalDragEnd,
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: _handleScrollNotification,
-                  child: SafeArea(
-                    bottom: false,
-                    child: CustomScrollView(
-                      controller: _scroll,
-                      // 短章（内容不满一屏）时 maxScrollExtent 为 0，默认物理
-                      // 会拒绝拖拽、过卷通知不发出 → 强制接受，保证短章也能
-                      // 拉出翻章提示。
-                      physics: const _AlwaysAcceptDragPhysics(
-                        parent: ClampingScrollPhysics(),
-                      ),
-                      slivers: [
-                        // 切章加载中：旧内容保持可见，顶部细进度条提示。
-                        if (_loading && _chapter != null)
-                          SliverToBoxAdapter(
-                            child: LinearProgressIndicator(
-                              minHeight: 2,
-                              color: theme.accent,
-                              backgroundColor: Colors.transparent,
+      // 面板开合只重建 PopScope 包装；Scaffold 作为 child 传入，正文不重建。
+      child: ListenableBuilder(
+        listenable: _drawerCtrl,
+        child: Scaffold(
+          backgroundColor: theme.bg,
+          body: Stack(
+            children: [
+              // 内容层 + 手势层：GestureDetector 是内容的全屏手势祖先
+              // （translucent），子组件点击（代码块复制等）在竞技场中优先；
+              // NotificationListener 承接过卷翻章（tap/scroll 模式共享同一
+              // ScrollView，行为一致）。
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTapUp: _handleTapUp,
+                  onHorizontalDragEnd: _handleHorizontalDragEnd,
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: _handleScrollNotification,
+                    // 沉浸式下系统栏已隐藏，SafeArea 仍会预留状态栏高度，
+                    // 顶部出现空白段——正文直接铺到屏幕顶缘；底部让出
+                    // 状态条 HUD 区（时间/电量/进度），文字永不滚入遮挡。
+                    // HUD 实占 ~23px（11 号字 + 底距 10），28 留少量余量。
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 28),
+                      child: CustomScrollView(
+                        controller: _scroll,
+                        // 短章（内容不满一屏）时 maxScrollExtent 为 0，默认物理
+                        // 会拒绝拖拽、过卷通知不发出 → 强制接受，保证短章也能
+                        // 拉出翻章提示。
+                        physics: const _AlwaysAcceptDragPhysics(
+                          parent: ClampingScrollPhysics(),
+                        ),
+                        slivers: [
+                          // 切章加载中：旧内容保持可见，顶部细进度条提示。
+                          if (_loading && _chapter != null)
+                            SliverToBoxAdapter(
+                              child: LinearProgressIndicator(
+                                minHeight: 2,
+                                color: theme.accent,
+                                backgroundColor: Colors.transparent,
+                              ),
                             ),
+                          // 顶部呼吸间距放在滚动区内部：章首有留白，
+                          // 上滑时随内容一起推走，不占常驻屏幕。
+                          SliverPadding(
+                            padding: const EdgeInsets.only(top: 20),
+                            sliver: _buildBody(theme, prefs),
                           ),
-                        _buildBody(theme, prefs),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
+              // 目录起手区：左侧 24px 竖条，只挂横向拖动（translucent 不拦截
+              // 该区域点击翻页/代码块点击）；其余区域的横向甩动仍走上面的
+              // 过卷/翻章手势，互不影响。
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: 0,
+                width: _drawerEdgeWidth,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onHorizontalDragUpdate: _onDrawerDragUpdate,
+                  onHorizontalDragEnd: _onDrawerDragEnd,
+                ),
+              ),
+              // 过卷翻章胶囊：菜单层之下，IgnorePointer 不挡任何点击。
+              _buildFlipHint(theme),
+              // 底部融入式状态条：IgnorePointer，菜单层打开时隐藏。
+              _buildReaderStatusBar(theme, orderText),
+              // 菜单层：顶栏 + 底栏，200ms 滑入滑出。
+              _buildTopBar(theme, title),
+              _buildBottomBar(theme),
+              // 首次阅读指引：点按分区教学，展示一次。
+              if (_coachVisible && !prefs.coachShown)
+                Positioned.fill(child: _buildCoachOverlay(theme, prefs)),
+              // 目录层：遮罩 + 左侧面板（自绘，替代 Scaffold.drawer）。
+              _buildDrawerLayer(theme, progress),
+            ],
+          ),
+        ),
+        builder: (context, child) => PopScope(
+          // 面板开着时返回键先收面板，再退页。
+          canPop: !_isDrawerOpen,
+          onPopInvokedWithResult: (didPop, result) {
+            if (!didPop) _closeDrawerPanel();
+          },
+          child: child!,
+        ),
+      ),
+    );
+  }
+
+  /// 底部状态条容器（定位于 Stack 底部、永不参与命中测试）。
+  Widget _buildReaderStatusBar(ReadingTheme theme, String orderText) {
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: IgnorePointer(
+        child: _ReaderStatusBar(
+          ratio: _ratio,
+          orderText: orderText,
+          title: _chapter?.title ?? '',
+          visible: !_menuVisible,
+          color: theme.textSecondary,
+          background: theme.bg,
+        ),
+      ),
+    );
+  }
+
+  /// 目录层：遮罩（黑 alpha 随开度 0→0.4，点按/横拖关闭）+ 左侧面板
+  /// （86% 屏宽，Transform.translate 滑入）。拖动与动画只驱动 Transform /
+  /// 遮罩透明度——面板内容作为 AnimatedBuilder 的 child 复用，正文层不重建。
+  Widget _buildDrawerLayer(ReadingTheme theme, ProgressStore progress) {
+    return AnimatedBuilder(
+      animation: _drawerCtrl,
+      child: _buildDrawerPanel(theme, progress),
+      builder: (context, panel) {
+        final t = _drawerCtrl.value;
+        return IgnorePointer(
+          ignoring: t <= 0,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _closeDrawerPanel,
+                  onHorizontalDragUpdate: _onDrawerDragUpdate,
+                  onHorizontalDragEnd: _onDrawerDragEnd,
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: 0.4 * t),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: 0,
+                width: _drawerPanelWidth,
+                child: Transform.translate(
+                  offset: Offset(-_drawerPanelWidth * (1 - t), 0),
+                  child: panel,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// 目录面板本体：theme.bg 底 + 右侧圆角 22 + 细描边 + 轻阴影（菜单层同
+  /// 风格）；当前章 accent 高亮 + 已读打勾，点击收面板并跳章（恢复该章
+  /// 保存位置，无则到顶）。
+  Widget _buildDrawerPanel(ReadingTheme theme, ProgressStore progress) {
+    final detail = context.read<LibraryStore>().cachedDetail(
+      widget.course.slug,
+    );
+    final chapters = detail?.chapters ?? _chapters;
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.bg,
+        borderRadius: const BorderRadius.horizontal(right: Radius.circular(22)),
+        border: Border(right: BorderSide(color: theme.divider)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(6, 0),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Text(
+                '目录',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: theme.text,
+                ),
+              ),
             ),
-            // 过卷翻章胶囊：菜单层之下，IgnorePointer 不挡任何点击。
-            _buildFlipHint(theme),
-            // 菜单层：顶栏 + 底栏，200ms 滑入滑出。
-            _buildTopBar(theme, title),
-            _buildBottomBar(theme),
-            // 首次阅读指引：点按分区教学，展示一次。
-            if (_coachVisible && !prefs.coachShown)
-              Positioned.fill(child: _buildCoachOverlay(theme, prefs)),
+            Divider(height: 1, color: theme.divider),
+            Expanded(
+              child: chapters.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Center(
+                        child: Text(
+                          '章节列表暂不可用',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: theme.textSecondary,
+                          ),
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: chapters.length,
+                      itemBuilder: (context, i) {
+                        final chapter = chapters[i];
+                        final isCurrent = chapter.slug == _currentSlug;
+                        final isRead = progress.isRead(
+                          widget.course.slug,
+                          chapter.slug,
+                        );
+                        return InkWell(
+                          onTap: () {
+                            _closeDrawerPanel();
+                            _goChapter(chapter.slug);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isRead
+                                      ? Icons.check_circle_rounded
+                                      : Icons.radio_button_unchecked,
+                                  size: 18,
+                                  color: isCurrent
+                                      ? theme.accent
+                                      : theme.textSecondary,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    chapter.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      height: 1.4,
+                                      fontWeight: isCurrent
+                                          ? FontWeight.w700
+                                          : FontWeight.w400,
+                                      color: isCurrent
+                                          ? theme.accent
+                                          : theme.text,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
           ],
         ),
       ),
@@ -623,7 +919,11 @@ class _ReaderPageState extends State<ReaderPage> {
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.72), fontSize: 13, height: 1.5),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.72),
+              fontSize: 13,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -644,11 +944,7 @@ class _ReaderPageState extends State<ReaderPage> {
               flex: 3,
               child: Row(
                 children: [
-                  zone(
-                    icon: Icons.west,
-                    title: '上一页',
-                    subtitle: '点击左侧区域',
-                  ),
+                  zone(icon: Icons.west, title: '上一页', subtitle: '点击左侧区域'),
                   VerticalDivider(
                     width: 1,
                     thickness: 1,
@@ -664,11 +960,7 @@ class _ReaderPageState extends State<ReaderPage> {
                     thickness: 1,
                     color: Colors.white.withValues(alpha: 0.22),
                   ),
-                  zone(
-                    icon: Icons.east,
-                    title: '下一页',
-                    subtitle: '点击右侧区域',
-                  ),
+                  zone(icon: Icons.east, title: '下一页', subtitle: '点击右侧区域'),
                 ],
               ),
             ),
@@ -678,14 +970,23 @@ class _ReaderPageState extends State<ReaderPage> {
               child: Column(
                 children: [
                   Text(
-                    prefs.pageMode == 'tap' ? '上下滑动也可翻页 · 滚到底继续拉动进入下一章' : '上下滑动自由阅读 · 滚到底继续拉动进入下一章',
+                    prefs.pageMode == 'tap'
+                        ? '上下滑动也可翻页 · 滚到底继续拉动进入下一章'
+                        : '上下滑动自由阅读 · 滚到底继续拉动进入下一章',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.66), fontSize: 13),
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.66),
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 14),
                   Text(
                     '点击任意处开始阅读',
-                    style: TextStyle(color: theme.accent, fontSize: 14, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      color: theme.accent,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -885,8 +1186,7 @@ class _ReaderPageState extends State<ReaderPage> {
                       IconButton(
                         tooltip: '目录',
                         icon: Icon(Icons.menu_book_rounded, color: theme.text),
-                        onPressed: () =>
-                            _scaffoldKey.currentState?.openDrawer(),
+                        onPressed: _openDrawerPanel,
                       ),
                     ],
                   ),
@@ -997,8 +1297,7 @@ class _ReaderPageState extends State<ReaderPage> {
                           navButton(
                             '目录',
                             enabled: true,
-                            onTap: () =>
-                                _scaffoldKey.currentState?.openDrawer(),
+                            onTap: _openDrawerPanel,
                           ),
                           navButton(
                             'Aa 设置',
@@ -1043,107 +1342,6 @@ class _ReaderPageState extends State<ReaderPage> {
     final ratio = value / _sliderSteps;
     _scroll.jumpTo((ratio * max).clamp(0.0, max).toDouble());
     _ratio.value = ratio;
-  }
-
-  /// 目录抽屉：整课章节列表（详情缺失时占位），当前章 accent 高亮 + 已读打勾，
-  /// 点击跳章并恢复该章保存位置（无则到顶）。
-  Widget _buildDrawer(ReadingTheme theme, ProgressStore progress) {
-    final detail = context.read<LibraryStore>().cachedDetail(
-      widget.course.slug,
-    );
-    final chapters = detail?.chapters ?? _chapters;
-    return Drawer(
-      backgroundColor: theme.bg,
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Text(
-                '目录',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
-                  color: theme.text,
-                ),
-              ),
-            ),
-            Divider(height: 1, color: theme.divider),
-            Expanded(
-              child: chapters.isEmpty
-                  ? Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Center(
-                        child: Text(
-                          '章节列表暂不可用',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: theme.textSecondary,
-                          ),
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: chapters.length,
-                      itemBuilder: (context, i) {
-                        final chapter = chapters[i];
-                        final isCurrent = chapter.slug == _currentSlug;
-                        final isRead = progress.isRead(
-                          widget.course.slug,
-                          chapter.slug,
-                        );
-                        return InkWell(
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            _goChapter(chapter.slug);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isRead
-                                      ? Icons.check_circle_rounded
-                                      : Icons.radio_button_unchecked,
-                                  size: 18,
-                                  color: isCurrent
-                                      ? theme.accent
-                                      : theme.textSecondary,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    chapter.title,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      height: 1.4,
-                                      fontWeight: isCurrent
-                                          ? FontWeight.w700
-                                          : FontWeight.w400,
-                                      color: isCurrent
-                                          ? theme.accent
-                                          : theme.text,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   /// 阅读设置面板：翻页模式 / 字号步进 / 行距 / 主题（自动 + 7 档），
@@ -1459,6 +1657,154 @@ class _ThemeSwatch extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 阅读正文底部融入式状态条：`20:05 · 86% · 12/45 · 38%`。
+///
+/// - 整体被 IgnorePointer 包裹（由调用方负责），绝不挡翻页/菜单手势；
+/// - 时间：立即一次 + Timer 15s 刷新；电量：battery_plus 流（charging 也
+///   只显示百分比）；章节序号由父级传入；进度复用精确进度 ValueNotifier；
+/// - 菜单层打开时淡出隐藏（菜单自身带进度信息），关闭后 150ms 淡入恢复。
+class _ReaderStatusBar extends StatefulWidget {
+  const _ReaderStatusBar({
+    required this.ratio,
+    required this.orderText,
+    required this.title,
+    required this.visible,
+    required this.color,
+    required this.background,
+  });
+
+  final ValueNotifier<double> ratio;
+
+  /// 「当前章 order/总章数」，空串则整段隐藏。
+  final String orderText;
+
+  /// 当前章节标题，展示在状态条左侧（长标题省略）。
+  final String title;
+
+  final bool visible;
+
+  final Color color;
+
+  /// 主题背景色：底部渐变的基色，让 HUD 与正文区过渡自然。
+  final Color background;
+
+  @override
+  State<_ReaderStatusBar> createState() => _ReaderStatusBarState();
+}
+
+class _ReaderStatusBarState extends State<_ReaderStatusBar> {
+  String _clock = '';
+  int? _batteryLevel;
+  async.Timer? _clockTimer;
+  async.StreamSubscription<BatteryState>? _batterySub;
+
+  @override
+  void initState() {
+    super.initState();
+    _tickClock();
+    _refreshBattery();
+    _clockTimer = async.Timer.periodic(const Duration(seconds: 15), (_) {
+      _tickClock();
+      // 电量随 15s 节拍一起刷新（v6 流只报充放电状态变化，不报 level）。
+      _refreshBattery();
+    });
+    _listenBatteryState();
+  }
+
+  void _tickClock() {
+    if (mounted) setState(() => _clock = formatHm(DateTime.now()));
+  }
+
+  void _refreshBattery() {
+    Battery().batteryLevel
+        .then((level) {
+          if (mounted) setState(() => _batteryLevel = level);
+        })
+        .catchError((_) {
+          // 插件不可用（部分桌面/测试环境）：电量段保持隐藏。
+        });
+  }
+
+  /// 充放电状态变化（插/拔电源）立即刷一次电量。
+  void _listenBatteryState() {
+    try {
+      _batterySub = Battery().onBatteryStateChanged.listen(
+        (_) => _refreshBattery(),
+        onError: (_) {},
+        cancelOnError: true,
+      );
+    } catch (_) {
+      // 平台通道缺失同样降级：只剩 15s 节拍刷新。
+    }
+  }
+
+  @override
+  void dispose() {
+    _clockTimer?.cancel();
+    _batterySub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final segments = <String>[
+      if (_clock.isNotEmpty) _clock,
+      if (_batteryLevel != null) '$_batteryLevel%',
+      if (widget.orderText.isNotEmpty) widget.orderText,
+    ];
+    return AnimatedOpacity(
+      opacity: widget.visible ? 1 : 0,
+      duration: const Duration(milliseconds: 150),
+      // 沉浸式下系统导航栏已隐藏，SafeArea 反而虚占高度；改用主题背景色
+      // 向上渐隐的薄雾底，让 HUD 与正文让位区过渡自然。
+      child: Container(
+        alignment: Alignment.bottomCenter,
+        // 左右 16px：圆角屏底部弯边会裁掉贴边文字。
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [widget.background.withValues(alpha: 0), widget.background],
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                widget.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 1.2,
+                  letterSpacing: 0.5,
+                  color: widget.color,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ValueListenableBuilder<double>(
+              valueListenable: widget.ratio,
+              builder: (context, ratio, _) => Text(
+                [...segments, '${(ratio * 100).round()}%'].join(' · '),
+                maxLines: 1,
+                overflow: TextOverflow.clip,
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 1.2,
+                  letterSpacing: 0.5,
+                  color: widget.color,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

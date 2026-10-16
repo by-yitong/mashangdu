@@ -1,0 +1,85 @@
+Icon 组件用于帮助开发者显示一系列的小图标。Icon 组件支持三种不同类型的图片设置：
+
+```kotlin
+@Composable
+fun Icon(
+    imageVector: ImageVector, //矢量图
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    tint: Color
+) 
+
+@Composable
+fun Icon(
+    bitmap: ImageBitmap, //位图
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    tint: Color
+) 
+
+@Composable
+fun Icon(
+    painter: Painter, // 画笔
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    tint: Color
+) 
+```
+
+- ImageVector：矢量图对象，可以显示 SVG 格式的图标
+- ImageBitmap：位图对象，可以显示 JPG，PNG 等格式的图标 
+- Painter：代表一个自定义画笔，可以使用画笔在 Canvas 上直接绘制图标
+我们除了直接传入具体类型的实例，也可以通过 res/ 下的图片资源来设置图标：
+
+```kotlin
+Icon(imageVector = ImageVector.vectorResource(
+    id = R.drawable.ic_svg, contentDescription = "矢量图资源")
+  
+Icon(bitmap = ImageBitmap.imageResource(
+    id = R.drawable.ic_png), contentDescription = "图片资源")
+    
+Icon(painter = painterResource(
+    id = R.drawable.ic_both), contentDescription = "任意类型资源")
+```
+
+如上，ImageVector 和 ImageBitmap 都提供了对应的加载 Drawable 资源的方法，vectorResource 用来加载一个矢量 XML，imageResource 用来加载 jpg 或者 png 图片。painterResource 对以上两种类型的 Drawable 都支持，内部会根据资源的不同类型创作对应的画笔进行图标的绘制。
+
+
+接下来，我们使用 Icon 组件显示一个具体的图标：
+
+```kotlin
+@Composable
+fun IconSample() {
+  Icon(
+    imageVector = Icons.Filled.Favorite,
+    contentDescription = null
+    tint = Color.Red
+  )
+}
+```
+
+![](images/jetpack-compose/element-icon/demo.png)
+
+上述代码中我们直接使用了 Material 包预置的 Favorite 矢量图标，是一个心形图标。
+
+contentDescription 参数服务于系统的无障碍功能，其中的文字会转换为语言供视障人士听取内容时使用，这个参数没有默认值，必须手动设置， 也是官方有意为之，提醒开发者重视应用对于残障人士的关怀。但是 contentDescription 允置空。
+
+例子中的 Favorite 是一个 Filled 风格的图标，Material 包每个图标都提供了五种风格可供使用，除了 Filled，还包括 Outlined，Rounded，Sharp，Two tone 等，都可以通过 Icons.xxx.xxx 的方式调用。这五种风格在一些设计上的侧重点不同，如下图所示：
+
+|Icon 类型| 特点 | 代表示例 |
+|---------| --------- | ------|
+| Outlined | 勾勒轮廓 | ![](images/jetpack-compose/element-icon/outlined.png) |
+| Filled | 图形填充 | ![](images/jetpack-compose/element-icon/filled.png) |
+| Rounded | 端点均为圆角 | ![](images/jetpack-compose/element-icon/rounded.png) |
+| Sharp | 端点均为尖角 | ![](images/jetpack-compose/element-icon/sharp.png) |
+| TwoTone | 双色搭配 | ![](images/jetpack-compose/element-icon/twotone.png) |
+
+
+> **补充提示**
+> Icon 组件不仅仅可以加载 Material 包里自带的图标，也能加载网络下载第三方图标。谷歌也提供了专门的图标库。[在这里](https://fonts.google.com/icons)我们可以从上面下载更多图标使用。
+>
+> Material 自带的包仅有一些常用的图标，如需使用其他所有的 Material 图标，可以添加依赖项
+>
+> `implementation "androidx.compose.material:material-icons-extended:$compose_version"`
+
+> 本文来自 [你好 Compose](https://jetpackcompose.cn/docs/)，作者 compose-museum，采用 [CC BY-NC-SA 2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/) 授权转载，禁止商用。

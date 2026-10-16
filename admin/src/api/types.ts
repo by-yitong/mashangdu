@@ -46,3 +46,31 @@ export interface ChapterInput {
   content_md: string
   sort_order: number
 }
+
+/** App 发布版本（契约冻结，列表按 versionCode 降序） */
+export interface AppVersion {
+  id: number
+  version: string
+  versionCode: number
+  notes: string
+  apkUrl: string
+  force: boolean
+  enabled: boolean
+  /** 发布时间（=createdAt） */
+  releasedAt: string
+  updatedAt: string
+}
+
+/** POST /api/v1/admin/app-versions 请求体 */
+export interface AppVersionCreateInput {
+  version: string
+  versionCode: number
+  notes: string
+  apkUrl: string
+  force: boolean
+}
+
+/** PUT /api/v1/admin/app-versions/:id 请求体 */
+export interface AppVersionUpdateInput extends AppVersionCreateInput {
+  enabled: boolean
+}

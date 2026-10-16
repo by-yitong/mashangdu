@@ -5,14 +5,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
 
-	"code-tutorials/backend/internal/api"
-	"code-tutorials/backend/internal/store"
+	"code-tutorials/backend/web"
 )
 
 // adminDo 发起管理端请求；token 非空时带上 X-Admin-Token 请求头。
@@ -368,39 +366,26 @@ func TestAdminChapterCRUD(t *testing.T) {
 	}
 }
 
-// TestAdminStaticSPA 验证后台静态托管与 SPA 回退；目录不存在时行为不变。
+// TestAdminStaticSPA 验证后台静态托管（编译期 go:embed 嵌入 web.DistFS）与
+// SPA 回退：占位 index.html 在编译期进二进制，可直接断言其内容。
 func TestAdminStaticSPA(t *testing.T) {
 	t.Setenv("ADMIN_TOKEN", "dev123")
-	dist := t.TempDir()
-	indexHTML := "<!doctype html><html><body>admin-spa-entry</body></html>"
-	if err := os.WriteFile(filepath.Join(dist, "index.html"), []byte(indexHTML), 0o644); err != nil {
-		t.Fatalf("write index.html: %v", err)
-	}
-	if err := os.MkdirAll(filepath.Join(dist, "assets"), 0o755); err != nil {
-		t.Fatalf("mkdir assets: %v", err)
-	}
-	if err := os.WriteFile(filepath.Join(dist, "assets", "app.js"), []byte("console.log(1)"), 0o644); err != nil {
-		t.Fatalf("write app.js: %v", err)
-	}
+	r := newRouter(t)
 
-	db, err := store.Open(filepath.Join(t.TempDir(), "test.db"))
+	// 嵌入的占位 index.html：/admin/ 可直接 GET（SPA 入口，hash 路由也由
+	// 它承载），未知子路径回退到同一页面。
+	index, err := web.DistFS.ReadFile("dist/index.html")
 	if err != nil {
-		t.Fatalf("open test store: %v", err)
+		t.Fatalf("read embedded index.html: %v", err)
 	}
-	t.Cleanup(func() {
-		if sqlDB, err := db.DB(); err == nil {
-			_ = sqlDB.Close()
-		}
-	})
-	r := api.NewRouter(db, dist)
-
-	// /admin/ 与未知子路径都回退 index.html；真实静态文件正常返回。
+	if !strings.Contains(string(index), "admin frontend placeholder") {
+		t.Fatalf("embedded index.html missing placeholder text: %q", string(index))
+	}
 	for _, path := range []string{"/admin/", "/admin/courses/new", "/admin/a/b/c"} {
 		w := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, path, nil)
-		r.ServeHTTP(w, req)
-		if w.Code != http.StatusOK || w.Body.String() != indexHTML {
-			t.Fatalf("GET %s: status = %d body = %q, want 200 index.html", path, w.Code, w.Body.String())
+		r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
+		if w.Code != http.StatusOK || w.Body.String() != string(index) {
+			t.Fatalf("GET %s: status = %d body = %q, want 200 embedded index.html", path, w.Code, w.Body.String())
 		}
 	}
 	// 裸 /admin 由 Gin 尾斜杠重定向到 /admin/。
@@ -409,23 +394,12 @@ func TestAdminStaticSPA(t *testing.T) {
 	if w.Code != http.StatusMovedPermanently {
 		t.Fatalf("GET /admin: status = %d, want 301 redirect to /admin/", w.Code)
 	}
-	w = httptest.NewRecorder()
-	r.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/admin/assets/app.js", nil))
-	if w.Code != http.StatusOK || w.Body.String() != "console.log(1)" {
-		t.Fatalf("GET static asset: status = %d body = %q", w.Code, w.Body.String())
-	}
 
-	// 非 /admin 前缀的未知路径仍是 404 信封。
+	// 非 /admin 前缀的未知路径仍是 404 JSON 信封。
 	if status, resp := doGet(t, r, "/api/v1/no-such-route"); status != http.StatusNotFound || resp.Code != "NOT_FOUND" {
 		t.Fatalf("GET unknown api path: status = %d code = %s, want 404 NOT_FOUND", status, resp.Code)
 	}
 	if status, resp := doGet(t, r, "/administrator/panel"); status != http.StatusNotFound || resp.Code != "NOT_FOUND" {
 		t.Fatalf("GET /administrator/panel: status = %d code = %s, want 404 NOT_FOUND", status, resp.Code)
-	}
-
-	// 目录不存在（默认候选在测试目录下不存在）→ 不挂载 /admin。
-	r2 := newRouter(t)
-	if status, resp := doGet(t, r2, "/admin/"); status != http.StatusNotFound || resp.Code != "NOT_FOUND" {
-		t.Fatalf("GET /admin/ without dist: status = %d code = %s, want 404 NOT_FOUND", status, resp.Code)
 	}
 }

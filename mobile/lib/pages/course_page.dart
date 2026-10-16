@@ -91,6 +91,12 @@ class _CoursePageState extends State<CoursePage> {
     final readCount = progress.readCount(widget.course.slug);
     final ratio = progress.progress(widget.course.slug, total);
 
+    // 「继续观看/开始阅读」目标章：有进度跳上次读到的章，无进度跳第 1 章；
+    // 详情未加载出章节时为 null（隐藏操作行）。
+    final lastSlug = progress.lastChapter(widget.course.slug);
+    final continueSlug = lastSlug ??
+        (chapters.isNotEmpty ? chapters.first.slug : null);
+
     // 章节标题过滤（大小写不敏感）；搜索为空时显示全部。
     final keyword = _query.trim().toLowerCase();
     final visibleChapters = keyword.isEmpty
@@ -124,6 +130,12 @@ class _CoursePageState extends State<CoursePage> {
                     readCount: readCount,
                     total: total,
                     ratio: ratio,
+                    continueTitle: progress.lastChapterTitle(
+                      widget.course.slug,
+                    ),
+                    onContinue: continueSlug == null
+                        ? null
+                        : () => _openChapter(continueSlug),
                   ),
                   const SizedBox(height: 16),
                   _SearchField(
@@ -314,12 +326,20 @@ class _ProgressHeader extends StatelessWidget {
     required this.readCount,
     required this.total,
     required this.ratio,
+    required this.continueTitle,
+    required this.onContinue,
   });
 
   final CourseSummary summary;
   final int readCount;
   final int total;
   final double ratio;
+
+  /// 上次阅读章节标题；null = 无进度（显示「开始阅读」）。
+  final String? continueTitle;
+
+  /// 操作行回调；null = 隐藏整行（如章节列表未加载）。
+  final VoidCallback? onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -347,6 +367,41 @@ class _ProgressHeader extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ProgressBar(value: ratio),
+          if (onContinue != null) ...[
+            const SizedBox(height: 6),
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: onContinue,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        continueTitle == null
+                            ? '开始阅读'
+                            : '继续观看 · ${continueTitle!}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          height: 1.3,
+                          color: colors.accent,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      size: 18,
+                      color: colors.accent,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
