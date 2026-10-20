@@ -1,18 +1,11 @@
-import {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  type ChangeEvent,
-  type DragEvent,
-  type KeyboardEvent,
-} from 'react'
+import { useCallback, useMemo, useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from 'react'
 import { ApiError, errMsg, importCoursePackage } from '../api/client'
 import type { CourseImportResult, ImportedCourse } from '../api/types'
-import { btnGhost, btnPrimary } from '../components/ui'
+import { Modal } from './Modal'
+import { btnGhost, btnPrimary } from './ui'
 import { useToast } from '../ToastProvider'
 
-/** 页面内错误态：接口失败时的 code + message */
+/** 弹窗内错误态：接口失败时的 code + message */
 interface ImportFailure {
   code: string
   message: string
@@ -134,9 +127,8 @@ function UploadCard({
   const fileSize = useMemo(() => (file ? fmtBytes(file.size) : ''), [file])
 
   return (
-    <section className="flex h-full flex-col rounded-card border border-track bg-card p-5 shadow-sm lg:col-span-2">
-      <h2 className="text-base font-bold text-ink">上传课程包</h2>
-      <p className="mt-1 text-[13px] text-inkmuted">选择或拖入 zip 课程包，一键导入课程库</p>
+    <section className="flex flex-col rounded-card border border-track bg-card p-5">
+      <h3 className="text-base font-bold text-ink">上传课程包</h3>
 
       <div
         role="button"
@@ -148,7 +140,7 @@ function UploadCard({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`mt-4 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-10 text-center transition ${
+        className={`mt-4 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition ${
           dragging
             ? 'border-accent bg-accentdim/60'
             : 'border-track bg-paper hover:border-accent/50 hover:bg-accentdim/30'
@@ -215,7 +207,7 @@ function UploadCard({
         </button>
       </div>
 
-      <p className="mt-auto border-t border-track pt-3 text-xs leading-relaxed text-inkmuted">
+      <p className="mt-4 border-t border-track pt-3 text-xs leading-relaxed text-inkmuted">
         zip 内约定布局：courses.json（课程清单）+ 各章节 .md + images/（章节插图）
       </p>
     </section>
@@ -236,14 +228,11 @@ function ResultCard({ result, failure, uploading }: ResultCardProps) {
   )
 
   return (
-    <section
-      className="flex h-full flex-col rounded-card border border-track bg-card p-5 shadow-sm lg:col-span-3"
-      aria-busy={uploading}
-    >
-      <h2 className="text-base font-bold text-ink">导入结果</h2>
+    <section className="flex flex-col rounded-card border border-track bg-card p-5" aria-busy={uploading}>
+      <h3 className="text-base font-bold text-ink">导入结果</h3>
 
       {uploading && (
-        <div className="mt-4 flex flex-1 items-center justify-center gap-2.5 rounded-2xl border border-track bg-paper py-12 text-sm text-inkmuted">
+        <div className="mt-4 flex items-center justify-center gap-2.5 rounded-2xl border border-track bg-paper py-10 text-sm text-inkmuted">
           <span
             className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent"
             aria-hidden
@@ -265,7 +254,7 @@ function ResultCard({ result, failure, uploading }: ResultCardProps) {
           <p className="mt-1 text-[13px] text-inkmuted">
             共导入 {result.courses.length} 门课程，图片 {imageStats.count} 张（{imageStats.size}）
           </p>
-          <ul className="mt-3">
+          <ul className="mt-1">
             {result.courses.map((course) => (
               <CourseRow key={course.slug} course={course} />
             ))}
@@ -274,7 +263,7 @@ function ResultCard({ result, failure, uploading }: ResultCardProps) {
       )}
 
       {!uploading && !failure && !result && (
-        <div className="mt-4 flex flex-1 items-center justify-center rounded-2xl border border-dashed border-track bg-paper px-4 py-12 text-center">
+        <div className="mt-4 flex items-center justify-center rounded-2xl border border-dashed border-track bg-paper px-4 py-8 text-center">
           <p className="text-[13px] leading-relaxed text-inkmuted">
             还没有导入记录
             <br />
@@ -286,7 +275,12 @@ function ResultCard({ result, failure, uploading }: ResultCardProps) {
   )
 }
 
-export function CourseImportPage() {
+interface ImportFormProps {
+  onImported: (result: CourseImportResult) => void
+}
+
+/** 弹窗内容：随 open 挂载销毁，每次打开重置为初始态 */
+function ImportForm({ onImported }: ImportFormProps) {
   const [file, setFile] = useState<File | null>(null)
   const [fileError, setFileError] = useState('')
   const [dragging, setDragging] = useState(false)
@@ -320,7 +314,8 @@ export function CourseImportPage() {
     try {
       const data = await importCoursePackage(file)
       setResult(data)
-      push('success', `导入成功：${data.courses.length} 门课程、${data.images.count} 张图片`)
+      // 成功 toast 与列表刷新由调用方（课程页）在 onImported 中处理
+      onImported(data)
     } catch (e) {
       const next: ImportFailure =
         e instanceof ApiError ? { code: e.code, message: e.message } : { code: 'UNKNOWN', message: errMsg(e) }
@@ -329,30 +324,37 @@ export function CourseImportPage() {
     } finally {
       setUploading(false)
     }
-  }, [file, uploading, push])
+  }, [file, uploading, push, onImported])
 
   return (
-    <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="text-[32px] font-bold leading-tight text-ink">课程导入</h1>
-        <p className="mt-1 text-[13px] text-inkmuted">
-          打包上传课程 zip，一次导入多门课程、章节与插图
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        <UploadCard
-          file={file}
-          fileError={fileError}
-          dragging={dragging}
-          uploading={uploading}
-          onPick={handlePick}
-          onDraggingChange={setDragging}
-          onImport={() => void handleImport()}
-          onClear={handleClear}
-        />
-        <ResultCard result={result} failure={failure} uploading={uploading} />
-      </div>
+    <div className="flex flex-col gap-4">
+      <UploadCard
+        file={file}
+        fileError={fileError}
+        dragging={dragging}
+        uploading={uploading}
+        onPick={handlePick}
+        onDraggingChange={setDragging}
+        onImport={() => void handleImport()}
+        onClear={handleClear}
+      />
+      <ResultCard result={result} failure={failure} uploading={uploading} />
     </div>
+  )
+}
+
+interface CourseImportDialogProps {
+  open: boolean
+  onClose: () => void
+  /** 导入成功回调（调用方负责 toast 与列表刷新） */
+  onImported: (result: CourseImportResult) => void
+}
+
+/** 课程导入弹窗：内嵌上传卡 + 结果卡，open=false 时不渲染内容以重置内部状态 */
+export function CourseImportDialog({ open, onClose, onImported }: CourseImportDialogProps) {
+  return (
+    <Modal open={open} title="导入课程包" onClose={onClose} size="lg">
+      {open ? <ImportForm onImported={onImported} /> : null}
+    </Modal>
   )
 }

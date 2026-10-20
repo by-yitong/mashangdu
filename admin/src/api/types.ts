@@ -114,3 +114,68 @@ export interface CourseImportResult {
     bytes: number
   }
 }
+
+/** GET /api/v1/admin/stats 响应 data（契约冻结，空库时数值为 0、数组为 []） */
+export interface AdminStats {
+  courseCount: number
+  chapterCount: number
+  totalViews: number
+  userCount: number
+  commentCount: number
+  likeCount: number
+  /** 内容版本号（ISO 时间），空库为 "" */
+  contentVersion: string
+  topChapters: AdminTopChapter[]
+  recentUsers: AdminUserBrief[]
+  recentComments: AdminRecentComment[]
+}
+
+/** 概况页 · 热门章节条目 */
+export interface AdminTopChapter {
+  courseSlug: string
+  courseTitle: string
+  chapterSlug: string
+  chapterTitle: string
+  viewCount: number
+}
+
+/** 概况页 · 最新注册用户条目（avatar 可为 ""） */
+export interface AdminUserBrief {
+  id: number
+  username: string
+  avatar: string
+  createdAt: string
+}
+
+/** 概况页 · 最新评论条目 */
+export interface AdminRecentComment {
+  id: number
+  userId: number
+  username: string
+  courseSlug: string
+  chapterSlug: string
+  chapterTitle: string
+  content: string
+  createdAt: string
+}
+
+/** GET /api/v1/admin/users 列表条目（契约冻结，lastReadAt 无记录时为 ""） */
+export interface AdminUser {
+  id: number
+  username: string
+  avatar: string
+  createdAt: string
+  commentCount: number
+  likeCount: number
+  recordCount: number
+  lastReadAt: string
+}
+
+/** GET /api/v1/admin/users 响应 data（分页信封，q 为用户名模糊搜索） */
+export interface AdminUserPage {
+  users: AdminUser[]
+  total: number
+  page: number
+  pageSize: number
+  pageCount: number
+}

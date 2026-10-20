@@ -4,9 +4,10 @@ import { AppVersionListPage } from './pages/AppVersionListPage'
 import { ChapterEditPage } from './pages/ChapterEditPage'
 import { CommentListPage } from './pages/CommentListPage'
 import { CourseDetailPage } from './pages/CourseDetailPage'
-import { CourseImportPage } from './pages/CourseImportPage'
 import { CourseListPage } from './pages/CourseListPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
+import { UserListPage } from './pages/UserListPage'
 import { SettingsProvider, useSettings } from './SettingsContext'
 import { ToastProvider } from './ToastProvider'
 
@@ -37,8 +38,9 @@ const routes = [
   {
     element: <RequireToken />,
     children: [
-      { path: '/', element: <CourseListPage /> },
-      { path: '/course-import', element: <CourseImportPage /> },
+      { path: '/', element: <DashboardPage /> },
+      { path: '/courses', element: <CourseListPage /> },
+      { path: '/users', element: <UserListPage /> },
       { path: '/app-versions', element: <AppVersionListPage /> },
       { path: '/comments', element: <CommentListPage /> },
       { path: '/courses/:slug', element: <CourseDetailPage /> },

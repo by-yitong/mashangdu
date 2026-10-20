@@ -156,6 +156,9 @@ func NewRouterWithDirs(db *gorm.DB, seedDir, imgRoot string) *gin.Engine {
 	admin.DELETE("/app-versions/:id", s.deleteAppVersion)
 	admin.GET("/comments", s.adminListComments)
 	admin.DELETE("/comments/:id", s.adminDeleteComment)
+	admin.GET("/stats", s.adminStats)
+	admin.GET("/users", s.adminListUsers)
+	admin.DELETE("/users/:id", s.adminDeleteUser)
 	return r
 }
 

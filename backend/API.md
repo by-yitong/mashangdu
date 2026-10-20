@@ -3,7 +3,7 @@
 教程内容 API。Golang + Gin + GORM + SQLite（驱动 `github.com/glebarez/sqlite`，纯 Go 无 CGO）。
 
 - Base URL：`http://localhost:8080/api/v1`
-- 方法：内容接口（1～4）为只读 `GET`；管理端接口（5～10、10b、13b、16，`/api/v1/admin` 前缀）提供写操作；用户认证（11）与观看记录（12）为 `POST/GET/PUT/DELETE`；用户头像（14）与章节互动（15）为 `POST/GET/DELETE`
+- 方法：内容接口（1～4）为只读 `GET`；管理端接口（5～10、10b、13b、16～18，`/api/v1/admin` 前缀）提供写操作；用户认证（11）与观看记录（12）为 `POST/GET/PUT/DELETE`；用户头像（14）与章节互动（15）为 `POST/GET/DELETE`
 - 认证：内容接口、`GET /app/latest`、阅读量/评论列表（15a/15b/15d）无认证；`stats` 支持可选 Bearer；用户认证、头像上传、观看记录、点赞与发评论接口需要请求头 `Authorization: Bearer <token>`（见下文"用户认证（Bearer）"）；管理端接口需要请求头 `X-Admin-Token`（见下文"管理端鉴权"）
 - CORS：允许所有来源（开发期），预检 `OPTIONS` 返回 204；允许方法 `GET, POST, PUT, DELETE, OPTIONS`，允许头含 `X-Admin-Token`、`Authorization`
 
@@ -223,7 +223,7 @@ admin 前端在编译期通过 go:embed 嵌入二进制（`backend/web/dist`，�
 
 ---
 
-## 管理端接口（5～10、10b、13b、16）
+## 管理端接口（5～10、10b、13b、16～18）
 
 供 React 后台（`/admin`）调用的内容管理接口。除下方差异外，信封、时间格式与内容接口一致。
 
@@ -1225,6 +1225,123 @@ curl -s -o avatar.png http://localhost:8080/avatars/1-ab12cd34.png
 
 ---
 
+## 17. 管理端概况统计（X-Admin-Token）
+
+### GET /api/v1/admin/stats
+
+后台仪表盘概况：各表计数、总阅读量、内容版本与最新动态（热门章节、新注册用户、最新评论）。
+
+#### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "courseCount": 3,
+    "chapterCount": 120,
+    "totalViews": 4567,
+    "userCount": 23,
+    "commentCount": 45,
+    "likeCount": 78,
+    "contentVersion": "2026-10-15T10:30:58Z",
+    "topChapters": [
+      {"courseSlug": "go-basics", "courseTitle": "Go 语言入门", "chapterSlug": "hello-world", "chapterTitle": "Hello World", "viewCount": 123}
+    ],
+    "recentUsers": [
+      {"id": 1, "username": "alice", "avatar": "", "createdAt": "2026-10-16T08:00:00Z"}
+    ],
+    "recentComments": [
+      {"id": 3, "userId": 1, "username": "alice", "courseSlug": "go-basics", "chapterSlug": "hello-world", "chapterTitle": "Hello World", "content": "写得不错！", "createdAt": "2026-10-16T09:31:00Z"}
+    ]
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `courseCount` / `chapterCount` / `userCount` / `commentCount` / `likeCount` | int | courses / chapters / users / chapter_comments / chapter_likes 各表行数 |
+| `totalViews` | int | 全部章节 `view_count` 之和，空表为 0 |
+| `contentVersion` | string | 与 GET /meta 的 `content_version` 同语义：courses + chapters 两表最大 `updated_at`（RFC3339 UTC） |
+| `topChapters` | array | `view_count > 0` 的章节按其降序前 5，联 courses 补 `courseSlug`/`courseTitle`；无则 `[]`（不是 `null`） |
+| `recentUsers` | array | 最新注册用户前 5（`created_at DESC, id DESC`），字段同 11 的 `user` 对象（`id`/`username`/`avatar`/`createdAt`）；无则 `[]` |
+| `recentComments` | array | 最新评论前 5（`created_at DESC, id DESC`），联 users / chapters 补用户名与章节标题；无则 `[]` |
+| `recentComments[].username` | string | 作者已被删除时兜底 `"(已删除用户)"` |
+| `recentComments[].chapterTitle` | string | 章节已被删除时兜底 `"(已删除章节)"` |
+
+403：见"管理端鉴权"。
+
+---
+
+## 18. 管理端用户管理（18a 列表 / 18b 删除）
+
+### 18a. GET /api/v1/admin/users?page=&pageSize=&q=
+
+全部用户列表，最新在前（`created_at DESC, id DESC`）；分页参数同 15d（`page` ≥1 默认 1、`pageSize` 1～50 默认 20，越界回落）；`q` 可选，对 `username` 做 `LIKE '%q%'` 模糊过滤（为空表示全部）。
+
+#### 成功响应 200
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "users": [
+      {
+        "id": 1,
+        "username": "alice",
+        "avatar": "",
+        "createdAt": "2026-10-16T08:00:00Z",
+        "commentCount": 5,
+        "likeCount": 3,
+        "recordCount": 10,
+        "lastReadAt": "2026-10-19T10:00:00Z"
+      }
+    ],
+    "total": 23,
+    "page": 1,
+    "pageSize": 20,
+    "pageCount": 2
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `users` | array | 无用户时为 `[]`（不是 `null`） |
+| `total` | int | 符合过滤条件的用户总数 |
+| `pageCount` | int | `ceil(total/pageSize)`，total=0 时为 0 |
+| `avatar` | string | 用户当前头像相对 URL（如 `/avatars/1-ab12cd34.png`），未上传时为空串 |
+| `createdAt` | string | 注册时间（RFC3339 UTC） |
+| `commentCount` / `likeCount` / `recordCount` | int | 该用户在 chapter_comments / chapter_likes / reading_records 的行数 |
+| `lastReadAt` | string | 该用户 reading_records 的 `MAX(read_at)`（RFC3339 UTC），无记录时为 `""` |
+
+### 18b. DELETE /api/v1/admin/users/{id}
+
+删除用户，并在单事务内连同其全部评论、点赞与观看记录一起删除；事务提交后尽力删除其头像文件（删除失败仅记日志，不影响响应）。
+
+#### 参数
+
+| 参数 | 位置 | 说明 |
+| --- | --- | --- |
+| `id` | path | 用户 id；非数字、为 0 或不存在均返回 404 |
+
+#### 成功响应 200
+
+```json
+{"code": "OK", "message": "ok", "data": {"deleted": true}}
+```
+
+#### 失败响应 404
+
+```json
+{"code": "NOT_FOUND", "message": "user not found", "data": null}
+```
+
+403：见"管理端鉴权"。
+
+---
+
 ## 错误码汇总
 
 | HTTP | code | 场景 |
@@ -1241,7 +1358,7 @@ curl -s -o avatar.png http://localhost:8080/avatars/1-ab12cd34.png
 | 401 | `AUTH_INVALID_CREDENTIALS` | 登录：用户不存在或密码错误（`invalid username or password`） |
 | 403 | `FORBIDDEN` | 管理端：`ADMIN_TOKEN` 未设置（`admin disabled: ADMIN_TOKEN not set`）或 token 不匹配（`invalid admin token`） |
 | 403 | `COMMENT_FORBIDDEN` | 删除他人评论（`only the author can delete this comment`） |
-| 404 | `NOT_FOUND` | 路径不存在、课程不存在（`course not found`）、章节不存在（`chapter not found`）、观看记录/章节互动的课程章节校验失败（`course or chapter not found`）、评论不存在（`comment not found`）、无可用 App 版本（`app release not found`）、App 版本 id 不存在（`app version not found`） |
+| 404 | `NOT_FOUND` | 路径不存在、课程不存在（`course not found`）、章节不存在（`chapter not found`）、观看记录/章节互动的课程章节校验失败（`course or chapter not found`）、评论不存在（`comment not found`）、用户不存在（`user not found`，18b）、无可用 App 版本（`app release not found`）、App 版本 id 不存在（`app version not found`） |
 | 409 | `AUTH_USERNAME_TAKEN` | 注册：用户名已存在（`username already exists`） |
 | 409 | `VERSION_CONFLICT` | 管理端：versionCode 与其他版本重复（`versionCode already exists`） |
 | 429 | `COMMENT_TOO_FAST` | 发布评论：同一用户两次发布间隔 <10s（`commenting too fast, retry in 10s`） |

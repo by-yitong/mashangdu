@@ -1,51 +1,65 @@
-import { useEffect, type MouseEvent, type ReactNode } from 'react'
+import { Dialog as DialogPrimitive } from 'radix-ui'
+import type { ReactNode } from 'react'
 import { btnDangerSolid, btnGhost } from './ui'
+
+type ModalSize = 'md' | 'lg'
+
+/** 尺寸 → 内容区最大宽度（md 为历史默认） */
+const SIZE_CLS: Record<ModalSize, string> = {
+  md: 'max-w-lg',
+  lg: 'max-w-2xl',
+}
 
 interface ModalProps {
   open: boolean
   title: string
   onClose: () => void
   children: ReactNode
+  /** 内容区最大宽度，默认 md（max-w-lg） */
+  size?: ModalSize
+  /** 内部使用：true 时阻断 ESC/点遮罩/关闭按钮（ConfirmDialog loading 态） */
+  lockClose?: boolean
 }
 
-export function Modal({ open, title, onClose, children }: ModalProps) {
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
-
-  if (!open) return null
-
-  const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) onClose()
-  }
-
+/**
+ * radix Dialog 封装：ESC/点遮罩/关闭按钮均回调 onClose；锁定 body 滚动与焦点圈定由 radix 自带。
+ * 与旧版差异：内容固定定位（top-4/sm:top-16），超高时内容区自身滚动。
+ */
+export function Modal({ open, title, onClose, children, size = 'md', lockClose = false }: ModalProps) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:py-16"
-      onMouseDown={handleMouseDown}
+    <DialogPrimitive.Root
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && !lockClose) onClose()
+      }}
     >
-      <div className="w-full max-w-lg rounded-card border border-track bg-card p-5 shadow-lg">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-ink">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="关闭"
-            className="rounded-full p-1.5 text-inkmuted transition hover:bg-track/60 hover:text-ink"
-          >
-            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 5l10 10M15 5L5 15" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40" />
+        <DialogPrimitive.Content
+          className={`fixed left-1/2 top-4 z-50 max-h-[calc(100vh-2rem)] w-[calc(100%-2rem)] -translate-x-1/2 overflow-y-auto rounded-card border border-track bg-card p-5 shadow-lg sm:top-16 sm:max-h-[calc(100vh-8rem)] ${SIZE_CLS[size]}`}
+          onEscapeKeyDown={(e) => {
+            if (lockClose) e.preventDefault()
+          }}
+          onInteractOutside={(e) => {
+            if (lockClose) e.preventDefault()
+          }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <DialogPrimitive.Title className="text-lg font-bold text-ink">{title}</DialogPrimitive.Title>
+            <DialogPrimitive.Close
+              aria-label="关闭"
+              disabled={lockClose}
+              className="rounded-full p-1.5 text-inkmuted transition hover:bg-track/60 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 5l10 10M15 5L5 15" strokeLinecap="round" />
+              </svg>
+            </DialogPrimitive.Close>
+          </div>
+          {children}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }
 
@@ -58,10 +72,13 @@ interface ConfirmDialogProps {
   onCancel: () => void
 }
 
+/** 确认弹窗：loading 时阻断一切关闭途径（ESC/遮罩/关闭按钮 + 取消按钮禁用） */
 export function ConfirmDialog({ open, title, message, loading, onConfirm, onCancel }: ConfirmDialogProps) {
   return (
-    <Modal open={open} title={title} onClose={loading ? noop : onCancel}>
-      <p className="text-sm leading-relaxed text-inkmuted">{message}</p>
+    <Modal open={open} title={title} onClose={onCancel} lockClose={loading}>
+      <DialogPrimitive.Description className="text-sm leading-relaxed text-inkmuted">
+        {message}
+      </DialogPrimitive.Description>
       <div className="mt-5 flex justify-end gap-2">
         <button type="button" className={btnGhost} onClick={onCancel} disabled={loading}>
           取消
@@ -72,8 +89,4 @@ export function ConfirmDialog({ open, title, message, loading, onConfirm, onCanc
       </div>
     </Modal>
   )
-}
-
-function noop() {
-  /* 加载中禁止关闭 */
 }

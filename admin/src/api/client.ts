@@ -1,5 +1,10 @@
 import { loadSettings } from '../lib/settings'
-import type { AdminCommentPage, CourseImportResult } from './types'
+import type {
+  AdminCommentPage,
+  AdminStats,
+  AdminUserPage,
+  CourseImportResult,
+} from './types'
 
 /** 响应信封 {"code":"OK","message":"ok","data":...} */
 export interface ApiEnvelope<T> {
@@ -103,4 +108,32 @@ export async function importCoursePackage(file: File): Promise<CourseImportResul
   const form = new FormData()
   form.append('file', file)
   return api<CourseImportResult>('/admin/courses/import', { method: 'POST', body: form })
+}
+
+/** 概况页：读取全站统计（指标 + 热门章节/最新用户/最新评论） */
+export async function getStats(): Promise<AdminStats> {
+  return api<AdminStats>('/admin/stats')
+}
+
+/** GET /api/v1/admin/users 查询参数 */
+export interface AdminUserQuery {
+  page?: number
+  pageSize?: number
+  /** 用户名模糊搜索 */
+  q?: string
+}
+
+/** 用户管理：分页查询用户列表（可按用户名搜索） */
+export async function listUsers(query: AdminUserQuery = {}): Promise<AdminUserPage> {
+  const search = new URLSearchParams()
+  if (query.page !== undefined) search.set('page', String(query.page))
+  if (query.pageSize !== undefined) search.set('pageSize', String(query.pageSize))
+  if (query.q) search.set('q', query.q)
+  const qs = search.toString()
+  return api<AdminUserPage>(`/admin/users${qs ? `?${qs}` : ''}`)
+}
+
+/** 用户管理：删除用户（级联清除其评论/点赞/阅读记录） */
+export async function deleteUser(id: number): Promise<{ deleted: boolean }> {
+  return api<{ deleted: boolean }>(`/admin/users/${id}`, { method: 'DELETE' })
 }

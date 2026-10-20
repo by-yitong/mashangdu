@@ -3,8 +3,9 @@ import { useSettings } from '../SettingsContext'
 import { btnGhost } from './ui'
 
 const NAV_LINKS = [
-  { to: '/', label: '课程', end: true },
-  { to: '/course-import', label: '课程导入' },
+  { to: '/', label: '概况', end: true },
+  { to: '/courses', label: '课程' },
+  { to: '/users', label: '用户管理' },
   { to: '/app-versions', label: '版本管理' },
   { to: '/comments', label: '评论管理' },
 ]
