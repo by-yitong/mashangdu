@@ -24,5 +24,7 @@ Thumbs.db
 # 课程包构建产物
 dist/
 
-# ZCode 会话元数据
-.zcode/
+# ZCode 会话元数据（skills 随仓库走，其余忽略）
+.zcode/*
+!.zcode/skills/
+.zcode/skills/crawl-tutorials/token.local

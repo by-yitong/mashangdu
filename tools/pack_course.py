@@ -68,7 +68,8 @@ def main() -> None:
         for ch in sorted(course["chapters"], key=lambda c: c["file"]):
             add_bytes(z, ch["file"], (seeddata / ch["file"]).read_bytes())
         for p in images:
-            rel = p.relative_to(args.images_root).as_posix()
+            # 契约：zip 内 images/** 解压到静态图片根目录下，故补 images/ 前缀
+            rel = "images/" + p.relative_to(args.images_root).as_posix()
             data = p.read_bytes()
             img_bytes_total += len(data)
             add_bytes(z, rel, data)

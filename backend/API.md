@@ -3,7 +3,7 @@
 教程内容 API。Golang + Gin + GORM + SQLite（驱动 `github.com/glebarez/sqlite`，纯 Go 无 CGO）。
 
 - Base URL：`http://localhost:8080/api/v1`
-- 方法：内容接口（1～4）为只读 `GET`；管理端接口（5～10、13b、16，`/api/v1/admin` 前缀）提供写操作；用户认证（11）与观看记录（12）为 `POST/GET/PUT/DELETE`；用户头像（14）与章节互动（15）为 `POST/GET/DELETE`
+- 方法：内容接口（1～4）为只读 `GET`；管理端接口（5～10、10b、13b、16，`/api/v1/admin` 前缀）提供写操作；用户认证（11）与观看记录（12）为 `POST/GET/PUT/DELETE`；用户头像（14）与章节互动（15）为 `POST/GET/DELETE`
 - 认证：内容接口、`GET /app/latest`、阅读量/评论列表（15a/15b/15d）无认证；`stats` 支持可选 Bearer；用户认证、头像上传、观看记录、点赞与发评论接口需要请求头 `Authorization: Bearer <token>`（见下文"用户认证（Bearer）"）；管理端接口需要请求头 `X-Admin-Token`（见下文"管理端鉴权"）
 - CORS：允许所有来源（开发期），预检 `OPTIONS` 返回 204；允许方法 `GET, POST, PUT, DELETE, OPTIONS`，允许头含 `X-Admin-Token`、`Authorization`
 
@@ -23,8 +23,12 @@ go run .
 
 ## 数据播种（seed）
 
-- 若 `internal/store/seeddata/courses.json` 存在，服务启动时按其 **upsert**：课程按 `slug`、章节按 `(course_id, slug)` 存在则更新、不存在则创建，**永不删除**。章节的 `file` 字段为相对 seeddata 目录的 markdown 文件名，读取其全文作为 `content_md`；仅在内容真正变化时才写库（避免无谓抬高 `content_version`）。schema 参考 `internal/store/seeddata/courses.example.json`（示例文件，引用内置 5 章，供测试使用）。
-- `courses.json` 不存在时保持原行为：`courses` 表为空则播种内置示例数据（go-basics 3 章、python-basics 2 章）。
+课程内容是**运行时数据**，不随二进制发布（二进制不携带任何文章），只来自两个途径：
+
+1. **磁盘 seeddata**：若 `internal/store/seeddata/courses.json` 存在（相对进程工作目录自动探测，候选：`internal/store/seeddata`、`seeddata`、`../store/seeddata`、`backend/internal/store/seeddata`），服务启动时按其 **upsert**：课程按 `slug`、章节按 `(course_id, slug)` 存在则更新、不存在则创建，**永不删除**。章节的 `file` 字段为相对 seeddata 目录的 markdown 文件名，读取其全文作为 `content_md`；仅在内容真正变化时才写库（避免无谓抬高 `content_version`）。schema 参考 `internal/store/seeddata/courses.example.json`（示例文件，引用内置 5 章，供测试使用）。
+2. **管理端导入接口**（见 10b）：运行时上传课程包 zip，解压 md/图片落盘到同一 seeddata 目录与图片根目录、按 slug 合并 courses.json，随即 upsert 进数据库，**无需重启服务**。
+
+- `courses.json` 不存在时**空库启动**，不播种任何内容（无内置兜底示例）。
 - `courses.json` 格式错误或引用的 md 文件缺失时，服务启动失败（fail fast）。
 
 ## 后台静态托管（生产部署）
@@ -50,6 +54,9 @@ admin 前端在编译期通过 go:embed 嵌入二进制（`backend/web/dist`，�
 | `AUTH_INVALID_CREDENTIALS` | 401 | `null`（仅登录） |
 | `AUTH_USERNAME_TAKEN` | 409 | `null`（仅注册） |
 | `VERSION_CONFLICT` | 409 | `null`（仅管理端 App 版本） |
+| `IMPORT_BAD_ZIP` | 400 | `null`（仅管理端课程包导入） |
+| `IMPORT_INVALID_PACKAGE` | 400 | `null`（仅管理端课程包导入） |
+| `IMPORT_MISSING_FILES` | 400 | `null`（仅管理端课程包导入） |
 | `AVATAR_INVALID` | 400 | `null`（仅头像上传） |
 | `COMMENT_INVALID_INPUT` | 400 | `null`（仅发布评论） |
 | `COMMENT_FORBIDDEN` | 403 | `null`（仅删除他人评论） |
@@ -216,7 +223,7 @@ admin 前端在编译期通过 go:embed 嵌入二进制（`backend/web/dist`，�
 
 ---
 
-## 管理端接口（5～10、13b）
+## 管理端接口（5～10、10b、13b、16）
 
 供 React 后台（`/admin`）调用的内容管理接口。除下方差异外，信封、时间格式与内容接口一致。
 
@@ -532,6 +539,96 @@ admin 前端在编译期通过 go:embed 嵌入二进制（`backend/web/dist`，�
 ```
 
 > 删除（课程或章节）不会降低 GET /meta 的 `content_version`（见接口 1 的版本号语义）。
+
+---
+
+## 10b. POST /api/v1/admin/courses/import（课程包导入）
+
+上传课程包 zip，运行时导入课程内容：章节 md 与 courses.json 落盘到 seeddata 目录、图片落盘到图片根目录（`backend/static/images/`），按 slug 合并 courses.json 并**立即 upsert 进数据库，无需重启服务**。课程内容因此不随二进制发布（见"数据播种（seed）"）。
+
+### 请求头
+
+| 头 | 说明 |
+| --- | --- |
+| `X-Admin-Token` | 管理端 token，见"管理端鉴权" |
+
+### 请求体（multipart/form-data）
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `file` | file | 是 | 课程包 zip 文件；请求体上限 600MB（超出返回 400） |
+
+### zip 布局（根目录）
+
+```text
+courses.json          # 必需：{"courses":[课程条目,...]}，条目字段与磁盘种子格式完全一致
+                      #   （slug/title/summary/language/color/sort_order/chapters[]，
+                      #    chapters 元素：slug/title/sort_order/file）
+*.md                  # 必需覆盖全部章节：章节正文，文件名与 chapters[].file 一致，位于 zip 根
+images/**             # 可选：图片（支持多级子目录），解压到图片根目录下
+                      #   （zip 内 images/x/y.png → static/images/x/y.png，同名覆盖）
+```
+
+校验与限额（任一不满足返回 400，见下方错误码）：
+
+- 仅接受常规文件条目（拒绝目录条目、符号链接等）；条目名分隔符归一为 `/` 后校验，拒绝绝对路径、含 `..`、含盘符的条目。
+- 条目数 ≤ 5000；总解压大小 ≤ 1GB（按 entry 头声明的 UncompressedSize64 预检 + 解压时按实际字节数累计复检）；单文件解压大小 ≤ 200MB。
+- 根目录只允许 `courses.json`、`*.md`（必须位于根，不接受嵌套目录下的 md）、`images/**`；出现其他条目（如 `extra.txt`）返回 400 并在 message 中报出条目名。
+- `courses.json` 必须可解析且 `courses` 数组非空；每门课 `slug`/`title` 必填、`chapters` 非空；每章 `slug`/`title` 必填且 `sort_order ≥ 1`；每章 `file` 必须存在于 zip 根，缺失则 400 并列出缺失文件名（最多 10 个）。
+- 课程 slug 与磁盘已有课程重复时按"**原位替换**"处理（更新该课程，不算错误）；包内重复 slug 同样后者覆盖前者。
+
+### 成功响应 200
+
+`state`：导入前 DB 中不存在该课程 slug → `created`，否则 `updated`；`images` 仅统计本次实际解压的图片。
+
+```json
+{
+  "code": "OK",
+  "message": "ok",
+  "data": {
+    "courses": [
+      {"slug": "jetpack-compose", "title": "Jetpack Compose 入门", "chapters": 58, "state": "created"}
+    ],
+    "images": {"count": 221, "bytes": 87320273}
+  }
+}
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `courses[].slug` | string | 课程标识 |
+| `courses[].title` | string | 课程标题 |
+| `courses[].chapters` | int | 该课程本次导入的章节数 |
+| `courses[].state` | string | `created`（DB 中原不存在）/ `updated`（原已存在，原位替换） |
+| `images.count` | int | 本次实际解压的图片个数 |
+| `images.bytes` | int | 本次实际解压的图片总字节数 |
+
+### 失败响应
+
+400（`IMPORT_BAD_ZIP`：非 zip/损坏/条目超限/路径不安全/意外条目/请求体超 600MB）：
+
+```json
+{"code": "IMPORT_BAD_ZIP", "message": "path traversal in zip is not allowed: ../evil.md", "data": null}
+```
+
+`message` 示例：`multipart field 'file' is required` / `request body exceeds 600MB limit` / `invalid or corrupted zip file` / `zip entry is not a regular file: images/` / `too many zip entries (more than 5000)` / `zip entry big.md exceeds 200MB uncompressed size limit` / `total uncompressed size exceeds 1GB limit` / `absolute path in zip is not allowed: /etc/passwd` / `path traversal in zip is not allowed: ../evil.md` / `unexpected zip entry (only courses.json, *.md at root and images/** are allowed): extra.txt`。
+
+400（`IMPORT_INVALID_PACKAGE`：courses.json 缺失或非法）：
+
+```json
+{"code": "IMPORT_INVALID_PACKAGE", "message": "courses.json missing from package", "data": null}
+```
+
+`message` 示例：`courses.json missing from package` / `invalid courses.json: courses array is empty` / `invalid courses.json: courses[0] (rust-basics) has no chapters` / `invalid courses.json: courses[0].chapters[2] (ownership) sort_order must be >= 1, got 0`。
+
+400（`IMPORT_MISSING_FILES`：章节 md 缺失，最多列 10 个文件名）：
+
+```json
+{"code": "IMPORT_MISSING_FILES", "message": "chapter md files missing from zip: ch-03.md, ch-17.md", "data": null}
+```
+
+403：见"管理端鉴权"。
+
 
 ---
 
@@ -1137,6 +1234,9 @@ curl -s -o avatar.png http://localhost:8080/avatars/1-ab12cd34.png
 | 400 | `AUTH_INVALID_INPUT` | 用户端：注册/登录字段长度不合法（`username must be 3-32 bytes and password must be 6-64 bytes`）、请求体非法 JSON（`invalid request body`） |
 | 400 | `AVATAR_INVALID` | 头像上传：multipart 非法、缺 file 字段、超 5MB、非 JPEG/PNG/WEBP 魔数（见 14a） |
 | 400 | `COMMENT_INVALID_INPUT` | 发布评论：content 去空白后为空或超过 1000 字符（`content must be 1-1000 characters after trimming`） |
+| 400 | `IMPORT_BAD_ZIP` | 课程包导入（10b）：非 zip/损坏/条目数或解压大小超限/路径不安全（绝对路径、`..`、盘符）/意外条目/请求体超 600MB |
+| 400 | `IMPORT_INVALID_PACKAGE` | 课程包导入（10b）：courses.json 缺失或非法（不可解析、courses 空、slug/title 缺失、chapters 空、sort_order < 1） |
+| 400 | `IMPORT_MISSING_FILES` | 课程包导入（10b）：courses.json 引用的章节 md 不在 zip 根（最多列 10 个文件名） |
 | 401 | `AUTH_UNAUTHORIZED` | 用户端：Bearer token 缺失（`missing bearer token`）或无效/过期（`invalid or expired token`） |
 | 401 | `AUTH_INVALID_CREDENTIALS` | 登录：用户不存在或密码错误（`invalid username or password`） |
 | 403 | `FORBIDDEN` | 管理端：`ADMIN_TOKEN` 未设置（`admin disabled: ADMIN_TOKEN not set`）或 token 不匹配（`invalid admin token`） |
