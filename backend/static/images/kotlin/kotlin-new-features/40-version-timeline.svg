@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" width="960" height="360" role="img" aria-label="Kotlin 版本演进时间线：从 2016 年 1.0 到 2025 年 2.2，2.0 为 K2 编译器的分水岭">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="48" y="48" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" letter-spacing="0.18em">KOTLIN RELEASE TIMELINE</text>
+  <text x="48" y="88" fill="#1c1917" font-size="24" font-family="'Instrument Serif', Georgia, 'Times New Roman', serif">Kotlin 版本演进</text>
+  <text x="48" y="112" fill="#78716c" font-size="12" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">横轴按真实年份间隔排布，2.0 是 K1 与 K2 的分界线</text>
+
+  <!-- ===== 时代标注与分隔线 ===== -->
+  <line x1="752" y1="144" x2="752" y2="200" stroke="rgba(28,25,23,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="356" y="168" fill="#78716c" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.14em">K1 时代</text>
+  <text x="796" y="168" fill="#78716c" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.14em">K2 时代</text>
+
+  <!-- ===== 时间轴 ===== -->
+  <line x1="40" y1="248" x2="856" y2="248" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="48" y1="248" x2="48" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+  <line x1="136" y1="248" x2="136" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+  <line x1="224" y1="248" x2="224" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+  <line x1="400" y1="248" x2="400" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+  <line x1="488" y1="248" x2="488" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+  <line x1="576" y1="248" x2="576" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+  <line x1="664" y1="248" x2="664" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+  <line x1="752" y1="248" x2="752" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+  <line x1="840" y1="248" x2="840" y2="268" stroke="rgba(28,25,23,0.25)" stroke-width="1"/>
+
+  <!-- ===== 刻度圆点 ===== -->
+  <circle cx="48" cy="248" r="4" fill="#57534e"/>
+  <circle cx="136" cy="248" r="4" fill="#57534e"/>
+  <circle cx="224" cy="248" r="4" fill="#57534e"/>
+  <circle cx="400" cy="248" r="4" fill="#57534e"/>
+  <circle cx="488" cy="248" r="4" fill="#57534e"/>
+  <circle cx="576" cy="248" r="4" fill="#57534e"/>
+  <circle cx="664" cy="248" r="4" fill="#57534e"/>
+  <circle cx="840" cy="248" r="4" fill="#57534e"/>
+  <circle cx="752" cy="248" r="6" fill="#b5523a"/>
+
+  <!-- ===== 版本号（轴上方） ===== -->
+  <text x="48" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">1.0</text>
+  <text x="136" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">1.1</text>
+  <text x="224" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">1.3</text>
+  <text x="400" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">1.4</text>
+  <text x="488" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">1.5</text>
+  <text x="576" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">1.7</text>
+  <text x="664" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">1.9</text>
+  <text x="752" y="224" fill="#b5523a" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2.0</text>
+  <text x="840" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2.2</text>
+
+  <!-- ===== 年份（轴下方） ===== -->
+  <text x="48" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2016</text>
+  <text x="136" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2017</text>
+  <text x="224" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2018</text>
+  <text x="400" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2020</text>
+  <text x="488" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2021</text>
+  <text x="576" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2022</text>
+  <text x="664" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2023</text>
+  <text x="752" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2024</text>
+  <text x="840" y="284" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">2025</text>
+
+  <!-- ===== 关键特性 ===== -->
+  <text x="48" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">稳定发布</text>
+  <text x="136" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">协程·typealias</text>
+  <text x="224" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">内联类·无符号类型</text>
+  <text x="400" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">SAM·sealed interface</text>
+  <text x="488" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">值类</text>
+  <text x="576" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">K2 Alpha</text>
+  <text x="664" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">entries·data object</text>
+  <text x="752" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">K2 正式发布</text>
+  <text x="840" y="308" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">when 守卫·上下文参数</text>
+</svg>

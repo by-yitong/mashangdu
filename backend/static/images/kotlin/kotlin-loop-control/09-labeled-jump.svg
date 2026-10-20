@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 688 360" width="688" height="360" role="img" aria-label="标签跳转控制流：外层 loop@ 循环包含内层 for 循环，在 j 等于 2 时 break@loop 一次跳出两层到达循环结束，continue@loop 则虚线回到外层循环的下一次迭代">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="48" y="44" fill="#1c1917" font-size="20" font-family="'Instrument Serif',Georgia,'Times New Roman',serif">标签跳转控制流</text>
+
+  <!-- 外层循环容器 -->
+  <rect x="128" y="96" width="344" height="216" rx="8" fill="#f2ede4" stroke="#1c1917" stroke-width="1"/>
+  <text x="144" y="120" fill="#1c1917" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace">loop@ for (i in 1..3)</text>
+
+  <!-- 内层循环容器 -->
+  <rect x="160" y="144" width="280" height="136" rx="6" fill="#ffffff" stroke="#57534e" stroke-width="1"/>
+  <text x="176" y="168" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace">for (j in 1..3)</text>
+
+  <!-- break@loop：跳出两层（accent） -->
+  <line x1="408" y1="224" x2="520" y2="224" stroke="#b5523a" stroke-width="1.2" marker-end="url(#arrow-accent)"/>
+
+  <!-- continue@loop：虚线回边 -->
+  <path d="M192 224 H64 V120 H128" fill="none" stroke="#57534e" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+  <!-- 箭头文字遮罩 -->
+  <rect x="432" y="216" width="64" height="16" fill="#faf7f2"/>
+  <rect x="24" y="156" width="80" height="16" fill="#faf7f2"/>
+
+  <text x="464" y="228" fill="#b5523a" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">break@loop</text>
+  <text x="64" y="168" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">continue@loop</text>
+
+  <!-- 条件节点 -->
+  <rect x="192" y="192" width="216" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="192" y="192" width="216" height="64" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="200" y="200" width="60" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="230" y="212" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">DECISION</text>
+  <text x="300" y="228" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">j == 2</text>
+  <text x="300" y="244" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">命中后跳转</text>
+
+  <!-- 循环结束节点：焦点 -->
+  <rect x="520" y="192" width="136" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="520" y="192" width="136" height="64" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1.2"/>
+  <rect x="528" y="200" width="36" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="546" y="212" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">END</text>
+  <text x="588" y="228" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">循环结束</text>
+  <text x="588" y="244" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">break 跳出两层</text>
+</svg>

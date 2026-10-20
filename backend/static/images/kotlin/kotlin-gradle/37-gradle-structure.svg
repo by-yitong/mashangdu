@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="960" height="400" role="img" aria-label="Kotlin Gradle 项目目录结构：根目录下包含 build.gradle.kts、settings.gradle.kts、gradle/wrapper、src/main/kotlin、src/test/kotlin">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="48" y="48" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" letter-spacing="0.18em">KOTLIN GRADLE PROJECT LAYOUT</text>
+  <text x="48" y="88" fill="#1c1917" font-size="24" font-family="'Instrument Serif', Georgia, 'Times New Roman', serif">Kotlin Gradle 项目目录结构</text>
+  <text x="48" y="112" fill="#78716c" font-size="12" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">约定优于配置：源码放在固定目录，无需额外声明路径</text>
+
+  <!-- ===== 连接线（先画，正交折线） ===== -->
+  <line x1="480" y1="216" x2="480" y2="256" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="104" y1="256" x2="856" y2="256" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="104" y1="256" x2="104" y2="288" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="292" y1="256" x2="292" y2="288" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="480" y1="256" x2="480" y2="288" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="668" y1="256" x2="668" y2="288" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="856" y1="256" x2="856" y2="288" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+
+  <!-- ===== 根目录 ===== -->
+  <rect x="396" y="152" width="168" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="396" y="152" width="168" height="64" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="480" y="188" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">项目根目录</text>
+  <text x="480" y="204" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">runoob-demo/</text>
+
+  <!-- ===== build.gradle.kts（焦点） ===== -->
+  <rect x="20" y="288" width="168" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="20" y="288" width="168" height="56" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <text x="104" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">build.gradle.kts</text>
+  <text x="104" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">依赖与任务配置</text>
+
+  <!-- ===== settings.gradle.kts ===== -->
+  <rect x="208" y="288" width="168" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="208" y="288" width="168" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="292" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">settings.gradle.kts</text>
+  <text x="292" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">多模块声明</text>
+
+  <!-- ===== gradle/wrapper ===== -->
+  <rect x="396" y="288" width="168" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="396" y="288" width="168" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="480" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">gradle/wrapper</text>
+  <text x="480" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">锁定 Gradle 版本</text>
+
+  <!-- ===== src/main/kotlin（焦点） ===== -->
+  <rect x="584" y="288" width="168" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="584" y="288" width="168" height="56" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <text x="668" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">src/main/kotlin</text>
+  <text x="668" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">源码</text>
+
+  <!-- ===== src/test/kotlin ===== -->
+  <rect x="772" y="288" width="168" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="772" y="288" width="168" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="856" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">src/test/kotlin</text>
+  <text x="856" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">测试源码</text>
+</svg>

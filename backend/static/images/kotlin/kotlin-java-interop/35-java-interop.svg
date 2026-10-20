@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="960" height="480" role="img" aria-label="Kotlin 与 Java 的双向映射：属性映射为 getter 和 setter，默认参数需要 JvmOverloads，顶层函数生成 FileKt 静态方法，companion object 成员需要 JvmStatic 才是静态方法">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-rev" markerWidth="8" markerHeight="6" refX="1" refY="3" orient="auto">
+      <polygon points="8 0, 0 3, 8 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="40" y="44" fill="#1c1917" font-size="20" font-family="'Instrument Serif',Georgia,'Times New Roman',serif">Kotlin 与 Java 的双向映射</text>
+  <text x="920" y="44" fill="#78716c" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="end" letter-spacing="0.08em">INTEROP MAPPING</text>
+
+  <text x="40" y="96" fill="#78716c" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" letter-spacing="0.08em">KOTLIN 声明</text>
+  <text x="920" y="96" fill="#78716c" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="end" letter-spacing="0.08em">JAVA 形态</text>
+
+  <line x1="300" y1="156" x2="660" y2="156" stroke="#57534e" stroke-width="1" marker-start="url(#arrow-rev)" marker-end="url(#arrow)"/>
+  <line x1="300" y1="236" x2="660" y2="236" stroke="#57534e" stroke-width="1" marker-start="url(#arrow-rev)" marker-end="url(#arrow)"/>
+  <line x1="300" y1="316" x2="660" y2="316" stroke="#57534e" stroke-width="1" marker-start="url(#arrow-rev)" marker-end="url(#arrow)"/>
+  <line x1="300" y1="396" x2="660" y2="396" stroke="#57534e" stroke-width="1" marker-start="url(#arrow-rev)" marker-end="url(#arrow)"/>
+
+  <rect x="400" y="56" width="160" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="400" y="56" width="160" height="56" rx="6" fill="rgba(28,25,23,0.03)" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <text x="480" y="84" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">同一份 JVM 字节码</text>
+  <text x="480" y="100" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">.class</text>
+
+  <rect x="40" y="128" width="260" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="40" y="128" width="260" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="48" y="136" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="76" y="144" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">PROP</text>
+  <text x="170" y="160" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">val name: String</text>
+  <text x="170" y="176" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">var age: Int</text>
+
+  <rect x="660" y="128" width="260" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="660" y="128" width="260" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="668" y="136" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="696" y="144" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">GETTER</text>
+  <text x="790" y="160" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">getName()</text>
+  <text x="790" y="176" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">getAge() / setAge()</text>
+
+  <rect x="40" y="208" width="260" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="40" y="208" width="260" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="48" y="216" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="76" y="224" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">DEFAULT</text>
+  <text x="170" y="240" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">fun f(a: Int = 1)</text>
+  <text x="170" y="256" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">默认参数</text>
+
+  <rect x="660" y="208" width="260" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="660" y="208" width="260" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="668" y="216" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="696" y="224" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">OVERLOAD</text>
+  <text x="790" y="240" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">f() / f(int)</text>
+  <text x="790" y="256" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">@JvmOverloads</text>
+
+  <rect x="40" y="288" width="260" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="40" y="288" width="260" height="56" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <rect x="48" y="296" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="76" y="304" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">TOP-LEVEL</text>
+  <text x="170" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">顶层函数</text>
+  <text x="170" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">fun topLevel()</text>
+
+  <rect x="660" y="288" width="260" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="660" y="288" width="260" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="668" y="296" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="696" y="304" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">STATIC</text>
+  <text x="790" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">UtilsKt.topLevel()</text>
+  <text x="790" y="336" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">静态方法</text>
+
+  <rect x="40" y="368" width="260" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="40" y="368" width="260" height="56" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <rect x="48" y="376" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="76" y="384" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">COMPANION</text>
+  <text x="170" y="400" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">companion object 成员</text>
+  <text x="170" y="416" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">Companion.create()</text>
+
+  <rect x="660" y="368" width="260" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="660" y="368" width="260" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="668" y="376" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="696" y="384" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">JVMSTATIC</text>
+  <text x="790" y="400" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">@JvmStatic</text>
+  <text x="790" y="416" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">真正的静态方法</text>
+</svg>

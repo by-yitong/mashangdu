@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="960" height="480" role="img" aria-label="KMP 项目 source set 层级：commonMain 下分 jvmMain、nativeMain、jsMain，nativeMain 下再分 iosArm64Main 与 linuxX64Main，右侧标注 expect 与 actual 的书写位置">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="48" y="48" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" letter-spacing="0.18em">KMP SOURCE SET STRUCTURE</text>
+  <text x="48" y="88" fill="#1c1917" font-size="24" font-family="'Instrument Serif', Georgia, 'Times New Roman', serif">source set 的层级结构</text>
+  <text x="48" y="112" fill="#78716c" font-size="12" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">共享代码写在 commonMain，平台专属代码写在各自的 source set</text>
+
+  <!-- ===== 连接线（先画，正交折线） ===== -->
+  <line x1="304" y1="208" x2="304" y2="240" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="120" y1="240" x2="488" y2="240" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="120" y1="240" x2="120" y2="272" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="304" y1="240" x2="304" y2="272" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="488" y1="240" x2="488" y2="272" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="304" y1="328" x2="304" y2="352" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="232" y1="352" x2="376" y2="352" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="232" y1="352" x2="232" y2="376" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="376" y1="352" x2="376" y2="376" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <line x1="376" y1="180" x2="608" y2="180" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+
+  <!-- ===== commonMain（焦点） ===== -->
+  <rect x="232" y="152" width="144" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="232" y="152" width="144" height="56" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <text x="304" y="184" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">commonMain</text>
+  <text x="304" y="200" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">跨所有目标</text>
+
+  <!-- ===== 第二层 ===== -->
+  <rect x="48" y="272" width="144" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="48" y="272" width="144" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="120" y="304" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">jvmMain</text>
+  <text x="120" y="320" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">JVM 目标</text>
+
+  <rect x="232" y="272" width="144" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="232" y="272" width="144" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="304" y="304" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">nativeMain</text>
+  <text x="304" y="320" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">Native 目标</text>
+
+  <rect x="416" y="272" width="144" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="416" y="272" width="144" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="488" y="304" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">jsMain</text>
+  <text x="488" y="320" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">JS 目标</text>
+
+  <!-- ===== 第三层 ===== -->
+  <rect x="168" y="376" width="128" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="168" y="376" width="128" height="56" rx="6" fill="rgba(28,25,23,0.05)" stroke="#57534e" stroke-width="1"/>
+  <text x="232" y="408" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">iosArm64Main</text>
+  <text x="232" y="424" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">iOS 设备</text>
+
+  <rect x="312" y="376" width="128" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="312" y="376" width="128" height="56" rx="6" fill="rgba(28,25,23,0.05)" stroke="#57534e" stroke-width="1"/>
+  <text x="376" y="408" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">linuxX64Main</text>
+  <text x="376" y="424" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">Linux x64</text>
+
+  <!-- ===== 右侧标注（焦点） ===== -->
+  <rect x="608" y="152" width="304" height="112" rx="6" fill="#faf7f2"/>
+  <rect x="608" y="152" width="304" height="112" rx="6" fill="#ffffff" stroke="#b5523a" stroke-width="1"/>
+  <text x="632" y="184" fill="#b5523a" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" letter-spacing="0.08em">expect / actual</text>
+  <line x1="632" y1="196" x2="888" y2="196" stroke="rgba(28,25,23,0.12)" stroke-width="0.8"/>
+  <text x="632" y="224" fill="#1c1917" font-size="12" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">expect 只能写在 commonMain</text>
+  <text x="632" y="248" fill="#57534e" font-size="12" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">actual 写在各平台 source set</text>
+</svg>

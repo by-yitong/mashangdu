@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 320" width="880" height="320" role="img" aria-label="Kotlin 源码 hello.kt 经 kotlinc 编译器编译为 hello.jar，再由 java -jar 运行并输出 Hello, World!，Gradle 或 Maven 是可选的另一条产出路径">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="48" y="40" fill="#1c1917" font-size="20" font-family="'Instrument Serif',Georgia,'Times New Roman',serif">Kotlin 源码到运行</text>
+
+  <!-- 主流程箭头 -->
+  <line x1="160" y1="136" x2="200" y2="136" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="328" y1="136" x2="368" y2="136" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="496" y1="136" x2="536" y2="136" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="648" y1="136" x2="688" y2="136" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- 可选支线 -->
+  <line x1="432" y1="240" x2="432" y2="188" stroke="rgba(28,25,23,0.30)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+  <!-- 箭头文字遮罩 -->
+  <rect x="164" y="128" width="32" height="16" fill="#faf7f2"/>
+  <rect x="332" y="128" width="32" height="16" fill="#faf7f2"/>
+  <rect x="500" y="128" width="32" height="16" fill="#faf7f2"/>
+  <rect x="652" y="128" width="32" height="16" fill="#faf7f2"/>
+  <rect x="412" y="208" width="40" height="16" fill="#faf7f2"/>
+
+  <text x="180" y="140" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">编译</text>
+  <text x="348" y="140" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">产出</text>
+  <text x="516" y="140" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">加载</text>
+  <text x="668" y="140" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">输出</text>
+  <text x="432" y="220" fill="#78716c" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">同样产出</text>
+
+  <!-- hello.kt：源码，焦点 -->
+  <rect x="48" y="96" width="112" height="80" rx="6" fill="#faf7f2"/>
+  <rect x="48" y="96" width="112" height="80" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1.2"/>
+  <rect x="56" y="104" width="52" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="82" y="116" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">SOURCE</text>
+  <text x="104" y="140" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">hello.kt</text>
+  <text x="104" y="156" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">源码文件</text>
+
+  <!-- kotlinc：编译器，焦点 -->
+  <rect x="200" y="96" width="128" height="80" rx="6" fill="#faf7f2"/>
+  <rect x="200" y="96" width="128" height="80" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1.2"/>
+  <rect x="208" y="104" width="60" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="238" y="116" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">COMPILER</text>
+  <text x="264" y="140" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">kotlinc</text>
+  <text x="264" y="156" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">K2 Compiler</text>
+
+  <!-- hello.jar：编译产物 -->
+  <rect x="368" y="96" width="128" height="80" rx="6" fill="#faf7f2"/>
+  <rect x="368" y="96" width="128" height="80" rx="6" fill="rgba(28,25,23,0.05)" stroke="#57534e" stroke-width="1"/>
+  <rect x="376" y="104" width="60" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="406" y="116" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">ARTIFACT</text>
+  <text x="432" y="140" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">hello.jar</text>
+  <text x="432" y="156" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">字节码 + 运行时</text>
+
+  <!-- java -jar：运行 -->
+  <rect x="536" y="96" width="112" height="80" rx="6" fill="#faf7f2"/>
+  <rect x="536" y="96" width="112" height="80" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="544" y="104" width="36" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="562" y="116" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">RUN</text>
+  <text x="592" y="140" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">java -jar</text>
+  <text x="592" y="156" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">启动 JVM</text>
+
+  <!-- 输出 -->
+  <rect x="688" y="96" width="144" height="80" rx="8" fill="#faf7f2"/>
+  <rect x="688" y="96" width="144" height="80" rx="8" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="696" y="104" width="52" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="722" y="116" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">OUTPUT</text>
+  <text x="760" y="140" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">Hello, World!</text>
+  <text x="760" y="156" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">控制台输出</text>
+
+  <!-- Gradle / Maven：可选构建路径 -->
+  <rect x="368" y="240" width="128" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="368" y="240" width="128" height="64" rx="6" fill="rgba(28,25,23,0.03)" stroke="rgba(28,25,23,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+  <rect x="376" y="248" width="60" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="406" y="260" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">OPTIONAL</text>
+  <text x="432" y="276" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">Gradle / Maven</text>
+  <text x="432" y="292" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">构建工具</text>
+</svg>

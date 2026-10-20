@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 552" width="960" height="552" role="img" aria-label="Kotlin 源码经 K2 编译器前端分叉到 Kotlin/JVM、Kotlin/JS、Kotlin/Wasm、Kotlin/Native 四个后端">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="48" y="48" fill="#78716c" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" letter-spacing="0.18em">KOTLIN COMPILER BACKENDS</text>
+  <text x="48" y="88" fill="#1c1917" font-size="24" font-family="'Instrument Serif', Georgia, 'Times New Roman', serif">Kotlin 的四个后端</text>
+  <text x="48" y="112" fill="#78716c" font-size="12" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">同一套语言前端，四种目标产物</text>
+
+  <!-- ===== 连线（先画） ===== -->
+  <line x1="152" y1="224" x2="152" y2="272" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="240" y1="304" x2="576" y2="184" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="240" y1="304" x2="576" y2="264" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="240" y1="304" x2="576" y2="344" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="240" y1="304" x2="576" y2="424" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- 箭头文字遮罩 -->
+  <rect x="136" y="240" width="32" height="16" fill="#faf7f2"/>
+  <text x="152" y="252" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.08em">解析</text>
+
+  <!-- ===== Kotlin 源码（焦点） ===== -->
+  <rect x="64" y="160" width="176" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="64" y="160" width="176" height="64" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <rect x="72" y="168" width="40" height="12" rx="2" fill="none" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="92" y="177" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.08em">SRC</text>
+  <text x="152" y="196" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">Kotlin 源码</text>
+  <text x="152" y="212" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">.kt</text>
+
+  <!-- ===== K2 编译器前端（焦点） ===== -->
+  <rect x="64" y="272" width="176" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="64" y="272" width="176" height="64" rx="6" fill="#ffffff" stroke="#b5523a" stroke-width="1"/>
+  <rect x="72" y="280" width="56" height="12" rx="2" fill="none" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="100" y="289" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.08em">FRONTEND</text>
+  <text x="152" y="308" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">K2 编译器前端</text>
+  <text x="152" y="324" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">FIR</text>
+
+  <!-- ===== 四个后端 ===== -->
+  <rect x="576" y="152" width="240" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="576" y="152" width="240" height="64" rx="6" fill="rgba(28,25,23,0.05)" stroke="#57534e" stroke-width="1"/>
+  <rect x="584" y="160" width="40" height="12" rx="2" fill="none" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="604" y="169" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.08em">JVM</text>
+  <text x="696" y="188" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">Kotlin/JVM</text>
+  <text x="696" y="204" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">.jar / .class</text>
+
+  <rect x="576" y="232" width="240" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="576" y="232" width="240" height="64" rx="6" fill="rgba(28,25,23,0.05)" stroke="#57534e" stroke-width="1"/>
+  <rect x="584" y="240" width="40" height="12" rx="2" fill="none" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="604" y="249" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.08em">JS</text>
+  <text x="696" y="268" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">Kotlin/JS</text>
+  <text x="696" y="284" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">.js</text>
+
+  <rect x="576" y="312" width="240" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="576" y="312" width="240" height="64" rx="6" fill="rgba(28,25,23,0.05)" stroke="#57534e" stroke-width="1"/>
+  <rect x="584" y="320" width="40" height="12" rx="2" fill="none" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="604" y="329" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.08em">WASM</text>
+  <text x="696" y="348" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">Kotlin/Wasm</text>
+  <text x="696" y="364" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">.wasm</text>
+
+  <rect x="576" y="392" width="240" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="576" y="392" width="240" height="64" rx="6" fill="rgba(28,25,23,0.05)" stroke="#57534e" stroke-width="1"/>
+  <rect x="584" y="400" width="40" height="12" rx="2" fill="none" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="604" y="409" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle" letter-spacing="0.08em">NATIVE</text>
+  <text x="696" y="428" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" text-anchor="middle">Kotlin/Native</text>
+  <text x="696" y="444" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" text-anchor="middle">原生二进制</text>
+
+  <!-- ===== 底部图例 ===== -->
+  <line x1="48" y1="488" x2="912" y2="488" stroke="rgba(28,25,23,0.12)" stroke-width="0.8"/>
+  <text x="48" y="512" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, 'PingFang SC', monospace" letter-spacing="0.14em">LEGEND</text>
+  <rect x="152" y="504" width="16" height="12" rx="3" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <text x="176" y="512" fill="#57534e" font-size="9" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">焦点：共享的语言前端</text>
+  <rect x="400" y="504" width="16" height="12" rx="3" fill="rgba(28,25,23,0.05)" stroke="#57534e" stroke-width="1"/>
+  <text x="424" y="512" fill="#57534e" font-size="9" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif">四个后端与其编译产物</text>
+</svg>

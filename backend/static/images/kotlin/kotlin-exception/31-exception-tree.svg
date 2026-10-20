@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 480" width="1000" height="480" role="img" aria-label="Kotlin 异常层次树：Throwable 分为 Exception 与 Error，Exception 下有 RuntimeException 和 IOException，Error 下有 OutOfMemoryError 和 StackOverflowError">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="40" y="44" fill="#1c1917" font-size="20" font-family="'Instrument Serif',Georgia,'Times New Roman',serif">Kotlin 异常层次</text>
+
+  <path d="M 408 120 V 152 M 212 152 H 604 M 212 152 V 176 M 604 152 V 176" fill="none" stroke="#57534e" stroke-width="1"/>
+  <path d="M 212 232 V 264 M 120 264 H 304 M 120 264 V 288 M 304 264 V 288" fill="none" stroke="#57534e" stroke-width="1"/>
+  <path d="M 604 232 V 264 M 512 264 H 696 M 512 264 V 288 M 696 264 V 288" fill="none" stroke="#57534e" stroke-width="1"/>
+  <path d="M 120 344 V 368" fill="none" stroke="#57534e" stroke-width="1"/>
+
+  <rect x="328" y="64" width="160" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="328" y="64" width="160" height="56" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <rect x="336" y="72" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="360" y="80" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">ROOT</text>
+  <text x="408" y="96" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">Throwable</text>
+  <text x="408" y="112" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">所有可抛出对象的根</text>
+
+  <rect x="132" y="176" width="160" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="132" y="176" width="160" height="56" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <rect x="140" y="184" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="164" y="192" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">BRANCH</text>
+  <text x="212" y="208" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">Exception</text>
+  <text x="212" y="224" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">可恢复的问题</text>
+
+  <rect x="524" y="176" width="160" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="524" y="176" width="160" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="532" y="184" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="556" y="192" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">BRANCH</text>
+  <text x="604" y="208" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">Error</text>
+  <text x="604" y="224" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">JVM 严重错误</text>
+
+  <rect x="40" y="288" width="160" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="40" y="288" width="160" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="48" y="296" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="72" y="304" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">RUNTIME</text>
+  <text x="120" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">RuntimeException</text>
+  <text x="120" y="336" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">运行时异常</text>
+
+  <rect x="224" y="288" width="160" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="224" y="288" width="160" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="232" y="296" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="256" y="304" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">LEAF</text>
+  <text x="304" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">IOException</text>
+  <text x="304" y="336" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">输入输出</text>
+
+  <rect x="432" y="288" width="160" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="432" y="288" width="160" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="440" y="296" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="464" y="304" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">LEAF</text>
+  <text x="512" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">OutOfMemoryError</text>
+  <text x="512" y="336" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">内存耗尽</text>
+
+  <rect x="616" y="288" width="160" height="56" rx="6" fill="#faf7f2"/>
+  <rect x="616" y="288" width="160" height="56" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <rect x="624" y="296" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="648" y="304" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">LEAF</text>
+  <text x="696" y="320" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">StackOverflowError</text>
+  <text x="696" y="336" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">栈溢出</text>
+
+  <rect x="40" y="368" width="160" height="80" rx="6" fill="#faf7f2"/>
+  <rect x="40" y="368" width="160" height="80" rx="6" fill="rgba(28,25,23,0.03)" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <rect x="48" y="376" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="72" y="384" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">SUBTYPES</text>
+  <text x="120" y="408" fill="#1c1917" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">IllegalArgumentException</text>
+  <text x="120" y="424" fill="#1c1917" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">NullPointerException</text>
+  <text x="120" y="440" fill="#1c1917" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">IllegalStateException</text>
+
+  <rect x="800" y="176" width="160" height="120" rx="6" fill="#faf7f2"/>
+  <rect x="800" y="176" width="160" height="120" rx="6" fill="rgba(28,25,23,0.03)" stroke="rgba(28,25,23,0.30)" stroke-width="1"/>
+  <rect x="808" y="184" width="48" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="832" y="192" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">NOTE</text>
+  <text x="816" y="224" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif">无受检异常</text>
+  <text x="816" y="248" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace">throw 的类型是 Nothing</text>
+  <text x="816" y="264" fill="#57534e" font-size="9" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif">编译器不强制声明异常</text>
+</svg>

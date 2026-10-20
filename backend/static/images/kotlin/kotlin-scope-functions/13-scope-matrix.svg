@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 688 580" width="688" height="580" role="img" aria-label="作用域函数二维决策矩阵：横轴是接收者访问方式 it 与 this，纵轴是返回值，上为返回结果下为返回对象本身，四个象限分别是 let、run、apply、also，其中 let 与 apply 用焦点色标出">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="48" y="44" fill="#1c1917" font-size="20" font-family="'Instrument Serif',Georgia,'Times New Roman',serif">作用域函数二维决策</text>
+
+  <!-- 轴 -->
+  <line x1="128" y1="312" x2="640" y2="312" stroke="#1c1917" stroke-width="1"/>
+  <line x1="384" y1="120" x2="384" y2="504" stroke="#1c1917" stroke-width="1"/>
+
+  <!-- 轴标签 -->
+  <text x="128" y="92" fill="#78716c" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" letter-spacing="0.08em">RETURN VALUE ↓</text>
+  <text x="120" y="124" fill="#1c1917" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="end" letter-spacing="0.08em">返回结果 ↑</text>
+  <text x="120" y="496" fill="#1c1917" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="end" letter-spacing="0.08em">返回对象本身 ↓</text>
+  <text x="128" y="528" fill="#1c1917" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" letter-spacing="0.08em">← IT</text>
+  <text x="640" y="528" fill="#1c1917" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="end" letter-spacing="0.08em">THIS →</text>
+  <text x="128" y="556" fill="#78716c" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" letter-spacing="0.08em">RECEIVER ACCESS →</text>
+
+  <!-- 左上：let（焦点） -->
+  <rect x="192" y="180" width="128" height="72" rx="6" fill="#faf7f2"/>
+  <rect x="192" y="180" width="128" height="72" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1.2"/>
+  <text x="256" y="220" fill="#1c1917" font-size="16" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">let</text>
+  <text x="256" y="240" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">it → 结果</text>
+
+  <!-- 右上：run -->
+  <rect x="448" y="180" width="128" height="72" rx="6" fill="#faf7f2"/>
+  <rect x="448" y="180" width="128" height="72" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="512" y="220" fill="#1c1917" font-size="16" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">run</text>
+  <text x="512" y="240" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">this → 结果</text>
+
+  <!-- 左下：also -->
+  <rect x="192" y="372" width="128" height="72" rx="6" fill="#faf7f2"/>
+  <rect x="192" y="372" width="128" height="72" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+  <text x="256" y="412" fill="#1c1917" font-size="16" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">also</text>
+  <text x="256" y="432" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">it → 对象</text>
+
+  <!-- 右下：apply（焦点） -->
+  <rect x="448" y="372" width="128" height="72" rx="6" fill="#faf7f2"/>
+  <rect x="448" y="372" width="128" height="72" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1.2"/>
+  <text x="512" y="412" fill="#1c1917" font-size="16" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">apply</text>
+  <text x="512" y="432" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">this → 对象</text>
+</svg>

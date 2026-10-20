@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 976 400" width="976" height="400" role="img" aria-label="可空值的处理方式：安全调用、Elvis、非空断言、安全转换与 let 块五种分支">
+<defs>
+<pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+<circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+</pattern>
+<marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+<polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+</marker>
+<marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+<polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+</marker>
+<marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+<polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+</marker>
+</defs>
+
+<rect width="100%" height="100%" fill="#faf7f2"/>
+<rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+<text x="40" y="36" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" letter-spacing="0.18em">KOTLIN · NULL SAFETY</text>
+<text x="40" y="60" fill="#1c1917" font-size="20" font-family="'Instrument Serif', Georgia, 'Times New Roman', serif">拿到可空值之后的五种处理</text>
+<line x1="40" y1="76" x2="936" y2="76" stroke="rgba(28,25,23,0.12)" stroke-width="1"/>
+
+<!-- connectors -->
+<line x1="488" y1="176" x2="488" y2="208" stroke="#57534e" stroke-width="1"/>
+<line x1="120" y1="208" x2="856" y2="208" stroke="#57534e" stroke-width="1"/>
+<line x1="120" y1="208" x2="120" y2="244" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="304" y1="208" x2="304" y2="244" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="488" y1="208" x2="488" y2="244" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="672" y1="208" x2="672" y2="244" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+<line x1="856" y1="208" x2="856" y2="244" stroke="#57534e" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+<!-- top: nullable value (focal) -->
+<rect x="328" y="104" width="320" height="72" rx="6" fill="#faf7f2"/>
+<rect x="328" y="104" width="320" height="72" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+<rect x="336" y="112" width="64" height="12" rx="2" fill="transparent" stroke="rgba(181,82,58,0.50)" stroke-width="0.8"/>
+<text x="368" y="121" fill="#b5523a" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle" letter-spacing="0.08em">NULLABLE</text>
+<text x="488" y="152" fill="#1c1917" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">val name: String?</text>
+
+<!-- card 1: safe call -->
+<rect x="40" y="248" width="160" height="120" rx="6" fill="#faf7f2"/>
+<rect x="40" y="248" width="160" height="120" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+<rect x="48" y="256" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+<text x="76" y="265" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle" letter-spacing="0.08em">SAFE CALL</text>
+<text x="120" y="296" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, sans-serif" text-anchor="middle"><tspan font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace">?.</tspan><tspan dx="6">安全调用</tspan></text>
+<text x="120" y="320" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">整条表达式</text>
+<text x="120" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">返回 null</text>
+
+<!-- card 2: elvis -->
+<rect x="224" y="248" width="160" height="120" rx="6" fill="#faf7f2"/>
+<rect x="224" y="248" width="160" height="120" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+<rect x="232" y="256" width="36" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+<text x="250" y="265" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle" letter-spacing="0.08em">ELVIS</text>
+<text x="304" y="296" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, sans-serif" text-anchor="middle"><tspan font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace">?:</tspan><tspan dx="6">Elvis</tspan></text>
+<text x="304" y="320" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">为 null 时</text>
+<text x="304" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">给出默认值</text>
+
+<!-- card 3: not-null assertion (focal, danger) -->
+<rect x="408" y="248" width="160" height="120" rx="6" fill="#faf7f2"/>
+<rect x="408" y="248" width="160" height="120" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+<rect x="416" y="256" width="44" height="12" rx="2" fill="transparent" stroke="rgba(181,82,58,0.50)" stroke-width="0.8"/>
+<text x="438" y="265" fill="#b5523a" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle" letter-spacing="0.08em">DANGER</text>
+<text x="488" y="296" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, sans-serif" text-anchor="middle"><tspan font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace">!!</tspan><tspan dx="6">非空断言</tspan></text>
+<text x="488" y="320" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">为 null 时抛</text>
+<text x="488" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">NullPointerException</text>
+
+<!-- card 4: safe cast -->
+<rect x="592" y="248" width="160" height="120" rx="6" fill="#faf7f2"/>
+<rect x="592" y="248" width="160" height="120" rx="6" fill="#ffffff" stroke="#1c1917" stroke-width="1"/>
+<rect x="600" y="256" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+<text x="628" y="265" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle" letter-spacing="0.08em">SAFE CAST</text>
+<text x="672" y="296" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist', -apple-system, 'Helvetica Neue', Arial, sans-serif" text-anchor="middle"><tspan font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace">as?</tspan><tspan dx="6">安全转换</tspan></text>
+<text x="672" y="320" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">类型不符时</text>
+<text x="672" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">返回 null</text>
+
+<!-- card 5: let block (dashed) -->
+<rect x="776" y="248" width="160" height="120" rx="6" fill="#faf7f2"/>
+<rect x="776" y="248" width="160" height="120" rx="6" fill="rgba(28,25,23,0.03)" stroke="rgba(28,25,23,0.30)" stroke-width="1" stroke-dasharray="4,3"/>
+<rect x="784" y="256" width="56" height="12" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+<text x="812" y="265" fill="#57534e" font-size="8" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle" letter-spacing="0.08em">LET BLOCK</text>
+<text x="856" y="296" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">?.let { }</text>
+<text x="856" y="320" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">只有非空才</text>
+<text x="856" y="336" fill="#57534e" font-size="9" font-family="'Geist Mono', 'SFMono-Regular', Menlo, Consolas, monospace" text-anchor="middle">执行代码块</text>
+</svg>

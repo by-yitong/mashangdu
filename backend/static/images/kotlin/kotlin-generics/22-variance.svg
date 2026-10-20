@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 352" width="800" height="352" role="img" aria-label="声明处型变方向对照：Producer out T 的箭头从类向外，T 只能出现在返回值位置；Consumer in T 的箭头从外向内，T 只能出现在参数位置">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.9" fill="rgba(28,25,23,0.10)"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#57534e"/>
+    </marker>
+    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#b5523a"/>
+    </marker>
+    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563eb"/>
+    </marker>
+  </defs>
+
+  <rect width="100%" height="100%" fill="#faf7f2"/>
+  <rect width="100%" height="100%" fill="url(#dots)" opacity="0.6"/>
+
+  <text x="44" y="56" fill="#1c1917" font-size="20" font-family="'Instrument Serif',Georgia,'Times New Roman',serif">声明处型变 out 与 in</text>
+
+  <line x1="400" y1="96" x2="400" y2="264" stroke="rgba(28,25,23,0.12)" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <line x1="100" y1="144" x2="48" y2="144" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="300" y1="144" x2="352" y2="144" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="448" y1="144" x2="500" y2="144" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="752" y1="144" x2="700" y2="144" stroke="#57534e" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <text x="72" y="136" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">T</text>
+  <text x="328" y="136" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">T</text>
+  <text x="472" y="136" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">T</text>
+  <text x="728" y="136" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">T</text>
+
+  <rect x="100" y="112" width="200" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="100" y="112" width="200" height="64" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <rect x="108" y="120" width="40" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="128" y="132" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">OUT</text>
+  <text x="200" y="152" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">class Producer&lt;out T&gt;</text>
+  <text x="200" y="168" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">fun get(): T</text>
+
+  <rect x="500" y="112" width="200" height="64" rx="6" fill="#faf7f2"/>
+  <rect x="500" y="112" width="200" height="64" rx="6" fill="rgba(181,82,58,0.08)" stroke="#b5523a" stroke-width="1"/>
+  <rect x="508" y="120" width="40" height="16" rx="2" fill="transparent" stroke="rgba(28,25,23,0.40)" stroke-width="0.8"/>
+  <text x="528" y="132" fill="#57534e" font-size="8" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle" letter-spacing="0.08em">IN</text>
+  <text x="600" y="152" fill="#1c1917" font-size="12" font-weight="600" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">class Consumer&lt;in T&gt;</text>
+  <text x="600" y="168" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">fun accept(t: T)</text>
+
+  <text x="200" y="208" fill="#1c1917" font-size="16" font-style="italic" font-family="'Instrument Serif',Georgia,'Times New Roman',serif" text-anchor="middle">生产者 / 只出不进</text>
+  <text x="600" y="208" fill="#1c1917" font-size="16" font-style="italic" font-family="'Instrument Serif',Georgia,'Times New Roman',serif" text-anchor="middle">消费者 / 只进不出</text>
+  <text x="200" y="232" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">T 只能出现在返回值位置</text>
+  <text x="600" y="232" fill="#57534e" font-size="9" font-family="'Geist Mono','SFMono-Regular',Menlo,Consolas,monospace" text-anchor="middle">T 只能出现在参数位置</text>
+
+  <line x1="160" y1="280" x2="640" y2="280" stroke="rgba(28,25,23,0.12)" stroke-width="1"/>
+  <text x="400" y="312" fill="#57534e" font-size="12" font-family="'Geist',-apple-system,'Helvetica Neue',Arial,sans-serif" text-anchor="middle">in / out 是声明处型变，使用处的类型投影是另一回事</text>
+</svg>
