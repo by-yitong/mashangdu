@@ -4,10 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:provider/provider.dart';
 
+import 'models/models.dart';
 import 'pages/home_page.dart';
 import 'pages/profile_page.dart';
+import 'pages/reader_page.dart';
 import 'state/api_client.dart';
 import 'state/library_store.dart';
+import 'state/settings_store.dart';
+import 'state/resume_store.dart';
 import 'state/theme_store.dart';
 import 'state/update_checker.dart';
 import 'widgets/design.dart';
@@ -120,8 +124,44 @@ class _HomeShellState extends State<HomeShell>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<LibraryStore>().refresh();
     });
+    // 启动恢复上一次阅读：只执行一次（_resumeAttempted 守卫），等首帧 +
+    // 400ms 缓冲再推栈，避免与同步/更新弹窗抢首屏；推栈前检查 mounted。
+    // 用可取消 Timer（dispose 时取消），壳被销毁时不留悬挂定时器。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _resumeTimer = Timer(const Duration(milliseconds: 400), () {
+        if (mounted) _tryRestoreReading();
+      });
+    });
     // 启动静默检查更新：有新版才弹窗，任何失败静默忽略。
     unawaited(_silentCheckUpdate());
+  }
+
+  /// 启动恢复守卫：_tryRestoreReading 只允许执行一次，防重复推栈。
+  bool _resumeAttempted = false;
+
+  /// 启动恢复的延迟定时器（首帧后 400ms），dispose 时取消。
+  Timer? _resumeTimer;
+
+  /// 读取 `resume.*` 记录并恢复：开关关 → 丢弃陈旧记录后停留首页；
+  /// 记录不存在（退出阅读页时已清除）→ 正常停留首页；
+  /// 记录存在且开关开 → 直接推 ReaderPage（章节内进度由其自身逻辑恢复）。
+  void _tryRestoreReading() {
+    if (_resumeAttempted) return;
+    _resumeAttempted = true;
+    if (!context.read<SettingsStore>().resumeOnLaunch) {
+      unawaited(context.read<ResumeStore>().exitReading());
+      return;
+    }
+    final pending = context.read<ResumeStore>().pendingResume();
+    if (pending == null) return;
+    final CourseSummary course = pending.course;
+    final String chapterSlug = pending.chapterSlug;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ReaderPage(course: course, chapterSlug: chapterSlug),
+      ),
+    );
   }
 
   Future<void> _silentCheckUpdate() async {
@@ -138,6 +178,7 @@ class _HomeShellState extends State<HomeShell>
 
   @override
   void dispose() {
+    _resumeTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _themeStore.removeListener(_syncBarBrightness);
     _barBrightness.dispose();

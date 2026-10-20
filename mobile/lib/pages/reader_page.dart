@@ -13,6 +13,7 @@ import '../state/auth_store.dart';
 import '../state/library_store.dart';
 import '../state/progress_store.dart';
 import '../state/reader_prefs.dart';
+import '../state/resume_store.dart';
 import '../utils/drawer_snap.dart';
 import '../utils/relative_time.dart' show formatHm;
 import '../widgets/chapter_interaction.dart';
@@ -87,6 +88,10 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
 
   /// 偏好引用：dispose 阶段不能用 context.read，didChangeDependencies 里抓一份。
   ReaderPrefs? _prefsRef;
+
+  /// 启动恢复记录引用（同 _prefsRef 模式）：进入/切章写 `resume.*`，
+  /// 退出阅读页清除——记录只在"停留在阅读页时被杀进程"才留存。
+  ResumeStore? _resumeRef;
 
   /// 进度节流保存间隔。
   static const int _saveIntervalMs = 500;
@@ -177,6 +182,11 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _currentSlug = widget.chapterSlug;
+    // didChangeDependencies 在 initState 之后才跑，这里先抓一次引用
+    // （context.read 无依赖注册，initState 可用，见 app.dart 同款做法），
+    // 写入启动恢复记录：停留在阅读页被杀进程时，下次启动恢复到本章。
+    _resumeRef ??= context.read<ResumeStore>();
+    _resumeRef?.enterReading(widget.course, widget.chapterSlug);
     _scroll.addListener(_onScroll);
     // 沉浸式阅读：状态栏/导航栏隐藏（下滑可临时呼出）。
     SystemChrome.setEnabledSystemUIMode(
@@ -190,6 +200,7 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _prefsRef ??= context.read<ReaderPrefs>();
+    _resumeRef ??= context.read<ResumeStore>();
     _drawerWidthPx = MediaQuery.sizeOf(context).width * _drawerWidthFactor;
   }
 
@@ -197,6 +208,10 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
   void dispose() {
     // 离开页面兜底保存一次进度，再释放资源。
     _savePositionNow();
+    // 正常返回（回课程页/首页）即清除启动恢复记录：dispose 在进程被杀时
+    // 不会执行，这正是"记录只代表退出时停留在阅读页"的关键。
+    // dispose 同步路径不能 await，fire-and-forget。
+    async.unawaited(_resumeRef?.exitReading());
     _scroll.dispose();
     _ratio.dispose();
     _flipHint.dispose();
@@ -279,6 +294,8 @@ class _ReaderPageState extends State<ReaderPage> with TickerProviderStateMixin {
   void _goChapter(String slug) {
     if (slug == _currentSlug) return;
     _savePositionNow();
+    // 同步启动恢复记录到新章（进程被杀时恢复到最近停留的章）。
+    _resumeRef?.enterReading(widget.course, slug);
     setState(() {
       _currentSlug = slug;
       _loading = true;

@@ -6,6 +6,7 @@ import 'package:code_tutorials/state/download_store.dart';
 import 'package:code_tutorials/state/library_store.dart';
 import 'package:code_tutorials/state/progress_store.dart';
 import 'package:code_tutorials/state/reader_prefs.dart';
+import 'package:code_tutorials/state/resume_store.dart';
 import 'package:code_tutorials/state/settings_store.dart';
 import 'package:code_tutorials/state/theme_store.dart';
 import 'package:flutter/material.dart';
@@ -49,6 +50,9 @@ void main() {
           Provider<ContentCache>.value(value: cache),
           ChangeNotifierProvider<ProgressStore>(
             create: (_) => ProgressStore(prefs),
+          ),
+          ChangeNotifierProvider<ResumeStore>(
+            create: (_) => ResumeStore(prefs),
           ),
           ChangeNotifierProvider<LibraryStore>(
             create: (_) => _NoopLibraryStore(apiClient, cache),

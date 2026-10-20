@@ -13,6 +13,7 @@ import 'state/download_store.dart';
 import 'state/library_store.dart';
 import 'state/progress_store.dart';
 import 'state/reader_prefs.dart';
+import 'state/resume_store.dart';
 import 'state/settings_store.dart';
 import 'state/theme_store.dart';
 
@@ -50,6 +51,11 @@ Future<void> main() async {
             Provider<ContentCache>(create: (_) => ContentCache(prefs)),
             ChangeNotifierProvider<ProgressStore>(
               create: (_) => ProgressStore(prefs),
+            ),
+            // 启动恢复阅读记录：ReaderPage 进入/切章写入、退出清除，
+            // HomeShell 启动时读取决定是否直接恢复到上次章节。
+            ChangeNotifierProvider<ResumeStore>(
+              create: (_) => ResumeStore(prefs),
             ),
             ChangeNotifierProvider<LibraryStore>(
               create: (context) => LibraryStore(

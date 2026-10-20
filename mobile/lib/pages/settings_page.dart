@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../state/api_client.dart';
 import '../state/library_store.dart';
+import '../state/settings_store.dart';
 import '../state/theme_store.dart';
 import '../state/update_checker.dart';
 import '../widgets/design.dart';
@@ -32,6 +33,8 @@ class SettingsPage extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
         children: const [
           _AppearanceCard(),
+          SizedBox(height: 14),
+          _ReadingCard(),
           SizedBox(height: 14),
           _AboutCard(),
         ],
@@ -86,6 +89,73 @@ class _AppearanceCard extends StatelessWidget {
               selectedForegroundColor: colors.onAccent,
               selectedBackgroundColor: colors.accent,
               side: BorderSide(color: colors.track),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 阅读卡片:打开 app 时继续上一次阅读开关（默认开，SettingsStore 持久化）。
+class _ReadingCard extends StatelessWidget {
+  const _ReadingCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final settings = context.watch<SettingsStore>();
+    return DesignCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '阅读',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: colors.ink,
+            ),
+          ),
+          InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => context.read<SettingsStore>().setResumeOnLaunch(
+              !settings.resumeOnLaunch,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '打开时继续上次阅读',
+                          style: TextStyle(fontSize: 14, color: colors.ink),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '退出时停留在阅读页，下次打开直接回到该章节',
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.4,
+                            color: colors.inkMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: settings.resumeOnLaunch,
+                    onChanged: (value) =>
+                        context.read<SettingsStore>().setResumeOnLaunch(value),
+                    activeThumbColor: colors.accent,
+                    activeTrackColor: colors.accentDim,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
